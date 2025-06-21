@@ -8,6 +8,9 @@ import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/auth/screens/update_password_screen.dart'; // <-- Nueva pantalla
 import 'features/dashboard/screens/dashboard_screen.dart';
+import 'features/profile/screens/profile_screen.dart';
+
+import 'presentation/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -66,9 +69,9 @@ class _MyAppState extends State<MyApp> {
             '/update-password', (route) => false);
       } else if (event == AuthChangeEvent.signedIn && session != null) {
         // Si el usuario inicia sesión (ya sea por confirmación de email, Google, etc.)
-        // lo llevamos al dashboard, limpiando cualquier pantalla anterior.
+        // lo llevamos al dashboard (o perfil para probar), limpiando cualquier pantalla anterior.
         _navigatorKey.currentState?.pushNamedAndRemoveUntil(
-            '/dashboard', (route) => false);
+            '/profile', (route) => false); // Redirige a Perfil para probar
       } else if (event == AuthChangeEvent.signedOut) {
         // Si el usuario cierra sesión, lo llevamos al login.
          _navigatorKey.currentState?.pushNamedAndRemoveUntil(
@@ -89,40 +92,37 @@ class _MyAppState extends State<MyApp> {
       navigatorKey: _navigatorKey, // Asignamos la GlobalKey al Navigator
       title: 'FinAi',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF0d1137),
-        colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF3F51B5),
-          secondary: Color(0xFF6A1B9A),
-          error: Colors.redAccent,
-        ),
-      ),
-      // La ruta inicial se decide en base a si hay una sesión guardada al arrancar.
-      initialRoute: Supabase.instance.client.auth.currentSession == null
-          ? '/login'
-          : '/dashboard',
       
+      // --- APLICACIÓN DE TEMAS ---
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system, // La app cambiará de tema con el sistema operativo
+
+      // Usamos un StreamBuilder para decidir la pantalla inicial de forma reactiva
+      home: StreamBuilder<AuthState>(
+        stream: Supabase.instance.client.auth.onAuthStateChange,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const SplashScreen();
+          }
+          
+          if (snapshot.hasData && snapshot.data?.session != null) {
+            // AHORA REDIRIGE AL PERFIL PARA PROBARLO
+            return const ProfileScreen(); 
+          }
+
+          return const LoginScreen();
+        },
+      ),
+
       // Definimos todas las rutas con nombre de la aplicación.
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
-        '/update-password': (context) => const UpdatePasswordScreen(), // <-- Nueva ruta
+        '/update-password': (context) => const UpdatePasswordScreen(),
         '/dashboard': (context) => const DashboardScreen(),
-      },
-      // Usamos un builder para mostrar la Splash Screen al principio
-      builder: (context, child) {
-        return FutureBuilder(
-          // Esperamos a que Supabase recupere la sesión inicial
-          future: Supabase.instance.client.auth.onAuthStateChange.first,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const SplashScreen();
-            }
-            // Una vez que el estado inicial se ha resuelto, mostramos la app.
-            return child ?? const SizedBox.shrink();
-          },
-        );
+        '/profile': (context) => const ProfileScreen(), // <-- Nueva ruta
       },
     );
   }
