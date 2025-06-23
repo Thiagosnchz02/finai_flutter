@@ -114,6 +114,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  /// Cierra la sesión del usuario actual.
+  Future<void> _signOut() async {
+    try {
+      await _supabase.auth.signOut();
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.message}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+      }
+    }
+  }
+
   /// Muestra un diálogo de confirmación y luego cierra sesión en otros dispositivos.
   Future<void> _signOutOthers() async {
     final shouldSignOut = await showDialog<bool>(
@@ -170,7 +186,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: () {
                     setState(() {
                       _isEditing = false;
-                      _getProfile(); 
+                      _getProfile();
                     });
                   },
                 ),
@@ -185,6 +201,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   onPressed: () {
                     // TODO: Navegar a la pantalla de Ajustes
                   },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: _signOut,
+                  tooltip: 'Cerrar Sesión',
                 ),
               ],
       ),
