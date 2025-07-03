@@ -303,7 +303,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 120,
                   ),
                 )
-              : const Icon(Icons.person, size: 60),
+              : ClipOval(
+                  child: Image.asset(
+                    'assets/images/avatar_predeterminado.png',
+                    width: 120,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  ),
+                ),
         ),
       ],
     );
