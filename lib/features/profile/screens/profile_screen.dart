@@ -296,8 +296,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         TextButton.icon(
           onPressed: () {
             if (_isEditing) {
-              // Si se cancela, se resetean los datos a los originales
-              _getProfile();
+              // Si se cancela, se restauran los datos originales sin recargar de la red
+              _nameController.text =
+                  (_originalProfileData['full_name'] as String?) ?? '';
+              _phoneValue =
+                  (_originalProfileData['phone_number'] as String?) ?? '';
+              _avatarUrl =
+                  (_originalProfileData['avatar_url'] as String?) ?? '';
             }
             setState(() => _isEditing = !_isEditing);
           },
