@@ -9,7 +9,6 @@ class AvatarCreatorScreen extends StatefulWidget {
 }
 
 class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
-  InAppWebViewController? _webViewController;
   bool _isLoading = true;
 
   // URL del creador de avatares de Ready Player Me.
@@ -36,7 +35,6 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
               mediaPlaybackRequiresUserGesture: false,
             ),
             onWebViewCreated: (controller) {
-              _webViewController = controller;
 
               // Añadimos el "puente" entre JavaScript y Flutter.
               // El nombre 'rpmAvatarExported' debe coincidir con el que llamamos desde JS.
