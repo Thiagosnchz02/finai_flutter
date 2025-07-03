@@ -36,6 +36,7 @@ dependencies:
   intl_phone_field: ^3.2.0   # Para el campo de teléfono con selector de país.
   flutter_svg: ^2.0.10+1       # Para renderizar imágenes SVG.
   provider: ^6.1.2           # Para la gestión de estado del tema.
+  flutter_inappwebview: ^6.0.0 # Busca la última versión en pub.dev
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
