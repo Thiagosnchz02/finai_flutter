@@ -264,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               _avatarUrl!.replaceFirst('.glb', '.png'),
                               fit: BoxFit.cover,
                               width: 120,
-                              height: 120,
+                              height: 100,
                               errorBuilder: (context, error, stackTrace) =>
                                   Image.asset('assets/images/avatar_predeterminado.png'),
                             ),
