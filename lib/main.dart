@@ -10,10 +10,13 @@ import 'features/auth/screens/update_password_screen.dart'; // <-- Nueva pantall
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'features/profile/screens/avatar_creator_screen.dart'; // Añade esta importación
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'presentation/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await InAppWebViewController.initialize();
 
   await Supabase.initialize(
     url: 'https://exwdzrnguktrpmwgvioo.supabase.co', // REEMPLAZA CON TU URL
