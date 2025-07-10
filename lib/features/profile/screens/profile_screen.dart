@@ -4,7 +4,6 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 
 // Importamos las pantallas necesarias
 import 'change_password_screen.dart';
-import 'avatar_creator_screen.dart'; // <-- Importante: pantalla de RPM
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -108,18 +107,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  /// Navega a la pantalla del creador de avatares y espera el resultado.
-  Future<void> _openAvatarCreator() async {
-    final newAvatarUrl = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (_) => const AvatarCreatorScreen()),
-    );
-
-    if (newAvatarUrl != null && newAvatarUrl.isNotEmpty && mounted) {
-      setState(() {
-        _avatarUrl = newAvatarUrl;
-      });
-    }
-  }
 
   /// Cierra la sesión del usuario actual.
   Future<void> _signOut() async {
@@ -245,7 +232,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         GestureDetector(
           // La acción de abrir el creador de avatares solo se activa en modo edición
-          onTap: _isEditing ? _openAvatarCreator : null,
+          onTap: null,
           child: Stack(
             alignment: Alignment.center,
             children: [
