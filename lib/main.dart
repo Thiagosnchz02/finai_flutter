@@ -9,7 +9,6 @@ import 'features/auth/screens/forgot_password_screen.dart';
 import 'features/auth/screens/update_password_screen.dart'; // <-- Nueva pantalla
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
-import 'features/profile/screens/avatar_creator_screen.dart'; // Añade esta importación
 import 'presentation/theme/app_theme.dart';
 
 Future<void> main() async {
@@ -123,7 +122,6 @@ class _MyAppState extends State<MyApp> {
         '/update-password': (context) => const UpdatePasswordScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/profile': (context) => const ProfileScreen(), // <-- Nueva ruta
-        '/avatar-creator': (context) => const AvatarCreatorScreen(), // <-- AÑADE ESTA LÍNEA
       },
     );
   }
