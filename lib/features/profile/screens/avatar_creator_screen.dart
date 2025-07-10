@@ -11,11 +11,12 @@ class AvatarCreatorScreen extends StatefulWidget {
 
 class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
   // Categoría de assets seleccionada actualmente (pelo, ojos, etc.)
+  // La inicializamos con 'faceShape' que suele ser una de las primeras.
   String _selectedCategory = 'faceShape';
 
   @override
   Widget build(BuildContext context) {
-    // Usamos un Consumer para escuchar los cambios en nuestro provider
+    // Usamos un Consumer para escuchar los cambios en nuestro provider y reconstruir la UI.
     return Consumer<AvatarCreatorProvider>(
       builder: (context, provider, child) {
         return Scaffold(
@@ -23,22 +24,34 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
             title: const Text('Crea tu Avatar'),
             actions: [
               // Botón para guardar el avatar final
-              TextButton(
-                onPressed: provider.isLoading
-                    ? null
-                    : () async {
-                        final finalUrl = await provider.createFinalAvatar();
-                        if (mounted && finalUrl != null) {
-                          Navigator.of(context).pop(finalUrl);
-                        } else if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('No se pudo crear el avatar.')),
-                          );
-                        }
-                      },
-                child: provider.isLoading 
-                    ? const CircularProgressIndicator(color: Colors.white) 
-                    : const Text('Guardar'),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: TextButton(
+                  onPressed: provider.isLoading
+                      ? null
+                      : () async {
+                          final finalUrl = await provider.createFinalAvatar();
+                          if (mounted && finalUrl != null) {
+                            // Si se crea con éxito, devolvemos la URL a la pantalla anterior.
+                            Navigator.of(context).pop(finalUrl);
+                          } else if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('No se pudo crear el avatar.')),
+                            );
+                          }
+                        },
+                  child: provider.isLoading && provider.previewUrl != null // Muestra carga solo al guardar
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Guardar'),
+                ),
               )
             ],
           ),
@@ -48,11 +61,14 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
     );
   }
 
+  /// Construye el cuerpo principal de la pantalla.
   Widget _buildBody(BuildContext context, AvatarCreatorProvider provider) {
+    // Muestra un indicador de carga grande solo la primera vez.
     if (provider.isLoading && provider.previewUrl == null) {
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Muestra un mensaje de error si algo falló al cargar los assets.
     if (provider.error != null) {
       return Center(child: Text('Error: ${provider.error}'));
     }
@@ -65,7 +81,7 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
         // --- SECCIÓN DE CATEGORÍAS ---
         _buildCategorySelector(provider),
         
-        // --- SECCIÓN DE ASSETS ---
+        // --- SECCIÓN DE ASSETS (opciones) ---
         Expanded(
           child: _buildAssetGrid(provider),
         ),
@@ -73,7 +89,7 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
     );
   }
 
-  // Widget para la previsualización del avatar
+  /// Widget para la previsualización del avatar.
   Widget _buildPreviewSection(BuildContext context, AvatarCreatorProvider provider) {
     return Container(
       height: 250,
@@ -97,9 +113,9 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
     );
   }
 
-  // Widget para los botones de selección de categoría (Pelo, Ojos, etc.)
+  /// Widget para los botones de selección de categoría (Pelo, Ojos, etc.).
   Widget _buildCategorySelector(AvatarCreatorProvider provider) {
-    // Categorías que queremos mostrar. Puedes añadir más.
+    // Categorías que queremos mostrar. Puedes añadir o quitar de esta lista.
     final categories = ['faceShape', 'eyes', 'eyebrows', 'hair', 'mouth', 'beard', 'glasses', 'outfit'];
     
     return SizedBox(
@@ -128,7 +144,7 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
     );
   }
 
-  // Widget para la cuadrícula de assets de la categoría seleccionada
+  /// Widget para la cuadrícula de assets de la categoría seleccionada.
   Widget _buildAssetGrid(AvatarCreatorProvider provider) {
     // Obtenemos la lista de assets para la categoría seleccionada
     final List<dynamic> assets = provider.availableAssets[_selectedCategory] ?? [];

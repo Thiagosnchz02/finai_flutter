@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 // Importamos las pantallas necesarias
 import 'change_password_screen.dart';
 import '../providers/avatar_creator_provider.dart';
+import 'avatar_creator_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -253,7 +254,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         GestureDetector(
           // La acción de abrir el creador de avatares solo se activa en modo edición
-          onTap: null,
+          onTap: _isEditing ? _openAvatarCreator : null,
           child: Stack(
             alignment: Alignment.center,
             children: [

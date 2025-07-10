@@ -3,25 +3,29 @@ import 'package:http/http.dart' as http;
 
 // Clase para encapsular la lógica de la API de Ready Player Me
 class RpmApiService {
-  final String _baseUrl = 'https://api.readyplayer.me/v2';
+  // ***** URL CORREGIDA *****
+  // La nueva URL base para la API es v1 y no requiere /avatars para los assets.
+  final String _baseUrl = 'https://api.readyplayer.me/v1';
   
-  // NOTA: Para una app en producción, deberías registrarte como partner en RPM
-  // y usar tu propio subdominio. Para desarrollo, 'demo' funciona.
-  final String _partnerDomain = 'demo'; 
+  final String _apiKey = 'sk_live_yZ65J-tQ1mQa4d15VL_whUJjpg6TBn58AfkE';
 
   /// Obtiene el catálogo de assets (piezas) disponibles para crear el avatar.
   Future<Map<String, dynamic>> getAvailableAssets() async {
-    // Este endpoint nos da todas las piezas (pelo, ojos, ropa, etc.)
-    final uri = Uri.parse('$_baseUrl/avatars/assets');
+    // El endpoint correcto es /assets, no /avatars/assets.
+    final uri = Uri.parse('$_baseUrl/assets?type=outfit,beard,hair,facemask,faceshape,eyebrows,eyes,glasses,headwear,lipshape,mouth,noseshape,facewear,shirt');
     
     try {
-      final response = await http.get(uri);
+      final response = await http.get(
+        uri,
+        // Añadimos la cabecera de autenticación con la API Key
+        headers: {'x-api-key': _apiKey},
+      );
       if (response.statusCode == 200) {
         return json.decode(response.body);
       } else {
         throw Exception('Failed to load avatar assets: ${response.body}');
       }
-    } catch (e) {
+    }catch (e) {
       print('Error fetching RPM assets: $e');
       throw Exception('Could not connect to Ready Player Me service.');
     }
@@ -29,21 +33,21 @@ class RpmApiService {
 
   /// Solicita una imagen de previsualización 2D basada en la configuración actual del avatar.
   Future<String> render2DPreview(Map<String, dynamic> avatarConfig) async {
-    // La API de renderizado es diferente y espera el partner en el cuerpo de la petición.
-    final uri = Uri.parse('https://api.readyplayer.me/v1/avatars');
+    final uri = Uri.parse('$_baseUrl/avatars');
     
     try {
       final response = await http.post(
         uri,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': _apiKey, // Añadimos la API Key aquí también
+        },
         body: json.encode(avatarConfig),
       );
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
-        // La URL de la imagen 2D se encuentra en 'renders' -> '2d-head-render'
-        // o a veces en 'avatar' -> '2d-head-render'. Verificamos ambas.
-        return body['renders']?['2d-head-render'] ?? body['avatar']?['2d-head-render'] ?? '';
+        return body['renders']?['2d-head-render'] ?? '';
       } else {
         throw Exception('Failed to render preview: ${response.body}');
       }
@@ -54,20 +58,26 @@ class RpmApiService {
   }
 
   /// Crea el avatar 3D final y devuelve la URL del modelo .glb
-  Future<String> createFinalAvatar(Map<String, dynamic> avatarConfig) async {
+  Future<String?> createFinalAvatar(Map<String, dynamic> avatarConfig) async {
     final uri = Uri.parse('$_baseUrl/avatars');
     
     try {
       final response = await http.post(
         uri,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': _apiKey, // Y aquí también
+        },
         body: json.encode(avatarConfig),
       );
 
       if (response.statusCode == 200) {
         final body = json.decode(response.body);
-        // La URL final del modelo .glb se encuentra en el campo 'url'
-        return body['url'];
+        final avatarId = body['id'];
+        if (avatarId != null) {
+          return 'https://models.readyplayer.me/$avatarId.glb';
+        }
+        return null;
       } else {
         throw Exception('Failed to create final avatar: ${response.body}');
       }
