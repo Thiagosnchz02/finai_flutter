@@ -34,9 +34,10 @@ dependencies:
   local_auth: ^2.2.0
   font_awesome_flutter: ^10.7.0
   intl_phone_field: ^3.2.0   # Para el campo de teléfono con selector de país.
-  flutter_svg: ^2.0.10+1       # Para renderizar imágenes SVG.
-  provider: ^6.1.2           # Para la gestión de estado del tema.
+  flutter_svg: ^2.0.10+1       # Para la gestión de estado del tema.
   flutter_inappwebview: ^6.0.0 # Busca la última versión en pub.dev
+  http: ^1.2.1          # Para realizar las peticiones a la API de RPM.
+  provider: ^6.1.2       # Para una gestión de estado simple y eficaz.
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

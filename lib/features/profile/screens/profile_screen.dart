@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:provider/provider.dart'; 
 
 // Importamos las pantallas necesarias
 import 'change_password_screen.dart';
+import '../providers/avatar_creator_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -103,6 +105,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isEditing = false;
         _isLoading = false;
+      });
+    }
+  }
+
+   Future<void> _openAvatarCreator() async {
+    // Envolvemos la pantalla del creador con un ChangeNotifierProvider
+    // para que tenga acceso a su gestor de estado.
+    final newAvatarUrl = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => ChangeNotifierProvider(
+          create: (_) => AvatarCreatorProvider(),
+          child: const AvatarCreatorScreen(),
+        ),
+      ),
+    );
+
+    if (newAvatarUrl != null && newAvatarUrl.isNotEmpty && mounted) {
+      setState(() {
+        _avatarUrl = newAvatarUrl;
       });
     }
   }
