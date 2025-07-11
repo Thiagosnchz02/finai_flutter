@@ -11,8 +11,23 @@ class AvatarCreatorScreen extends StatefulWidget {
 
 class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
   // Categoría de assets seleccionada actualmente (pelo, ojos, etc.)
-  // La inicializamos con 'faceShape' que suele ser una de las primeras.
   String _selectedCategory = 'faceShape';
+
+  // Mapeo de nombres técnicos a nombres amigables para la UI
+  final Map<String, String> _categoryDisplayNames = {
+    'faceShape': 'Rostro',
+    'eyes': 'Ojos',
+    'eyebrows': 'Cejas',
+    'hair': 'Pelo',
+    'beard': 'Barba',
+    'glasses': 'Gafas',
+    'outfit': 'Ropa',
+    'headwear': 'Gorros',
+    'facewear': 'Acc. Cara',
+    'lipShape': 'Labios',
+    'mouth': 'Boca',
+    'noseShape': 'Nariz',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -115,28 +130,30 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
 
   /// Widget para los botones de selección de categoría (Pelo, Ojos, etc.).
   Widget _buildCategorySelector(AvatarCreatorProvider provider) {
-    // Categorías que queremos mostrar. Puedes añadir o quitar de esta lista.
-    final categories = ['faceShape', 'eyes', 'eyebrows', 'hair', 'mouth', 'beard', 'glasses', 'outfit'];
+    // Usamos las claves de nuestro mapa de nombres para asegurar consistencia
+    final categories = _categoryDisplayNames.keys.toList();
     
     return SizedBox(
-      height: 50,
+      height: 60, // Aumentamos un poco la altura para que se vea mejor
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
         itemCount: categories.length,
         itemBuilder: (context, index) {
-          final category = categories[index];
-          final isSelected = _selectedCategory == category;
+          final categoryKey = categories[index];
+          final displayName = _categoryDisplayNames[categoryKey] ?? categoryKey;
+          final isSelected = _selectedCategory == categoryKey;
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0),
             child: OutlinedButton(
-              onPressed: () => setState(() => _selectedCategory = category),
+              onPressed: () => setState(() => _selectedCategory = categoryKey),
               style: OutlinedButton.styleFrom(
-                backgroundColor: isSelected ? Theme.of(context).colorScheme.primary : null,
-                foregroundColor: isSelected ? Colors.white : null,
-                side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                backgroundColor: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
+                foregroundColor: isSelected ? Colors.white : Theme.of(context).textTheme.bodyMedium?.color,
+                side: BorderSide(color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade700),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
               ),
-              child: Text(category), // Puedes poner nombres más amigables
+              child: Text(displayName),
             ),
           );
         },
@@ -146,7 +163,6 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
 
   /// Widget para la cuadrícula de assets de la categoría seleccionada.
   Widget _buildAssetGrid(AvatarCreatorProvider provider) {
-    // Obtenemos la lista de assets para la categoría seleccionada
     final List<dynamic> assets = provider.availableAssets[_selectedCategory] ?? [];
 
     if (assets.isEmpty) {
@@ -154,19 +170,17 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(12.0),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, // 4 assets por fila
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
+        crossAxisCount: 4,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
       ),
       itemCount: assets.length,
       itemBuilder: (context, index) {
         final asset = assets[index];
         final int assetId = asset['id'];
         final String? iconUrl = asset['icon'];
-
-        // Verificamos si este asset es el que está seleccionado actualmente
         final bool isSelected = provider.selectedAssets['assets']?[_selectedCategory] == assetId;
 
         return GestureDetector(
@@ -174,14 +188,17 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
           child: Container(
             decoration: BoxDecoration(
               color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
-                width: 2,
+                color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey.shade800,
+                width: isSelected ? 2.5 : 1.0,
               ),
             ),
             child: iconUrl != null
-                ? Image.network(iconUrl, fit: BoxFit.contain)
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(iconUrl, fit: BoxFit.contain)
+                  )
                 : const Icon(Icons.help_outline),
           ),
         );
