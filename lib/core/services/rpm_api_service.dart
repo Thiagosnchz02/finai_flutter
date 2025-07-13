@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RpmApiService {
   final String _baseUrl = 'https://api.readyplayer.me/v1';
   
-  // TUS CREDENCIALES
-  final String _apiKey = 'sk_live_yZ65J-tQ1mQa4d15VL_whUJjpg6TBn58AfkE';
-  final String _applicationId = '682d8039459f37cd4403973f';
+  final String _apiKey = dotenv.env['RPM_API_KEY'] ?? '';
+  final String _applicationId = dotenv.env['RPM_APPLICATION_ID'] ?? '';
 
   Future<String?> createRpmUser() async {
     final uri = Uri.parse('$_baseUrl/users');
