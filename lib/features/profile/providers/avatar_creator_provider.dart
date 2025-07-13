@@ -39,7 +39,11 @@ class AvatarCreatorProvider with ChangeNotifier {
       if (_rpmUserId == null) throw Exception("No se pudo obtener el ID de usuario de RPM.");
 
       // 1. Crear un avatar inicial para obtener su ID y la primera imagen
-      final initialAvatarData = await _apiService.createInitialAvatar(_rpmUserId!, 'male', 'halfbody');
+      final initialAvatarData = await _apiService.createInitialAvatar(
+        _rpmUserId!,
+        'male',
+        'halfbody',
+      );
       _avatarId = initialAvatarData['data']?['id'];
       if (_avatarId == null) throw Exception("No se pudo crear el avatar inicial.");
       
@@ -48,7 +52,9 @@ class AvatarCreatorProvider with ChangeNotifier {
 
       // 2. Cargar los assets disponibles
       final apiResponse = await _apiService.getAvailableAssets();
-      _availableAssets = Map<String, List<dynamic>>.from(apiResponse);
+      _availableAssets = Map<String, List<dynamic>>.from(
+        apiResponse['data'] ?? {},
+      );
 
       if (_availableAssets.isEmpty) {
         throw Exception("No se encontraron assets en la respuesta de la API.");
