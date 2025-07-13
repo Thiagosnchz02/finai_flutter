@@ -181,7 +181,7 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
         final asset = assets[index];
         final int assetId = asset['id'];
         final String? iconUrl = asset['icon'];
-        final bool isSelected = provider.selectedAssets['assets']?[_selectedCategory] == assetId;
+        final bool isSelected = provider.selectedAssets[_selectedCategory] == assetId;
 
         return GestureDetector(
           onTap: () => provider.selectAsset(_selectedCategory, assetId),
