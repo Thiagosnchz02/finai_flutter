@@ -10,138 +10,96 @@ class AvatarCreatorProvider with ChangeNotifier {
   // Estado
   bool _isLoading = true;
   String? _error;
-  String? _rpmUserId; // ID de usuario de Ready Player Me
+  String? _rpmUserId;
+  String? _avatarId;
 
   Map<String, List<dynamic>> _availableAssets = {};
-  Map<String, dynamic> _selectedAssets = {
-    "gender": "male",
-    "bodyType": "halfbody",
-    "assets": {}
-  };
+  final Map<String, dynamic> _selectedAssets = {};
   String? _previewUrl;
 
   // Getters
   bool get isLoading => _isLoading;
   String? get error => _error;
   Map<String, List<dynamic>> get availableAssets => _availableAssets;
+  Map<String, dynamic> get selectedAssets => _selectedAssets;
   String? get previewUrl => _previewUrl;
 
   AvatarCreatorProvider() {
     _initialize();
   }
 
-  /// Flujo de inicialización completo
+  /// Flujo de inicialización completo y corregido
   Future<void> _initialize() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      // 1. Obtener o crear el ID de usuario de RPM
       _rpmUserId = await _getOrCreateRpmUserId();
-      if (_rpmUserId == null) {
-        throw Exception("No se pudo obtener el ID de usuario para el avatar.");
-      }
+      if (_rpmUserId == null) throw Exception("No se pudo obtener el ID de usuario de RPM.");
+
+      // 1. Crear un avatar inicial para obtener su ID y la primera imagen
+      final initialAvatarData = await _apiService.createInitialAvatar(_rpmUserId!, 'male', 'halfbody');
+      _avatarId = initialAvatarData['data']?['id'];
+      if (_avatarId == null) throw Exception("No se pudo crear el avatar inicial.");
+      
+      // La respuesta de la creación ya contiene la primera URL de renderizado
+      _previewUrl = initialAvatarData['data']?['renders']?['2d-head-render'];
 
       // 2. Cargar los assets disponibles
       final apiResponse = await _apiService.getAvailableAssets();
       _availableAssets = Map<String, List<dynamic>>.from(apiResponse);
 
-
-      // 3. Generar la primera previsualización
-      if (_availableAssets.isNotEmpty) {
-        await updatePreview();
-      } else {
+      if (_availableAssets.isEmpty) {
         throw Exception("No se encontraron assets en la respuesta de la API.");
       }
-
     } catch (e) {
       _error = e.toString();
-      print(e);
+      print("Error en _initialize: $e");
     }
 
     _isLoading = false;
     notifyListeners();
   }
 
-  /// Busca el rpm_user_id en nuestro perfil, si no existe, lo crea en RPM y lo guarda.
   Future<String?> _getOrCreateRpmUserId() async {
-    // Busca primero en nuestra base de datos
-    final profileResponse = await _supabase
-        .from('profiles')
-        .select('rpm_user_id')
-        .eq('id', _currentSupabaseUserId)
-        .single();
-
-    if (profileResponse['rpm_user_id'] != null) {
-      print('RPM User ID encontrado en Supabase: ${profileResponse['rpm_user_id']}');
-      return profileResponse['rpm_user_id'];
-    }
-
-    // Si no existe, lo creamos en RPM
-    print('No se encontró RPM User ID, creando uno nuevo...');
+    final profileResponse = await _supabase.from('profiles').select('rpm_user_id').eq('id', _currentSupabaseUserId).single();
+    if (profileResponse['rpm_user_id'] != null) return profileResponse['rpm_user_id'];
+    
     final newRpmId = await _apiService.createRpmUser();
     if (newRpmId != null) {
-      // Y lo guardamos en nuestro perfil para futuras sesiones
-      await _supabase
-          .from('profiles')
-          .update({'rpm_user_id': newRpmId})
-          .eq('id', _currentSupabaseUserId);
-      print('Nuevo RPM User ID guardado en Supabase: $newRpmId');
+      await _supabase.from('profiles').update({'rpm_user_id': newRpmId}).eq('id', _currentSupabaseUserId);
       return newRpmId;
     }
     return null;
   }
 
+  /// Actualiza una pieza y refresca la preview
   Future<void> selectAsset(String type, int id) async {
-    _selectedAssets['assets'][type] = id;
+    _selectedAssets[type] = id;
     await updatePreview();
     notifyListeners();
   }
 
-  /// Llama a la API para renderizar la imagen de previsualización.
+  /// Llama a la API para actualizar el avatar y luego obtener la nueva imagen.
   Future<void> updatePreview() async {
-    if (_rpmUserId == null) return;
+    if (_avatarId == null) return;
     try {
-      final payload = {
-        "data": {
-          "userId": _rpmUserId, // Usamos el ID de RPM
-          "partner": "finai.readyplayer.me",
-          "bodyType": _selectedAssets['bodyType'],
-          "gender": _selectedAssets['gender'],
-          "assets": _selectedAssets['assets'],
-        }
-      };
-      _previewUrl = await _apiService.render2DPreview(payload);
+      final updatedAvatarData = await _apiService.updateAvatar(_avatarId!, _selectedAssets);
+      final newRenderUrl = updatedAvatarData['renders']?['2d-head-render'];
+
+      if (newRenderUrl != null) {
+        _previewUrl = '$newRenderUrl?ts=${DateTime.now().millisecondsSinceEpoch}';
+      }
     } catch (e) {
       print("Error en updatePreview: $e");
-      _previewUrl = null;
     }
     notifyListeners();
   }
 
-  /// Crea el avatar 3D final.
+  /// Devuelve la URL final del avatar 3D.
   Future<String?> createFinalAvatar() async {
-    if (_rpmUserId == null) return null;
-     _isLoading = true;
-     notifyListeners();
-     String? finalUrl;
-     try {
-        final payload = {
-          "data": {
-            "userId": _rpmUserId, // Usamos el ID de RPM
-            "partner": "finai.readyplayer.me",
-            "gender": _selectedAssets['gender'],
-            "bodyType": _selectedAssets['bodyType'],
-            "assets": _selectedAssets['assets'],
-          }
-        };
-        finalUrl = await _apiService.createFinalAvatar(payload);
-     } catch (e) {
-        print(e);
-     }
-     _isLoading = false;
-     notifyListeners();
-     return finalUrl;
+    if (_avatarId == null) return null;
+    return 'https://models.readyplayer.me/$_avatarId.glb';
   }
 }
