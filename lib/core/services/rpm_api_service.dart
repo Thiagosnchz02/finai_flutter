@@ -33,20 +33,25 @@ class RpmApiService {
   Future<Map<String, dynamic>> createInitialAvatar(String rpmUserId, String gender, String bodyType) async {
     final uri = Uri.parse('$_baseUrl/avatars');
     try {
-      final response = await http.post(
-        uri,
-        headers: {'Content-Type': 'application/json', 'x-api-key': _apiKey},
-        body: json.encode({
-          "userId": rpmUserId,
-          "partner": "finai.readyplayer.me",
-          "applicationId": _applicationId,
-          "data": {
-            "gender": gender,
-            "bodyType": bodyType,
-            "assets": {} // Empieza sin assets personalizados
-          }
-        }),
-      );
+      final payload = {
+      'userId': rpmUserId,
+      'partner': 'finai.readyplayer.me',
+      'applicationId': _applicationId,
+      'data': {
+        'gender': gender,
+        'bodyType': bodyType,
+        'assets': {},
+      },
+    };
+    print('🔥 createInitialAvatar payload = ${json.encode(payload)}');
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': _apiKey,
+      },
+      body: json.encode(payload),
+    );
       if (response.statusCode == 201) { // 201 Created
         return json.decode(response.body);
       } else {
