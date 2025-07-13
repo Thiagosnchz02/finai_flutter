@@ -40,6 +40,7 @@ class RpmApiService {
           "data": {
             "userId": rpmUserId,
             "partner": "finai.readyplayer.me",
+            "applicationId": _applicationId,
             "gender": gender,
             "bodyType": bodyType,
             "assets": {} // Empieza sin assets personalizados
