@@ -11,11 +11,11 @@ class AvatarCreatorScreen extends StatefulWidget {
 
 class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
   // Categoría de assets seleccionada actualmente (pelo, ojos, etc.)
-  String _selectedCategory = 'faceShape';
+  String _selectedCategory = 'faceshape';
 
   // Mapeo de nombres técnicos a nombres amigables para la UI
   final Map<String, String> _categoryDisplayNames = {
-    'faceShape': 'Rostro',
+    'faceshape': 'Rostro',
     'eyes': 'Ojos',
     'eyebrows': 'Cejas',
     'hair': 'Pelo',
@@ -24,9 +24,9 @@ class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
     'outfit': 'Ropa',
     'headwear': 'Gorros',
     'facewear': 'Acc. Cara',
-    'lipShape': 'Labios',
+    'lipshape': 'Labios',
     'mouth': 'Boca',
-    'noseShape': 'Nariz',
+    'noseshape': 'Nariz',
   };
 
   @override
