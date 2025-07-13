@@ -37,13 +37,13 @@ class RpmApiService {
         uri,
         headers: {'Content-Type': 'application/json', 'x-api-key': _apiKey},
         body: json.encode({
-          "userId": rpmUserId,
-          "partner": "finai.readyplayer.me",
-          "applicationId": _applicationId,
-          "data": {
-            "gender": gender,
-            "bodyType": bodyType,
-            "assets": {} // Empieza sin assets personalizados
+          'data': {
+            'userId': rpmUserId,
+            'partner': 'finai.readyplayer.me',
+            'applicationId': _applicationId,
+            'gender': gender,
+            'bodyType': bodyType,
+            'assets': {} // Empieza sin assets personalizados
           }
         }),
       );
