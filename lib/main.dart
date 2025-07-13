@@ -15,16 +15,15 @@ import 'presentation/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (await File('.env').exists()) {
-    await dotenv.load(fileName: '.env');
-  } else {
-    debugPrint(
-        'Warning: .env file not found. Copy .env.example to .env and provide your credentials.');
-  }
+  
+  // ***** LÓGICA DE CARGA SIMPLIFICADA *****
+  // Simplemente llama a load. El paquete maneja los errores si no encuentra el archivo.
+  await dotenv.load(fileName: ".env");
 
+  // Ahora, inicializamos Supabase usando las variables cargadas.
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL'] ?? '',
-    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+    url: dotenv.env['SUPABASE_URL']!, // Usamos '!' para asegurar que no son nulas. La app debe fallar si no están.
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
   runApp(const MyApp());
