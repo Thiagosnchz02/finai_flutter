@@ -39,7 +39,11 @@ class AvatarCreatorProvider with ChangeNotifier {
       if (_rpmUserId == null) throw Exception("No se pudo obtener el ID de usuario de RPM.");
 
       // 1. Crear un avatar inicial para obtener su ID y la primera imagen
-      final initialAvatarData = await _apiService.createInitialAvatar(_rpmUserId!, 'male', 'halfbody');
+      final initialAvatarData = await _apiService.createInitialAvatar(
+        _rpmUserId!,
+        'male',
+        'halfbody',
+      );
       _avatarId = initialAvatarData['data']?['id'];
       if (_avatarId == null) throw Exception("No se pudo crear el avatar inicial.");
       
