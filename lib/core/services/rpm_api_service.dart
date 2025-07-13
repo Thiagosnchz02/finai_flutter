@@ -30,7 +30,11 @@ class RpmApiService {
   }
 
   /// **FUNCIÓN CORREGIDA:** Crea un avatar inicial con parámetros base.
-  Future<Map<String, dynamic>> createInitialAvatar(String rpmUserId, String gender, String bodyType) async {
+  Future<Map<String, dynamic>> createInitialAvatar(
+    String rpmUserId,
+    String outfitGender,
+    String bodyType,
+  ) async {
     final uri = Uri.parse('$_baseUrl/avatars');
     try {
       final response = await http.post(
@@ -41,9 +45,9 @@ class RpmApiService {
             "userId": rpmUserId,
             "partner": "finai.readyplayer.me",
             "applicationId": _applicationId,
-            "gender": gender,
+            "outfitGender": outfitGender,
             "bodyType": bodyType,
-            "assets": {} // Empieza sin assets personalizados
+            "assets": {}
           }
         }),
       );
