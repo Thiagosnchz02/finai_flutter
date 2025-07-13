@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -14,7 +15,12 @@ import 'presentation/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
+  if (await File('.env').exists()) {
+    await dotenv.load(fileName: '.env');
+  } else {
+    debugPrint(
+        'Warning: .env file not found. Copy .env.example to .env and provide your credentials.');
+  }
 
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL'] ?? '',
