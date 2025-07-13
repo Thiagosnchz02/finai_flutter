@@ -50,10 +50,12 @@ class RpmApiService {
       if (response.statusCode == 201) { // 201 Created
         return json.decode(response.body);
       } else {
-        throw Exception('Failed to create initial avatar: ${response.body}');
+        throw Exception(
+            'Failed to create initial avatar: statusCode=${response.statusCode}, body=${response.body}');
       }
     } catch (e) {
-      throw Exception('Could not create initial avatar.');
+      // Preserve and propagate the original error message
+      rethrow;
     }
   }
 
