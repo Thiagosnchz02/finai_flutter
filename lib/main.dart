@@ -11,6 +11,9 @@ import 'features/auth/screens/update_password_screen.dart'; // <-- Nueva pantall
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'presentation/theme/app_theme.dart';
+import "features/profile/screens/avatar_creator_screen.dart";
+import "features/profile/providers/avatar_creator_provider.dart";
+import "package:provider/provider.dart";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -128,6 +131,9 @@ class _MyAppState extends State<MyApp> {
         '/update-password': (context) => const UpdatePasswordScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/profile': (context) => const ProfileScreen(), // <-- Nueva ruta
+        '/avatar/avataaars': (context) => ChangeNotifierProvider(create: (_) => AvatarCreatorProvider(), child: const AvatarCreatorScreen()),
+        '/avatar/generative': (context) => const Scaffold(body: Center(child: Text('Generative AI'))),
+        '/avatar/meta-import': (context) => const Scaffold(body: Center(child: Text('Importar de Meta'))),
       },
     );
   }
