@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:dart_openai/dart_openai.dart';
 
 // Importa todas las pantallas que vamos a usar como rutas
 import 'features/auth/screens/login_screen.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!, // Usamos '!' para asegurar que no son nulas. La app debe fallar si no están.
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+  OpenAI.apiKey = dotenv.env['OPENAI_API_KEY']!;
 
   runApp(const MyApp());
 }
