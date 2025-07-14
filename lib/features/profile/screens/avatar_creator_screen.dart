@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Mapas de etiquetas en español para las opciones de Avataaars
 const Map<String, String> topTypeLabels = {
@@ -193,8 +194,18 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: () {
-              Navigator.pop(context, {'type': 'avataaars', 'config': _config});
+            onPressed: () async {
+              await Supabase.instance.client
+                  .from('profiles')
+                  .update({
+                    'avatar_attributes': _config,
+                    'avatar_url': null,
+                  })
+                  .eq('id', Supabase.instance.client.auth.currentUser!.id);
+              if (mounted) {
+                Navigator.pop(
+                    context, {'type': 'avataaars', 'config': _config});
+              }
             },
           ),
         ],
