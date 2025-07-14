@@ -20,9 +20,8 @@ class _MetaImportScreenState extends State<MetaImportScreen> {
       final result = await FacebookAuth.instance.login(
         permissions: ['public_profile'],
       );
-      if (result.status == LoginStatus.success) {
-        final AccessToken fbToken = result.accessToken!;
-        final String token = fbToken.token;
+        if (result.status == LoginStatus.success) {
+          final String token = result.accessToken!.tokenString;
         final uri = Uri.parse(
           'https://graph.facebook.com/me/avatar?fields=image_url&access_token=$token',
         );
