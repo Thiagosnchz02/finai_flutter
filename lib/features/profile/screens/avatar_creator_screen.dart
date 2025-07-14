@@ -166,6 +166,18 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
     'clotheType': 'ShirtCrewNeck',
   };
 
+  bool _saving = false;
+
+  Future<void> _saveToSupabase() async {
+    await Supabase.instance.client
+        .from('profiles')
+        .update({
+          'avatar_attributes': _config,
+          'avatar_url': null,
+        })
+        .eq('id', Supabase.instance.client.auth.currentUser!.id);
+  }
+
   String buildAvatarUrl() {
     final params = _config.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
@@ -192,22 +204,23 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: () async {
-              await Supabase.instance.client
-                  .from('profiles')
-                  .update({
-                    'avatar_attributes': _config,
-                    'avatar_url': null,
-                  })
-                  .eq('id', Supabase.instance.client.auth.currentUser!.id);
-              if (mounted) {
-                Navigator.pop(
-                    context, {'type': 'avataaars', 'config': _config});
-              }
-            },
-          ),
+          if (_saving)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: CircularProgressIndicator(),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.save),
+              onPressed: () async {
+                setState(() => _saving = true);
+                await _saveToSupabase();
+                if (mounted) {
+                  Navigator.of(context)
+                      .pop({'type': 'avataaars', 'config': _config});
+                }
+              },
+            ),
         ],
       ),
       body: SingleChildScrollView(
