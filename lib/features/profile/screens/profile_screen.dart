@@ -112,20 +112,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final source = await showAvatarSourceDialog(context);
     if (!mounted || source == null) return;
 
-    String route;
+    String? newAvatarUrl;
     switch (source) {
       case AvatarSource.avataaars:
-        route = '/avatar/avataaars';
+        newAvatarUrl = await Navigator.pushNamed<String?>(
+          context,
+          '/avatar/avataaars',
+        );
         break;
       case AvatarSource.generativeAI:
-        route = '/avatar/generative';
+        newAvatarUrl = await Navigator.pushNamed<String?>(
+          context,
+          '/avatar/generative',
+        );
         break;
       case AvatarSource.metaImport:
-        route = '/avatar/meta-import';
+        newAvatarUrl = await Navigator.pushNamed<String?>(
+          context,
+          '/avatar/meta-import',
+        );
         break;
     }
 
-    final newAvatarUrl = await Navigator.pushNamed<String>(context, route);
     if (newAvatarUrl != null && newAvatarUrl.isNotEmpty && mounted) {
       setState(() {
         _avatarUrl = newAvatarUrl;
