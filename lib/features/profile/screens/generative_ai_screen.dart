@@ -27,7 +27,7 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
       final imageResponse = await OpenAI.instance.image.create(
         prompt: promptController.text,
         n: 4,
-        size: "256x256",
+        size: OpenAIImageSize.size256,
       );
       final urls = <String>[];
       for (final data in imageResponse.data) {
