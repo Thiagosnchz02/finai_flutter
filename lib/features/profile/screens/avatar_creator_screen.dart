@@ -55,6 +55,28 @@ const Map<String, String> hairColorLabels = {
   'SilverGray': 'Gris plateado',
 };
 
+const Map<String, String> hatTypeLabels = {
+  'Blank': 'Sin accesorios',
+  'Kurt': 'Gafas estilo Kurt',
+  'Prescription01': 'Gafas graduadas 1',
+  'Prescription02': 'Gafas graduadas 2',
+  'Round': 'Gafas redondas',
+  'Sunglasses': 'Gafas de sol',
+  'Wayfarers': 'Gafas wayfarer',
+};
+
+const Map<String, String> facialHairTypeLabels = {
+  'Blank': 'Ninguno',
+  'BeardMedium': 'Barba media',
+  'BeardLight': 'Barba ligera',
+  'BeardMajestic': 'Barba majestuosa',
+  'MoustacheFancy': 'Bigote elegante',
+  'MoustacheMagnum': 'Bigote magnum',
+};
+
+// Reutilizamos los mismos colores de cabello para el vello facial
+const Map<String, String> facialHairColorLabels = hairColorLabels;
+
 const Map<String, String> eyeTypeLabels = {
   'Close': 'Cerrados',
   'Cry': 'Llorando',
@@ -68,6 +90,21 @@ const Map<String, String> eyeTypeLabels = {
   'Surprised': 'Sorprendido',
   'Wink': 'Guiño',
   'WinkWacky': 'Guiño alocado',
+};
+
+const Map<String, String> eyebrowTypeLabels = {
+  'Angry': 'Enfadadas',
+  'AngryNatural': 'Enfadadas natural',
+  'Default': 'Normales',
+  'DefaultNatural': 'Normales natural',
+  'FlatNatural': 'Planas natural',
+  'RaisedExcited': 'Levantadas',
+  'RaisedExcitedNatural': 'Levantadas natural',
+  'SadConcerned': 'Tristes',
+  'SadConcernedNatural': 'Tristes natural',
+  'UnibrowNatural': 'Uniceja',
+  'UpDown': 'Arriba-Abajo',
+  'UpDownNatural': 'Arriba-Abajo natural',
 };
 
 const Map<String, String> mouthTypeLabels = {
@@ -97,6 +134,16 @@ const Map<String, String> clotheTypeLabels = {
   'ShirtVNeck': 'Camiseta cuello V',
 };
 
+const Map<String, String> skinColorLabels = {
+  'Tanned': 'Bronceado',
+  'Yellow': 'Amarillo',
+  'Pale': 'Pálido',
+  'Light': 'Claro',
+  'Brown': 'Marrón',
+  'DarkBrown': 'Marrón oscuro',
+  'Black': 'Negro',
+};
+
 class AvataaarsScreen extends StatefulWidget {
   const AvataaarsScreen({super.key});
 
@@ -107,9 +154,14 @@ class AvataaarsScreen extends StatefulWidget {
 class _AvataaarsScreenState extends State<AvataaarsScreen> {
   final Map<String, String> _config = {
     'topType': 'ShortHairShortFlat',
+    'hatType': 'Blank',
     'hairColor': 'BrownDark',
+    'facialHairType': 'Blank',
+    'facialHairColor': 'BrownDark',
     'eyeType': 'Happy',
+    'eyebrowType': 'Default',
     'mouthType': 'Smile',
+    'skinColor': 'Light',
     'clotheType': 'ShirtCrewNeck',
   };
 
@@ -174,6 +226,20 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               onChanged: (v) => setState(() => _config['topType'] = v!),
             ),
             const Divider(),
+            const Text('Accesorios'),
+            DropdownButton<String>(
+              value: _config['hatType'],
+              items: hatTypeLabels.entries
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => _config['hatType'] = v!),
+            ),
+            const Divider(),
             const Text('Color de Pelo'),
             DropdownButton<String>(
               value: _config['hairColor'],
@@ -186,6 +252,34 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
                   )
                   .toList(),
               onChanged: (v) => setState(() => _config['hairColor'] = v!),
+            ),
+            const Divider(),
+            const Text('Vello Facial'),
+            DropdownButton<String>(
+              value: _config['facialHairType'],
+              items: facialHairTypeLabels.entries
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => _config['facialHairType'] = v!),
+            ),
+            const Divider(),
+            const Text('Color del Vello Facial'),
+            DropdownButton<String>(
+              value: _config['facialHairColor'],
+              items: facialHairColorLabels.entries
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => _config['facialHairColor'] = v!),
             ),
             const Divider(),
             const Text('Ojos'),
@@ -202,6 +296,20 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               onChanged: (v) => setState(() => _config['eyeType'] = v!),
             ),
             const Divider(),
+            const Text('Cejas'),
+            DropdownButton<String>(
+              value: _config['eyebrowType'],
+              items: eyebrowTypeLabels.entries
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => _config['eyebrowType'] = v!),
+            ),
+            const Divider(),
             const Text('Boca'),
             DropdownButton<String>(
               value: _config['mouthType'],
@@ -214,6 +322,20 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
                   )
                   .toList(),
               onChanged: (v) => setState(() => _config['mouthType'] = v!),
+            ),
+            const Divider(),
+            const Text('Color de Piel'),
+            DropdownButton<String>(
+              value: _config['skinColor'],
+              items: skinColorLabels.entries
+                  .map(
+                    (e) => DropdownMenuItem(
+                      value: e.key,
+                      child: Text(e.value),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (v) => setState(() => _config['skinColor'] = v!),
             ),
             const Divider(),
             const Text('Ropa'),
