@@ -13,6 +13,7 @@ import 'features/profile/screens/profile_screen.dart';
 import 'presentation/theme/app_theme.dart';
 import "features/profile/screens/avatar_creator_screen.dart";
 import 'features/profile/screens/generative_ai_screen.dart';
+import 'features/profile/screens/meta_import_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -132,7 +133,7 @@ class _MyAppState extends State<MyApp> {
         '/profile': (context) => const ProfileScreen(), // <-- Nueva ruta
         '/avatar/avataaars': (context) => const AvataaarsScreen(),
         '/avatar/generative': (context) => const GenerativeAiScreen(),
-        '/avatar/meta-import': (context) => const Scaffold(body: Center(child: Text('Importar de Meta'))),
+        '/avatar/meta-import': (context) => const MetaImportScreen(),
       },
     );
   }
