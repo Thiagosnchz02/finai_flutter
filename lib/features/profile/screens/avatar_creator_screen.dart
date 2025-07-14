@@ -56,7 +56,7 @@ const Map<String, String> hairColorLabels = {
   'SilverGray': 'Gris plateado',
 };
 
-const Map<String, String> hatTypeLabels = {
+const Map<String, String> accessoriesTypeLabels = {
   'Blank': 'Sin accesorios',
   'Kurt': 'Gafas estilo Kurt',
   'Prescription01': 'Gafas graduadas 1',
@@ -155,7 +155,7 @@ class AvataaarsScreen extends StatefulWidget {
 class _AvataaarsScreenState extends State<AvataaarsScreen> {
   final Map<String, String> _config = {
     'topType': 'ShortHairShortFlat',
-    'hatType': 'Blank',
+    'accessoriesType': 'Blank',
     'hairColor': 'BrownDark',
     'facialHairType': 'Blank',
     'facialHairColor': 'BrownDark',
@@ -263,13 +263,16 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               icon: Icons.checkroom,
               title: 'Accesorios',
               child: DropdownButton<String>(
-                value: _config['hatType'],
-                items: hatTypeLabels.entries
+                value: _config['accessoriesType'],
+                items: accessoriesTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['hatType'] = v!),
+                onChanged: (v) => setState(() {
+                  _config['accessoriesType'] = v!;
+                  buildAvatarUrl();
+                }),
               ),
             ),
             const SizedBox(height: 12),
