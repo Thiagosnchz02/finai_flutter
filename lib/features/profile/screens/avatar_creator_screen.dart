@@ -234,29 +234,40 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
             ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: SvgPicture.network(
-                  buildAvatarUrl(),
-                  key: ValueKey(buildAvatarUrl()),
-                  width: double.infinity,
-                  height: 200,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: SvgPicture.network(
+                      buildAvatarUrl(),
+                      key: ValueKey(buildAvatarUrl()),
+                      width: double.infinity,
+                      height: 200,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  'Personaliza tu avatar 2D',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Personaliza tu avatar 2D',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            _OptionCard(
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _OptionCard(
               icon: Icons.face_6,
               title: 'Peinado',
               child: DropdownButton<String>(
@@ -411,10 +422,13 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
                     .toList(),
                 onChanged: (v) => setState(() => _config['clotheColor'] = v!),
               ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
+    ],
+  ),
     );
   }
 }
