@@ -8,6 +8,7 @@ import 'change_password_screen.dart';
 import '../providers/avatar_creator_provider.dart';
 import 'avatar_creator_screen.dart';
 
+import '../widgets/avatar_source_dialog.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -110,18 +111,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-   Future<void> _openAvatarCreator() async {
-    // Envolvemos la pantalla del creador con un ChangeNotifierProvider
-    // para que tenga acceso a su gestor de estado.
-    final newAvatarUrl = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (_) => ChangeNotifierProvider(
-          create: (_) => AvatarCreatorProvider(),
-          child: const AvatarCreatorScreen(),
-        ),
-      ),
-    );
+  Future<void> _openAvatarCreator() async {
+    final source = await showAvatarSourceDialog(context);
+    if (!mounted || source == null) return;
 
+    String route;
+    switch (source) {
+      case AvatarSource.avataaars:
+        route = '/avatar/avataaars';
+        break;
+      case AvatarSource.generativeAI:
+        route = '/avatar/generative';
+        break;
+      case AvatarSource.metaImport:
+        route = '/avatar/meta-import';
+        break;
+    }
+
+    final newAvatarUrl = await Navigator.pushNamed<String>(context, route);
     if (newAvatarUrl != null && newAvatarUrl.isNotEmpty && mounted) {
       setState(() {
         _avatarUrl = newAvatarUrl;
