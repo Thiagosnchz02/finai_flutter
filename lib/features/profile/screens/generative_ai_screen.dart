@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:openai/openai.dart';
+import 'package:dart_openai/dart_openai.dart';
 
 class GenerativeAiScreen extends StatefulWidget {
   const GenerativeAiScreen({super.key});
@@ -24,13 +24,13 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
       _loading = true;
     });
     try {
-      final images = await OpenAI.instance.images.generate(
+      final imageResponse = await OpenAI.instance.image.create(
         prompt: promptController.text,
         n: 4,
-        size: '256x256',
+        size: "256x256",
       );
       final urls = <String>[];
-      for (final data in images.data) {
+      for (final data in imageResponse.data) {
         final url = data.url;
         if (url != null) urls.add(url);
       }
