@@ -1,226 +1,137 @@
-// lib/features/avatar/screens/avatar_creator_screen.dart
+// lib/features/profile/screens/avatar_creator_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../providers/avatar_creator_provider.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-class AvatarCreatorScreen extends StatefulWidget {
-  const AvatarCreatorScreen({super.key});
+class AvataaarsScreen extends StatefulWidget {
+  const AvataaarsScreen({super.key});
 
   @override
-  State<AvatarCreatorScreen> createState() => _AvatarCreatorScreenState();
+  State<AvataaarsScreen> createState() => _AvataaarsScreenState();
 }
 
-class _AvatarCreatorScreenState extends State<AvatarCreatorScreen> {
-  String _selectedCategory = 'faceshape';
-  final Map<String, String> _categoryDisplayNames = {
-    'faceshape': 'Rostro',
-    'eyes': 'Ojos',
-    'eyebrows': 'Cejas',
-    'hair': 'Pelo',
-    'beard': 'Barba',
-    'glasses': 'Gafas',
-    'outfit': 'Ropa',
-    'headwear': 'Gorros',
-    'facewear': 'Acc. Cara',
-    'lipshape': 'Labios',
-    'mouth': 'Boca',
-    'noseshape': 'Nariz',
+class _AvataaarsScreenState extends State<AvataaarsScreen> {
+  final Map<String, String> _config = {
+    'topType': 'ShortHairShortFlat',
+    'hairColor': 'BrownDark',
+    'eyeType': 'Happy',
+    'mouthType': 'Smile',
+    'clotheType': 'ShirtCrewNeck',
   };
+
+  String buildAvatarUrl() {
+    final params = _config.entries
+        .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
+        .join('&');
+    return 'https://avataaars.io/?$params&avatarStyle=Transparent';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AvatarCreatorProvider>(
-      builder: (context, provider, child) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Crea tu Avatar'),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: TextButton(
-                  onPressed: provider.isLoading
-                      ? null
-                      : () async {
-                          final finalUrl =
-                              await provider.createFinalAvatar();
-                          if (mounted && finalUrl != null) {
-                            Navigator.of(context).pop(finalUrl);
-                          } else if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('No se pudo crear el avatar.')),
-                            );
-                          }
-                        },
-                  child: provider.isLoading && provider.previewUrl != null
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Text('Guardar'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Avataaars Editor'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (_) => const AlertDialog(
+                  title: Text('¿Qué es Avataaars?'),
+                  content: Text(
+                      'Avataaars son avatares 2D SVG modulares estilo cartoon. Elige peinado, color, expresión y ropa.'),
                 ),
-              )
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: () {
+              Navigator.pop(context, {'type': 'avataaars', 'config': _config});
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          SvgPicture.network(
+            buildAvatarUrl(),
+            width: double.infinity,
+            height: 200,
+          ),
+          DropdownButton<String>(
+            value: _config['topType'],
+            items: const [
+              DropdownMenuItem(
+                value: 'ShortHairShortFlat',
+                child: Text('ShortHairShortFlat'),
+              ),
+              DropdownMenuItem(
+                value: 'LongHairStraight',
+                child: Text('LongHairStraight'),
+              ),
             ],
+            onChanged: (v) => setState(() => _config['topType'] = v!),
           ),
-          body: _buildBody(context, provider),
-        );
-      },
-    );
-  }
-
-  Widget _buildBody(
-      BuildContext context, AvatarCreatorProvider provider) {
-    if (provider.isLoading && provider.previewUrl == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (provider.error != null) {
-      return Center(child: Text('Error: ${provider.error}'));
-    }
-    return Column(
-      children: [
-        _buildPreviewSection(context, provider),
-        _buildCategorySelector(provider),
-        Expanded(child: _buildAssetGrid(provider)),
-      ],
-    );
-  }
-
-  Widget _buildPreviewSection(
-      BuildContext context, AvatarCreatorProvider provider) {
-    return Container(
-      height: 250,
-      width: double.infinity,
-      color: Theme.of(context).colorScheme.surface,
-      child: Center(
-        child: provider.previewUrl == null
-            ? const CircularProgressIndicator()
-            : Image.network(
-                provider.previewUrl!,
-                fit: BoxFit.contain,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const Center(
-                      child: CircularProgressIndicator());
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.error_outline, size: 60);
-                },
+          DropdownButton<String>(
+            value: _config['hairColor'],
+            items: const [
+              DropdownMenuItem(
+                value: 'BrownDark',
+                child: Text('BrownDark'),
               ),
-      ),
-    );
-  }
-
-  Widget _buildCategorySelector(
-      AvatarCreatorProvider provider) {
-    final categories = _categoryDisplayNames.keys.toList();
-    return SizedBox(
-      height: 60,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10),
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final key = categories[index];
-          final displayName =
-              _categoryDisplayNames[key] ?? key;
-          final isSelected = _selectedCategory == key;
-          return Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 4.0),
-            child: OutlinedButton(
-              onPressed: () =>
-                  setState(() => _selectedCategory = key),
-              style: OutlinedButton.styleFrom(
-                backgroundColor: isSelected
-                    ? Theme.of(context)
-                        .colorScheme
-                        .primary
-                    : Theme.of(context).cardColor,
-                foregroundColor: isSelected
-                    ? Colors.white
-                    : Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.color,
-                side: BorderSide(
-                    color: isSelected
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primary
-                        : Colors.grey.shade700),
-                shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(20)),
+              DropdownMenuItem(
+                value: 'Blonde',
+                child: Text('Blonde'),
               ),
-              child: Text(displayName),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildAssetGrid(
-      AvatarCreatorProvider provider) {
-    final assets =
-        provider.availableAssets[_selectedCategory] ?? [];
-    if (assets.isEmpty) {
-      return const Center(
-          child: Text('No hay opciones para esta página.'));
-    }
-    return GridView.builder(
-      padding: const EdgeInsets.all(12.0),
-      gridDelegate:
-          const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: assets.length,
-      itemBuilder: (context, index) {
-        final asset = assets[index];
-        // ID siempre como String
-        final String assetId = asset['id'].toString();
-        final String? iconUrl =
-            asset['iconUrl'] as String?;
-        final bool isSelected =
-            provider.selectedAssets[_selectedCategory] ==
-                assetId;
-        return GestureDetector(
-          onTap: () =>
-              provider.selectAsset(_selectedCategory, assetId),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius:
-                  BorderRadius.circular(12),
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context)
-                        .colorScheme
-                        .primary
-                    : Colors.grey.shade800,
-                width: isSelected ? 2.5 : 1.0,
-              ),
-            ),
-            child: iconUrl != null
-                ? ClipRRect(
-                    borderRadius:
-                        BorderRadius.circular(10),
-                    child: Image.network(iconUrl,
-                        fit: BoxFit.contain),
-                  )
-                : const Icon(Icons.help_outline),
+            ],
+            onChanged: (v) => setState(() => _config['hairColor'] = v!),
           ),
-        );
-      },
+          DropdownButton<String>(
+            value: _config['eyeType'],
+            items: const [
+              DropdownMenuItem(
+                value: 'Happy',
+                child: Text('Happy'),
+              ),
+              DropdownMenuItem(
+                value: 'Squint',
+                child: Text('Squint'),
+              ),
+            ],
+            onChanged: (v) => setState(() => _config['eyeType'] = v!),
+          ),
+          DropdownButton<String>(
+            value: _config['mouthType'],
+            items: const [
+              DropdownMenuItem(
+                value: 'Smile',
+                child: Text('Smile'),
+              ),
+              DropdownMenuItem(
+                value: 'Serious',
+                child: Text('Serious'),
+              ),
+            ],
+            onChanged: (v) => setState(() => _config['mouthType'] = v!),
+          ),
+          DropdownButton<String>(
+            value: _config['clotheType'],
+            items: const [
+              DropdownMenuItem(
+                value: 'ShirtCrewNeck',
+                child: Text('ShirtCrewNeck'),
+              ),
+              DropdownMenuItem(
+                value: 'BlazerShirt',
+                child: Text('BlazerShirt'),
+              ),
+            ],
+            onChanged: (v) => setState(() => _config['clotheType'] = v!),
+          ),
+        ],
+      ),
     );
   }
 }
