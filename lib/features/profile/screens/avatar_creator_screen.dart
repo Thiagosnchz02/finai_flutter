@@ -135,6 +135,16 @@ const Map<String, String> clotheTypeLabels = {
   'ShirtVNeck': 'Camiseta cuello V',
 };
 
+// Colores disponibles para la ropa
+const Map<String, String> clotheColorLabels = {
+  'Black': 'Negro',
+  'Blue01': 'Azul 1',
+  'Blue02': 'Azul 2',
+  'Blue03': 'Azul 3',
+  'Red': 'Rojo',
+  'White': 'Blanco',
+};
+
 const Map<String, String> skinColorLabels = {
   'Tanned': 'Bronceado',
   'Yellow': 'Amarillo',
@@ -164,6 +174,7 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
     'mouthType': 'Smile',
     'skinColor': 'Light',
     'clotheType': 'ShirtCrewNeck',
+    'clotheColor': 'Blue02',
   };
 
   bool _saving = false;
@@ -385,6 +396,20 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
                     )
                     .toList(),
                 onChanged: (v) => setState(() => _config['clotheType'] = v!),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.palette,
+              title: 'Color de Ropa',
+              child: DropdownButton<String>(
+                value: _config['clotheColor'],
+                items: clotheColorLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['clotheColor'] = v!),
               ),
             ),
           ],
