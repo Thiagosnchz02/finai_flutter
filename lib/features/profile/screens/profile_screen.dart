@@ -4,6 +4,9 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 
 // Importamos las pantallas necesarias
 import 'change_password_screen.dart';
+import 'avatar_creator_screen.dart';
+import 'generative_ai_screen.dart';
+import 'meta_import_screen.dart';
 
 import '../widgets/avatar_source_dialog.dart';
 class ProfileScreen extends StatefulWidget {
@@ -115,21 +118,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String? newAvatarUrl;
     switch (source) {
       case AvatarSource.avataaars:
-        newAvatarUrl = await Navigator.pushNamed<String?>(
+        newAvatarUrl = await Navigator.push<String?>(
           context,
-          '/avatar/avataaars',
+          MaterialPageRoute<String?>(
+            builder: (context) => const AvataaarsScreen(),
+          ),
         );
         break;
       case AvatarSource.generativeAI:
-        newAvatarUrl = await Navigator.pushNamed<String?>(
+        newAvatarUrl = await Navigator.push<String?>(
           context,
-          '/avatar/generative',
+          MaterialPageRoute<String?>(
+            builder: (context) => const GenerativeAiScreen(),
+          ),
         );
         break;
       case AvatarSource.metaImport:
-        newAvatarUrl = await Navigator.pushNamed<String?>(
+        newAvatarUrl = await Navigator.push<String?>(
           context,
-          '/avatar/meta-import',
+          MaterialPageRoute<String?>(
+            builder: (context) => const MetaImportScreen(),
+          ),
         );
         break;
     }
