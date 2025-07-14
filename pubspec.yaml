@@ -39,6 +39,7 @@ dependencies:
   http: ^1.2.1          # Para realizar las peticiones a la API de RPM.
   provider: ^6.1.2       # Para una gestión de estado simple y eficaz.
   flutter_dotenv: ^5.1.0  # Para manejar variables de entorno
+  flutter_facebook_auth: ^7.1.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
