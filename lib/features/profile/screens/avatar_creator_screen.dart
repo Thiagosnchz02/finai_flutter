@@ -229,152 +229,207 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Center(
-              child: SvgPicture.network(
-                buildAvatarUrl(),
-                width: double.infinity,
-                height: 200,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                child: SvgPicture.network(
+                  buildAvatarUrl(),
+                  key: ValueKey(buildAvatarUrl()),
+                  width: double.infinity,
+                  height: 200,
+                ),
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Personaliza tu avatar 2D',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 16),
-            const Text('Peinado'),
-            DropdownButton<String>(
-              value: _config['topType'],
-              items: topTypeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['topType'] = v!),
+            _OptionCard(
+              icon: Icons.face_6,
+              title: 'Peinado',
+              child: DropdownButton<String>(
+                value: _config['topType'],
+                items: topTypeLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['topType'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Accesorios'),
-            DropdownButton<String>(
-              value: _config['hatType'],
-              items: hatTypeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['hatType'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.checkroom,
+              title: 'Accesorios',
+              child: DropdownButton<String>(
+                value: _config['hatType'],
+                items: hatTypeLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['hatType'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Color de Pelo'),
-            DropdownButton<String>(
-              value: _config['hairColor'],
-              items: hairColorLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['hairColor'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.color_lens,
+              title: 'Color de Pelo',
+              child: DropdownButton<String>(
+                value: _config['hairColor'],
+                items: hairColorLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['hairColor'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Vello Facial'),
-            DropdownButton<String>(
-              value: _config['facialHairType'],
-              items: facialHairTypeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['facialHairType'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.face_retouching_natural,
+              title: 'Vello Facial',
+              child: DropdownButton<String>(
+                value: _config['facialHairType'],
+                items: facialHairTypeLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['facialHairType'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Color del Vello Facial'),
-            DropdownButton<String>(
-              value: _config['facialHairColor'],
-              items: facialHairColorLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['facialHairColor'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.color_lens_outlined,
+              title: 'Color del Vello Facial',
+              child: DropdownButton<String>(
+                value: _config['facialHairColor'],
+                items: facialHairColorLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['facialHairColor'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Ojos'),
-            DropdownButton<String>(
-              value: _config['eyeType'],
-              items: eyeTypeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['eyeType'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.remove_red_eye,
+              title: 'Ojos',
+              child: DropdownButton<String>(
+                value: _config['eyeType'],
+                items: eyeTypeLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['eyeType'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Cejas'),
-            DropdownButton<String>(
-              value: _config['eyebrowType'],
-              items: eyebrowTypeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['eyebrowType'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.filter_b_and_w,
+              title: 'Cejas',
+              child: DropdownButton<String>(
+                value: _config['eyebrowType'],
+                items: eyebrowTypeLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['eyebrowType'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Boca'),
-            DropdownButton<String>(
-              value: _config['mouthType'],
-              items: mouthTypeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['mouthType'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.tag_faces,
+              title: 'Boca',
+              child: DropdownButton<String>(
+                value: _config['mouthType'],
+                items: mouthTypeLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['mouthType'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Color de Piel'),
-            DropdownButton<String>(
-              value: _config['skinColor'],
-              items: skinColorLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['skinColor'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.brightness_6,
+              title: 'Color de Piel',
+              child: DropdownButton<String>(
+                value: _config['skinColor'],
+                items: skinColorLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['skinColor'] = v!),
+              ),
             ),
-            const Divider(),
-            const Text('Ropa'),
-            DropdownButton<String>(
-              value: _config['clotheType'],
-              items: clotheTypeLabels.entries
-                  .map(
-                    (e) => DropdownMenuItem(
-                      value: e.key,
-                      child: Text(e.value),
-                    ),
-                  )
-                  .toList(),
-              onChanged: (v) => setState(() => _config['clotheType'] = v!),
+            const SizedBox(height: 12),
+            _OptionCard(
+              icon: Icons.checkroom_outlined,
+              title: 'Ropa',
+              child: DropdownButton<String>(
+                value: _config['clotheType'],
+                items: clotheTypeLabels.entries
+                    .map(
+                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                    )
+                    .toList(),
+                onChanged: (v) => setState(() => _config['clotheType'] = v!),
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OptionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final Widget child;
+
+  const _OptionCard({
+    required this.icon,
+    required this.title,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).dividerColor),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontSize: 16),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            child,
           ],
         ),
       ),
