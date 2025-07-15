@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:avataaars/avataaars.dart';
-import 'package:flex_color_picker/flex_color_picker.dart';
+import 'package:flex_color_picker/flex_color_picker.da
 
 import '../../../core/localization/localization_strings.dart';
 

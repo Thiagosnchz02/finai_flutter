@@ -28,7 +28,7 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!, // Usamos '!' para asegurar que no son nulas. La app debe fallar si no están.
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
-  OpenAI.apiKey = dotenv.env['OPENAI_API_KEY']!;
+  OpenAI.apiKey = dotenv.env['OPEN_AI_API_KEY']!;
 
   runApp(const MyApp());
 }
