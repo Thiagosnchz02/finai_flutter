@@ -4,34 +4,34 @@ import 'package:avataaars/avataaars.dart';
 /// como cadenas legibles por la API de avataaars.
 extension AvataaarGetters on Avataaar {
   /// Obtiene el tipo de peinado seleccionado.
-  String getTopType() => top.name;
+  String getTopType() => top.topType.name;
 
   /// Obtiene el tipo de accesorio seleccionado.
-  String getAccessoriesType() => accessories.name;
+  String getAccessoriesType() => top.accessoriesType.name;
 
   /// Obtiene el color de pelo seleccionado.
   String getHairColor() => hairColor.name;
 
   /// Obtiene el tipo de vello facial seleccionado.
-  String getFacialHairType() => facialHair.name;
+  String getFacialHairType() => facialHairType.name;
 
   /// Obtiene el color del vello facial seleccionado.
   String getFacialHairColor() => facialHairColor.name;
 
   /// Obtiene el tipo de ojos seleccionado.
-  String getEyeType() => eye.name;
+  String getEyeType() => eyeType.name;
 
   /// Obtiene el tipo de cejas seleccionado.
-  String getEyebrowType() => eyebrow.name;
+  String getEyebrowType() => eyebrowType.name;
 
   /// Obtiene el tipo de boca seleccionado.
-  String getMouthType() => mouth.name;
+  String getMouthType() => mouthType.name;
 
   /// Obtiene el color de piel seleccionado.
-  String getSkinColor() => skin.name;
+  String getSkinColor() => skinColor.name;
 
   /// Obtiene el tipo de vestimenta seleccionado.
-  String getClotheType() => clothe.name;
+  String getClotheType() => clotheType.name;
 
   /// Obtiene el color de la vestimenta seleccionada.
   String getClotheColor() => clotheColor.name;
