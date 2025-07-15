@@ -146,19 +146,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!mounted) return;
 
-    final ts = DateTime.now().millisecondsSinceEpoch;
-
     if (result == null) {
       await _getProfile();
-      if (!mounted) return;
-      setState(() {
-        if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
-          _avatarUrl = '${_avatarUrl!}?ts=$ts';
-        }
-      });
     } else if (result.isNotEmpty) {
       setState(() {
-        _avatarUrl = '$result?ts=$ts';
+        _avatarUrl = result;
       });
     }
   }

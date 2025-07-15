@@ -193,14 +193,18 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
     final userId = supabase.auth.currentUser!.id;
     await supabase
         .from('profiles')
-        .update({
-          'avatar_attributes': _config,
-          'avatar_url': null,
-        })
+        .update({'avatar_attributes': _config})
         .eq('id', userId);
+
+    final newUrl = buildAvatarUrl();
+    await supabase
+        .from('profiles')
+        .update({'avatar_url': newUrl})
+        .eq('id', userId);
+
     await Future.delayed(const Duration(milliseconds: 300));
     if (mounted) {
-      Navigator.of(context).pop(null);
+      Navigator.of(context).pop(newUrl);
     }
   }
 
