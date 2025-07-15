@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 // Importamos las pantallas necesarias
 import 'change_password_screen.dart';
@@ -293,15 +294,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ? const Icon(Icons.threed_rotation, size: 60, color: Colors.white)
                     : _avatarUrl != null && _avatarUrl!.isNotEmpty
                         ? ClipOval(
-                            child: Image.network(
-                              // RPM genera avatares en formato .png para las previews 2D
-                              _avatarUrl!.replaceFirst('.glb', '.png'),
-                              fit: BoxFit.cover,
-                              width: 120,
-                              height: 100,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Image.asset('assets/images/avatar_predeterminado.png'),
-                            ),
+                            child: _avatarUrl!.endsWith('.svg')
+                                ? SvgPicture.network(
+                                    _avatarUrl!,
+                                    width: 120,
+                                    height: 120,
+                                    placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+                                  )
+                                : Image.network(
+                                    _avatarUrl!.replaceFirst('.glb', '.png'),
+                                    fit: BoxFit.cover,
+                                    width: 120,
+                                    height: 100,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                        Image.asset('assets/images/avatar_predeterminado.png'),
+                                  ),
                           )
                         : ClipOval(
                             child: Image.asset('assets/images/avatar_predeterminado.png'),
