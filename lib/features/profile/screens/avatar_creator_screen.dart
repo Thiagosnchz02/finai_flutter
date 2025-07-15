@@ -177,7 +177,7 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
     'clotheColor': 'Blue02',
   };
 
-  bool _saving = false;
+  bool _loadingAvatarSave = false;
 
 
   String buildAvatarUrl() {
@@ -185,6 +185,23 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
     return 'https://avataaars.io/?$params&avatarStyle=Transparent';
+  }
+
+  Future<void> _saveAvatar() async {
+    setState(() => _loadingAvatarSave = true);
+    final supabase = Supabase.instance.client;
+    final userId = supabase.auth.currentUser!.id;
+    await supabase
+        .from('profiles')
+        .update({
+          'avatar_attributes': _config,
+          'avatar_url': null,
+        })
+        .eq('id', userId);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) {
+      Navigator.of(context).pop(null);
+    }
   }
 
   @override
@@ -206,7 +223,7 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               );
             },
           ),
-          if (_saving)
+          if (_loadingAvatarSave)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: CircularProgressIndicator(),
@@ -214,21 +231,7 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
           else
             IconButton(
               icon: const Icon(Icons.save),
-              onPressed: () async {
-                setState(() => _saving = true);
-                final supabase = Supabase.instance.client;
-                final userId = supabase.auth.currentUser!.id;
-                await supabase
-                    .from('profiles')
-                    .update({
-                      'avatar_attributes': _config,
-                      'avatar_url': null,
-                    })
-                    .eq('id', userId);
-                if (mounted) {
-                  Navigator.of(context).pop(null);
-                }
-              },
+              onPressed: _saveAvatar,
             ),
         ],
       ),
