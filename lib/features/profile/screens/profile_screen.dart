@@ -80,11 +80,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final userId = _supabase.auth.currentUser!.id;
-      final sanitizedAvatarUrl = _avatarUrl?.split('?').first;
       await _supabase.from('profiles').update({
         'full_name': _nameController.text.trim(),
         'phone_number': _phoneValue,
-        'avatar_url': sanitizedAvatarUrl, // <-- Guardamos la URL del avatar de RPM
+        'avatar_url': _avatarUrl, // Guardamos la URL tal cual, incluyendo parámetros
       }).eq('id', userId);
 
       if (mounted) {
