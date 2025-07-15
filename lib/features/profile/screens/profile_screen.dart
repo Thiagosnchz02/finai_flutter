@@ -115,10 +115,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final source = await showAvatarSourceDialog(context);
     if (!mounted || source == null) return;
 
-    String? newAvatarUrl;
+    String? result;
     switch (source) {
       case AvatarSource.avataaars:
-        newAvatarUrl = await Navigator.push<String?>(
+        result = await Navigator.push<String?>(
           context,
           MaterialPageRoute<String?>(
             builder: (context) => const AvataaarsScreen(),
@@ -126,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
         break;
       case AvatarSource.generativeAI:
-        newAvatarUrl = await Navigator.push<String?>(
+        result = await Navigator.push<String?>(
           context,
           MaterialPageRoute<String?>(
             builder: (context) => const GenerativeAiScreen(),
@@ -134,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
         break;
       case AvatarSource.metaImport:
-        newAvatarUrl = await Navigator.push<String?>(
+        result = await Navigator.push<String?>(
           context,
           MaterialPageRoute<String?>(
             builder: (context) => const MetaImportScreen(),
@@ -143,9 +143,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         break;
     }
 
-    if (newAvatarUrl != null && newAvatarUrl.isNotEmpty && mounted) {
+    if (!mounted) return;
+
+    if (result == null) {
+      await _getProfile();
+    } else if (result.isNotEmpty) {
       setState(() {
-        _avatarUrl = newAvatarUrl;
+        _avatarUrl = result;
       });
     }
   }
