@@ -1,5 +1,7 @@
 // lib/features/profile/screens/avatar_creator_screen.dart
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -31,6 +33,28 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
   };
 
   bool _loadingAvatarSave = false;
+
+  static const Map<String, Color> _hairColors = {
+    'Auburn': Color(0xFFA55728),
+    'Black': Color(0xFF2C1B18),
+    'Blonde': Color(0xFFB58143),
+    'BlondeGolden': Color(0xFFD6B370),
+    'Brown': Color(0xFF724133),
+    'BrownDark': Color(0xFF4A312C),
+    'PastelPink': Color(0xFFF59797),
+    'Platinum': Color(0xFFE8E1E1),
+    'Red': Color(0xFFC93305),
+    'SilverGray': Color(0xFFC8C8C8),
+  };
+
+  static const Map<String, Color> _clotheColors = {
+    'Black': Color(0xFF262E33),
+    'Blue01': Color(0xFF65C9FF),
+    'Blue02': Color(0xFF5199E4),
+    'Blue03': Color(0xFF25557C),
+    'Red': Color(0xFFFF5C5C),
+    'White': Color(0xFFFFFFFF),
+  };
 
   @override
   void initState() {
@@ -77,6 +101,40 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
     });
   }
 
+  double _colorDistance(Color a, Color b) {
+    final dr = a.red - b.red;
+    final dg = a.green - b.green;
+    final db = a.blue - b.blue;
+    return math.sqrt((dr * dr + dg * dg + db * db).toDouble());
+  }
+
+  String _nearestColorKey(Color color, Map<String, Color> options) {
+    String bestKey = options.keys.first;
+    double best = double.infinity;
+    for (final entry in options.entries) {
+      final d = _colorDistance(color, entry.value);
+      if (d < best) {
+        best = d;
+        bestKey = entry.key;
+      }
+    }
+    return bestKey;
+  }
+
+  Future<void> _pickColor(String key, Map<String, Color> map) async {
+    final current = map[_config[key]!] ?? Colors.black;
+    final color = await showColorPickerDialog(
+      context,
+      current,
+      title: const Text('Selecciona un color'),
+      showColorCode: false,
+      dismissible: true,
+    );
+    if (!mounted || color == null) return;
+    final nearest = _nearestColorKey(color, map);
+    _updatePart(key, nearest);
+  }
+
 
   String buildAvatarUrl() {
     final params = _config.entries
@@ -94,7 +152,7 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
         .update({'avatar_attributes': _config})
         .eq('id', userId);
 
-    final _ = _avatar.toSvg();
+    _avatar.toSvg();
     final newUrl = buildAvatarUrl();
     await supabase
         .from('profiles')
@@ -201,14 +259,36 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
             _OptionCard(
               icon: Icons.color_lens,
               title: 'Color de Pelo',
-              child: DropdownButton<String>(
-                value: _config['hairColor'],
-                items: LocalizationStrings.hairColorLabels.entries
-                    .map(
-                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                    )
-                    .toList(),
-                onChanged: (v) => _updatePart('hairColor', v!),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: _hairColors[_config['hairColor']] ?? Colors.black,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Theme.of(context).dividerColor),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: _config['hairColor'],
+                      items: LocalizationStrings.hairColorLabels.entries
+                          .map(
+                            (e) => DropdownMenuItem(
+                                value: e.key, child: Text(e.value)),
+                          )
+                          .toList(),
+                      onChanged: (v) => _updatePart('hairColor', v!),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () => _pickColor('hairColor', _hairColors),
+                    child: const Text('Elegir'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 12),
@@ -313,16 +393,37 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
             _OptionCard(
               icon: Icons.palette,
               title: 'Color de Ropa',
-              child: DropdownButton<String>(
-                value: _config['clotheColor'],
-                items: LocalizationStrings.clotheColorLabels.entries
-                    .map(
-                      (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                    )
-                    .toList(),
-                onChanged: (v) => _updatePart('clotheColor', v!),
+              child: Row(
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: _clotheColors[_config['clotheColor']] ?? Colors.black,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Theme.of(context).dividerColor),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButton<String>(
+                      value: _config['clotheColor'],
+                      items: LocalizationStrings.clotheColorLabels.entries
+                          .map(
+                            (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
+                          )
+                          .toList(),
+                      onChanged: (v) => _updatePart('clotheColor', v!),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: () => _pickColor('clotheColor', _clotheColors),
+                    child: const Text('Elegir'),
+                  ),
+                ],
               ),
-              ),
+            ),
             ],
           ),
         ),
