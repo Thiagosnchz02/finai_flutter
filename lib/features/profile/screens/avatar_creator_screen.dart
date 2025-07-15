@@ -4,9 +4,163 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:avataaars/avataaars.dart';
-import 'package:flex_color_picker/flex_color_picker.da
+import 'package:flex_color_picker/flex_color_picker.dart';
 
+<<<<<<< HEAD
+
+/// Mapas de etiquetas en español para las opciones de Avataaars
+const Map<String, String> topTypeLabels = {
+  'NoHair': 'Calvo',
+  'Eyepatch': 'Parche en el ojo',
+  'Hat': 'Sombrero',
+  'Hijab': 'Hiyab',
+  'Turban': 'Turbante',
+  'WinterHat1': 'Gorro de invierno 1',
+  'WinterHat2': 'Gorro de invierno 2',
+  'WinterHat3': 'Gorro de invierno 3',
+  'WinterHat4': 'Gorro de invierno 4',
+  'LongHairBigHair': 'Pelo largo abundante',
+  'LongHairBob': 'Melena',
+  'LongHairBun': 'Moño',
+  'LongHairCurly': 'Pelo largo rizado',
+  'LongHairCurvy': 'Pelo largo ondulado',
+  'LongHairDreads': 'Rastas largas',
+  'LongHairFrida': 'Estilo Frida',
+  'LongHairFro': 'Afro largo',
+  'LongHairFroBand': 'Afro largo con banda',
+  'LongHairNotTooLong': 'Pelo medio',
+  'LongHairShavedSides': 'Lado rapado',
+  'LongHairMiaWallace': 'Estilo Mia Wallace',
+  'LongHairStraight': 'Pelo largo liso',
+  'LongHairStraight2': 'Pelo largo liso 2',
+  'LongHairStraightStrand': 'Pelo largo con mechón',
+  'ShortHairDreads01': 'Rastas cortas 1',
+  'ShortHairDreads02': 'Rastas cortas 2',
+  'ShortHairFrizzle': 'Pelo muy rizado',
+  'ShortHairShaggyMullet': 'Mullet desordenado',
+  'ShortHairShortCurly': 'Pelo corto rizado',
+  'ShortHairShortFlat': 'Pelo corto plano',
+  'ShortHairShortRound': 'Pelo corto redondo',
+  'ShortHairShortWaved': 'Pelo corto ondulado',
+  'ShortHairSides': 'Lados cortos',
+  'ShortHairTheCaesar': 'Corte César',
+  'ShortHairTheCaesarSidePart': 'César con raya',
+};
+
+const Map<String, String> hairColorLabels = {
+  'Auburn': 'Castaño rojizo',
+  'Black': 'Negro',
+  'Blonde': 'Rubio',
+  'BlondeGolden': 'Rubio dorado',
+  'Brown': 'Marrón',
+  'BrownDark': 'Marrón oscuro',
+  'PastelPink': 'Rosa pastel',
+  'Platinum': 'Platino',
+  'Red': 'Rojo',
+  'SilverGray': 'Gris plateado',
+};
+
+const Map<String, String> accessoriesTypeLabels = {
+  'Blank': 'Sin accesorios',
+  'Kurt': 'Gafas estilo Kurt',
+  'Prescription01': 'Gafas graduadas 1',
+  'Prescription02': 'Gafas graduadas 2',
+  'Round': 'Gafas redondas',
+  'Sunglasses': 'Gafas de sol',
+  'Wayfarers': 'Gafas wayfarer',
+};
+
+const Map<String, String> facialHairTypeLabels = {
+  'Blank': 'Ninguno',
+  'BeardMedium': 'Barba media',
+  'BeardLight': 'Barba ligera',
+  'BeardMajestic': 'Barba majestuosa',
+  'MoustacheFancy': 'Bigote elegante',
+  'MoustacheMagnum': 'Bigote magnum',
+};
+
+// Reutilizamos los mismos colores de cabello para el vello facial
+const Map<String, String> facialHairColorLabels = hairColorLabels;
+
+const Map<String, String> eyeTypeLabels = {
+  'Close': 'Cerrados',
+  'Cry': 'Llorando',
+  'Default': 'Normal',
+  'Dizzy': 'Mareado',
+  'EyeRoll': 'Ojos en blanco',
+  'Happy': 'Feliz',
+  'Hearts': 'Enamorado',
+  'Side': 'De lado',
+  'Squint': 'Entrecerrados',
+  'Surprised': 'Sorprendido',
+  'Wink': 'Guiño',
+  'WinkWacky': 'Guiño alocado',
+};
+
+const Map<String, String> eyebrowTypeLabels = {
+  'Angry': 'Enfadadas',
+  'AngryNatural': 'Enfadadas natural',
+  'Default': 'Normales',
+  'DefaultNatural': 'Normales natural',
+  'FlatNatural': 'Planas natural',
+  'RaisedExcited': 'Levantadas',
+  'RaisedExcitedNatural': 'Levantadas natural',
+  'SadConcerned': 'Tristes',
+  'SadConcernedNatural': 'Tristes natural',
+  'UnibrowNatural': 'Uniceja',
+  'UpDown': 'Arriba-Abajo',
+  'UpDownNatural': 'Arriba-Abajo natural',
+};
+
+const Map<String, String> mouthTypeLabels = {
+  'Concerned': 'Preocupado',
+  'Default': 'Normal',
+  'Disbelief': 'Incrédulo',
+  'Eating': 'Comiendo',
+  'Grimace': 'Mueca',
+  'Sad': 'Triste',
+  'ScreamOpen': 'Gritando',
+  'Serious': 'Serio',
+  'Smile': 'Sonriendo',
+  'Tongue': 'Sacando la lengua',
+  'Twinkle': 'Brillando',
+  'Vomit': 'Vómito',
+};
+
+const Map<String, String> clotheTypeLabels = {
+  'BlazerShirt': 'Blazer con camisa',
+  'BlazerSweater': 'Blazer con suéter',
+  'CollarSweater': 'Suéter con cuello',
+  'GraphicShirt': 'Camiseta gráfica',
+  'Hoodie': 'Sudadera',
+  'Overall': 'Overol',
+  'ShirtCrewNeck': 'Camiseta cuello redondo',
+  'ShirtScoopNeck': 'Camiseta cuello amplio',
+  'ShirtVNeck': 'Camiseta cuello V',
+};
+
+// Colores disponibles para la ropa
+const Map<String, String> clotheColorLabels = {
+  'Black': 'Negro',
+  'Blue01': 'Azul 1',
+  'Blue02': 'Azul 2',
+  'Blue03': 'Azul 3',
+  'Red': 'Rojo',
+  'White': 'Blanco',
+};
+
+const Map<String, String> skinColorLabels = {
+  'Tanned': 'Bronceado',
+  'Yellow': 'Amarillo',
+  'Pale': 'Pálido',
+  'Light': 'Claro',
+  'Brown': 'Marrón',
+  'DarkBrown': 'Marrón oscuro',
+  'Black': 'Negro',
+};
+=======
 import '../../../core/localization/localization_strings.dart';
+>>>>>>> 6f52031ef405984fb8cdb018948279fa3aa77a23
 
 class AvataaarsScreen extends StatefulWidget {
   const AvataaarsScreen({super.key});
