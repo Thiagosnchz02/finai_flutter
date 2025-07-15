@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:avataaars/avataaars.dart';
-import '../extensions/avataaar_getters.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import '../../../core/localization/localization_strings.dart';
 
@@ -66,19 +65,33 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
   void _randomizeAvatar() {
     setState(() {
       _avatar = Avataaar.random();
-      // Se utilizan los getters provistos por la extensión AvataaarGetters
-      // para acceder a las propiedades del avatar de forma segura.
-      _config['topType'] = _avatar.getTopType();
-      _config['accessoriesType'] = _avatar.getAccessoriesType();
-      _config['hairColor'] = _avatar.getHairColor();
-      _config['facialHairType'] = _avatar.getFacialHairType();
-      _config['facialHairColor'] = _avatar.getFacialHairColor();
-      _config['eyeType'] = _avatar.getEyeType();
-      _config['eyebrowType'] = _avatar.getEyebrowType();
-      _config['mouthType'] = _avatar.getMouthType();
-      _config['skinColor'] = _avatar.getSkinColor();
-      _config['clotheType'] = _avatar.getClotheType();
-      _config['clotheColor'] = _avatar.getClotheColor();
+      String capitalize(String value) =>
+          value.isEmpty ? value : '${value[0].toUpperCase()}${value.substring(1)}';
+
+      final avatarJson = _avatar.toJson();
+
+      _config['topType'] =
+          capitalize((avatarJson['hair'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['accessoriesType'] = capitalize(
+          (avatarJson['accessory'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['hairColor'] =
+          _nearestColorKey(_avatar.hair.color, _hairColors);
+      _config['facialHairType'] = capitalize(
+          (avatarJson['facialHair'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['facialHairColor'] =
+          _nearestColorKey(_avatar.facialHair.color, _hairColors);
+      _config['eyeType'] = capitalize(
+          (avatarJson['eyes'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['eyebrowType'] = capitalize(
+          (avatarJson['eyebrow'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['mouthType'] = capitalize(
+          (avatarJson['mouth'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['skinColor'] = capitalize(
+          (avatarJson['skin'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['clotheType'] = capitalize(
+          (avatarJson['clothes'] as Map<String, dynamic>)['runtimeType'] as String);
+      _config['clotheColor'] =
+          _nearestColorKey(_avatar.clothes.color, _clotheColors);
     });
   }
 
