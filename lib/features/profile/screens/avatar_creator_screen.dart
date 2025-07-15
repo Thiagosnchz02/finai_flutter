@@ -179,15 +179,6 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
 
   bool _saving = false;
 
-  Future<void> _saveToSupabase() async {
-    await Supabase.instance.client
-        .from('profiles')
-        .update({
-          'avatar_attributes': _config,
-          'avatar_url': null,
-        })
-        .eq('id', Supabase.instance.client.auth.currentUser!.id);
-  }
 
   String buildAvatarUrl() {
     final params = _config.entries
@@ -225,10 +216,17 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               icon: const Icon(Icons.save),
               onPressed: () async {
                 setState(() => _saving = true);
-                await _saveToSupabase();
+                final supabase = Supabase.instance.client;
+                final userId = supabase.auth.currentUser!.id;
+                await supabase
+                    .from('profiles')
+                    .update({
+                      'avatar_attributes': _config,
+                      'avatar_url': null,
+                    })
+                    .eq('id', userId);
                 if (mounted) {
-                  Navigator.of(context)
-                      .pop({'type': 'avataaars', 'config': _config});
+                  Navigator.of(context).pop(null);
                 }
               },
             ),
