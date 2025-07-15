@@ -80,10 +80,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final userId = _supabase.auth.currentUser!.id;
+      final sanitizedAvatarUrl = _avatarUrl?.split('?').first;
       await _supabase.from('profiles').update({
         'full_name': _nameController.text.trim(),
         'phone_number': _phoneValue,
-        'avatar_url': _avatarUrl, // <-- Guardamos la URL del avatar de RPM
+        'avatar_url': sanitizedAvatarUrl, // <-- Guardamos la URL del avatar de RPM
       }).eq('id', userId);
 
       if (mounted) {
@@ -145,11 +146,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!mounted) return;
 
+    final ts = DateTime.now().millisecondsSinceEpoch;
+
     if (result == null) {
       await _getProfile();
+      if (!mounted) return;
+      setState(() {
+        if (_avatarUrl != null && _avatarUrl!.isNotEmpty) {
+          _avatarUrl = '${_avatarUrl!}?ts=$ts';
+        }
+      });
     } else if (result.isNotEmpty) {
       setState(() {
-        _avatarUrl = result;
+        _avatarUrl = '$result?ts=$ts';
       });
     }
   }
