@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:avataaars/avataaars.dart';
+import '../extensions/avataaar_getters.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import '../../../core/localization/localization_strings.dart';
 
@@ -65,17 +66,19 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
   void _randomizeAvatar() {
     setState(() {
       _avatar = Avataaar.random();
-      _config['topType'] = _avatar.top.name;
-      _config['accessoriesType'] = _avatar.accessories.name;
-      _config['hairColor'] = _avatar.hairColor.name;
-      _config['facialHairType'] = _avatar.facialHair.name;
-      _config['facialHairColor'] = _avatar.facialHairColor.name;
-      _config['eyeType'] = _avatar.eye.name;
-      _config['eyebrowType'] = _avatar.eyebrow.name;
-      _config['mouthType'] = _avatar.mouth.name;
-      _config['skinColor'] = _avatar.skin.name;
-      _config['clotheType'] = _avatar.clothe.name;
-      _config['clotheColor'] = _avatar.clotheColor.name;
+      // Se utilizan los getters provistos por la extensión AvataaarGetters
+      // para acceder a las propiedades del avatar de forma segura.
+      _config['topType'] = _avatar.getTopType();
+      _config['accessoriesType'] = _avatar.getAccessoriesType();
+      _config['hairColor'] = _avatar.getHairColor();
+      _config['facialHairType'] = _avatar.getFacialHairType();
+      _config['facialHairColor'] = _avatar.getFacialHairColor();
+      _config['eyeType'] = _avatar.getEyeType();
+      _config['eyebrowType'] = _avatar.getEyebrowType();
+      _config['mouthType'] = _avatar.getMouthType();
+      _config['skinColor'] = _avatar.getSkinColor();
+      _config['clotheType'] = _avatar.getClotheType();
+      _config['clotheColor'] = _avatar.getClotheColor();
     });
   }
 
