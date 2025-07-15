@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+
 /// Mapas de etiquetas en español para las opciones de Avataaars
 const Map<String, String> topTypeLabels = {
   'NoHair': 'Calvo',
