@@ -83,7 +83,7 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
     final params = _config.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value)}')
         .join('&');
-    return 'https://avataaars.io/?$params&avatarStyle=Circle';
+    return 'https://avataaars.io/?$params&avatarStyle=Transparent';
   }
 
   Future<void> _saveAvatar() async {
