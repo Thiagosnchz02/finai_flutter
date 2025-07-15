@@ -3,7 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:avataaars/avataaars.dart';
+import 'package:flex_color_picker/flex_color_picker.dart';
 
+<<<<<<< HEAD
 
 /// Mapas de etiquetas en español para las opciones de Avataaars
 const Map<String, String> topTypeLabels = {
@@ -155,6 +158,9 @@ const Map<String, String> skinColorLabels = {
   'DarkBrown': 'Marrón oscuro',
   'Black': 'Negro',
 };
+=======
+import '../../../core/localization/localization_strings.dart';
+>>>>>>> 6f52031ef405984fb8cdb018948279fa3aa77a23
 
 class AvataaarsScreen extends StatefulWidget {
   const AvataaarsScreen({super.key});
@@ -164,6 +170,7 @@ class AvataaarsScreen extends StatefulWidget {
 }
 
 class _AvataaarsScreenState extends State<AvataaarsScreen> {
+  late Avataaar _avatar;
   final Map<String, String> _config = {
     'topType': 'ShortHairShortFlat',
     'accessoriesType': 'Blank',
@@ -179,6 +186,51 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
   };
 
   bool _loadingAvatarSave = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _avatar = Avataaar.random();
+  }
+
+  void _randomizeAvatar() {
+    setState(() {
+      _avatar = Avataaar.random();
+      _config['topType'] = _avatar.top.name;
+      _config['accessoriesType'] = _avatar.accessories.name;
+      _config['hairColor'] = _avatar.hairColor.name;
+      _config['facialHairType'] = _avatar.facialHair.name;
+      _config['facialHairColor'] = _avatar.facialHairColor.name;
+      _config['eyeType'] = _avatar.eye.name;
+      _config['eyebrowType'] = _avatar.eyebrow.name;
+      _config['mouthType'] = _avatar.mouth.name;
+      _config['skinColor'] = _avatar.skin.name;
+      _config['clotheType'] = _avatar.clothe.name;
+      _config['clotheColor'] = _avatar.clotheColor.name;
+    });
+  }
+
+  void _updatePart(String key, String value) {
+    setState(() {
+      _config[key] = value;
+      _avatar = _avatar.copyWith(
+        top: key == 'topType' ? Top.values.byName(value) : _avatar.top,
+        accessories:
+            key == 'accessoriesType' ? Accessories.values.byName(value) : _avatar.accessories,
+        hairColor: key == 'hairColor' ? HairColor.values.byName(value) : _avatar.hairColor,
+        facialHair: key == 'facialHairType' ? FacialHair.values.byName(value) : _avatar.facialHair,
+        facialHairColor:
+            key == 'facialHairColor' ? HairColor.values.byName(value) : _avatar.facialHairColor,
+        eye: key == 'eyeType' ? Eye.values.byName(value) : _avatar.eye,
+        eyebrow: key == 'eyebrowType' ? Eyebrow.values.byName(value) : _avatar.eyebrow,
+        mouth: key == 'mouthType' ? Mouth.values.byName(value) : _avatar.mouth,
+        skin: key == 'skinColor' ? Skin.values.byName(value) : _avatar.skin,
+        clothe: key == 'clotheType' ? Clothe.values.byName(value) : _avatar.clothe,
+        clotheColor:
+            key == 'clotheColor' ? ClotheColor.values.byName(value) : _avatar.clotheColor,
+      );
+    });
+  }
 
 
   String buildAvatarUrl() {
@@ -197,6 +249,7 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
         .update({'avatar_attributes': _config})
         .eq('id', userId);
 
+    final _ = _avatar.toSvg();
     final newUrl = buildAvatarUrl();
     await supabase
         .from('profiles')
@@ -240,34 +293,33 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
             ),
         ],
       ),
-      body: Column(
+      body: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
+          Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Center(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: SvgPicture.network(
-                      buildAvatarUrl(),
-                      key: ValueKey(buildAvatarUrl()),
-                      width: double.infinity,
-                      height: 200,
-                    ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: SvgPicture.string(
+                    _avatar.toSvg(),
+                    key: ValueKey(_avatar.toSvg()),
+                    width: 160,
+                    height: 160,
+                    onPictureError: (e, s) => debugPrint('SVG error: $e'),
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Personaliza tu avatar 2D',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                ElevatedButton.icon(
+                  onPressed: _randomizeAvatar,
+                  icon: const Icon(Icons.shuffle),
+                  label: const Text('Randomizar'),
                 ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
           Expanded(
+            flex: 2,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -278,12 +330,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Peinado',
               child: DropdownButton<String>(
                 value: _config['topType'],
-                items: topTypeLabels.entries
+                items: LocalizationStrings.topTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['topType'] = v!),
+                onChanged: (v) => _updatePart('topType', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -292,15 +344,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Accesorios',
               child: DropdownButton<String>(
                 value: _config['accessoriesType'],
-                items: accessoriesTypeLabels.entries
+                items: LocalizationStrings.accessoriesTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() {
-                  _config['accessoriesType'] = v!;
-                  buildAvatarUrl();
-                }),
+                onChanged: (v) => _updatePart('accessoriesType', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -309,12 +358,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Color de Pelo',
               child: DropdownButton<String>(
                 value: _config['hairColor'],
-                items: hairColorLabels.entries
+                items: LocalizationStrings.hairColorLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['hairColor'] = v!),
+                onChanged: (v) => _updatePart('hairColor', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -323,12 +372,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Vello Facial',
               child: DropdownButton<String>(
                 value: _config['facialHairType'],
-                items: facialHairTypeLabels.entries
+                items: LocalizationStrings.facialHairTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['facialHairType'] = v!),
+                onChanged: (v) => _updatePart('facialHairType', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -337,12 +386,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Color del Vello Facial',
               child: DropdownButton<String>(
                 value: _config['facialHairColor'],
-                items: facialHairColorLabels.entries
+                items: LocalizationStrings.facialHairColorLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['facialHairColor'] = v!),
+                onChanged: (v) => _updatePart('facialHairColor', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -351,12 +400,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Ojos',
               child: DropdownButton<String>(
                 value: _config['eyeType'],
-                items: eyeTypeLabels.entries
+                items: LocalizationStrings.eyeTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['eyeType'] = v!),
+                onChanged: (v) => _updatePart('eyeType', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -365,12 +414,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Cejas',
               child: DropdownButton<String>(
                 value: _config['eyebrowType'],
-                items: eyebrowTypeLabels.entries
+                items: LocalizationStrings.eyebrowTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['eyebrowType'] = v!),
+                onChanged: (v) => _updatePart('eyebrowType', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -379,12 +428,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Boca',
               child: DropdownButton<String>(
                 value: _config['mouthType'],
-                items: mouthTypeLabels.entries
+                items: LocalizationStrings.mouthTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['mouthType'] = v!),
+                onChanged: (v) => _updatePart('mouthType', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -393,12 +442,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Color de Piel',
               child: DropdownButton<String>(
                 value: _config['skinColor'],
-                items: skinColorLabels.entries
+                items: LocalizationStrings.skinColorLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['skinColor'] = v!),
+                onChanged: (v) => _updatePart('skinColor', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -407,12 +456,12 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Ropa',
               child: DropdownButton<String>(
                 value: _config['clotheType'],
-                items: clotheTypeLabels.entries
+                items: LocalizationStrings.clotheTypeLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['clotheType'] = v!),
+                onChanged: (v) => _updatePart('clotheType', v!),
               ),
             ),
             const SizedBox(height: 12),
@@ -421,20 +470,32 @@ class _AvataaarsScreenState extends State<AvataaarsScreen> {
               title: 'Color de Ropa',
               child: DropdownButton<String>(
                 value: _config['clotheColor'],
-                items: clotheColorLabels.entries
+                items: LocalizationStrings.clotheColorLabels.entries
                     .map(
                       (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
                     )
                     .toList(),
-                onChanged: (v) => setState(() => _config['clotheColor'] = v!),
+                onChanged: (v) => _updatePart('clotheColor', v!),
               ),
               ),
             ],
           ),
         ),
+          ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: SvgPicture.string(
+                _avatar.toSvg(),
+                key: ValueKey('preview_${_avatar.toSvg()}'),
+                width: 160,
+                height: 160,
+                onPictureError: (e, s) => debugPrint('SVG error: $e'),
+              ),
+            ),
+          ),
+        ],
       ),
-    ],
-  ),
     );
   }
 }

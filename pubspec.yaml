@@ -41,6 +41,8 @@ dependencies:
   flutter_dotenv: ^5.1.0  # Para manejar variables de entorno
   flutter_facebook_auth: ^7.1.2
   dart_openai: ^5.1.0
+  avataaars: ^2.0.0
+  flex_color_picker: ^3.3.0
 
 
   # The following adds the Cupertino Icons font to your application.
