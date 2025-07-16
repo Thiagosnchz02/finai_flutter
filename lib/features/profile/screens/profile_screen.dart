@@ -300,7 +300,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     width: 120,
                                     height: 120,
                                     placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
-                                    onPictureError: (e, s) => debugPrint('SVG error: $e'),
                                   )
                                 : Image.network(
                                     _avatarUrl!.replaceFirst('.glb', '.png'),
