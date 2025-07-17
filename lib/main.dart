@@ -12,7 +12,6 @@ import 'features/auth/screens/update_password_screen.dart'; // <-- Nueva pantall
 import 'features/dashboard/screens/dashboard_screen.dart';
 import 'features/profile/screens/profile_screen.dart';
 import 'presentation/theme/app_theme.dart';
-import "features/profile/screens/avatar_creator_screen.dart";
 import 'features/profile/screens/generative_ai_screen.dart';
 import 'features/profile/screens/meta_import_screen.dart';
 
@@ -133,7 +132,6 @@ class _MyAppState extends State<MyApp> {
         '/update-password': (context) => const UpdatePasswordScreen(),
         '/dashboard': (context) => const DashboardScreen(),
         '/profile': (context) => const ProfileScreen(), // <-- Nueva ruta
-        '/avatar/avataaars': (context) => const AvataaarsScreen(),
         '/avatar/generative': (context) => const GenerativeAiScreen(),
         '/avatar/meta-import': (context) => const MetaImportScreen(),
       },

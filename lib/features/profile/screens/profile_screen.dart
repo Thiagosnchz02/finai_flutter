@@ -5,7 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 // Importamos las pantallas necesarias
 import 'change_password_screen.dart';
-import 'avatar_creator_screen.dart';
 import 'generative_ai_screen.dart';
 import 'meta_import_screen.dart';
 
@@ -116,42 +115,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final source = await showAvatarSourceDialog(context);
     if (!mounted || source == null) return;
 
-    String? result;
-    switch (source) {
-      case AvatarSource.avataaars:
-        result = await Navigator.push<String?>(
-          context,
-          MaterialPageRoute<String?>(
-            builder: (context) => const AvataaarsScreen(),
-          ),
-        );
-        break;
-      case AvatarSource.generativeAI:
-        result = await Navigator.push<String?>(
-          context,
-          MaterialPageRoute<String?>(
-            builder: (context) => const GenerativeAiScreen(),
-          ),
-        );
-        break;
-      case AvatarSource.metaImport:
-        result = await Navigator.push<String?>(
-          context,
-          MaterialPageRoute<String?>(
-            builder: (context) => const MetaImportScreen(),
-          ),
-        );
-        break;
-    }
+    // Ya no es necesario un `result` de tipo String, puede ser dinámico
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          switch (source) {
+            case AvatarSource.generativeAI:
+              return const GenerativeAiScreen();
+            case AvatarSource.metaImport:
+              return const MetaImportScreen();
+          }
+        },
+      ),
+    );
 
     if (!mounted) return;
 
-    if (result == null) {
-      await _getProfile();
-    } else if (result.isNotEmpty) {
+    if (result != null && result['url'] != null) {
       setState(() {
-        _avatarUrl = result;
+        _avatarUrl = result['url'];
       });
+      // Opcional: podrías querer guardar el perfil aquí automáticamente
+      // await _updateProfile(); 
+    } else {
+        // Si el usuario vuelve sin seleccionar nada, recargamos el perfil
+        // para asegurar que no se quede ninguna imagen temporal.
+        await _getProfile();
     }
   }
 
