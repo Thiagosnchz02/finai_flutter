@@ -49,14 +49,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.13.0"
-  avataaars:
-    dependency: "direct main"
-    description:
-      name: avataaars
-      sha256: bbf71cbb6f31bb45d26f31c304d0559ff0a7220d272bce375417282c51bf1dd2
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.1"
   boolean_selector:
     dependency: transitive
     description:
@@ -161,14 +153,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
-  flex_color_picker:
-    dependency: "direct main"
-    description:
-      name: flex_color_picker
-      sha256: "8f753a1a026a13ea5cc5eddbae3ceb886f2537569ab2e5208efb1e3bb5af72ff"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.7.1"
   flex_seed_scheme:
     dependency: transitive
     description:
