@@ -25,8 +25,5 @@ cp .env.example .env
 ```
 
 Variables requeridas:
-
-- `RPM_API_KEY`
-- `RPM_APPLICATION_ID`
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`

@@ -36,7 +36,7 @@ dependencies:
   intl_phone_field: ^3.2.0   # Para el campo de teléfono con selector de país.
   flutter_svg: ^2.0.10+1       # Para la gestión de estado del tema.
   flutter_inappwebview: ^6.0.0 # Busca la última versión en pub.dev
-  http: ^1.2.1          # Para realizar las peticiones a la API de RPM.
+  http: ^1.2.1          # Para realizar peticiones HTTP.
   provider: ^6.1.2       # Para una gestión de estado simple y eficaz.
   flutter_dotenv: ^5.1.0  # Para manejar variables de entorno
   flutter_facebook_auth: ^7.1.2
