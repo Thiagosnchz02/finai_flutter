@@ -5,8 +5,6 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 // Importamos las pantallas necesarias
 import 'change_password_screen.dart';
-import 'generative_ai_screen.dart';
-import 'meta_import_screen.dart';
 
 import '../widgets/avatar_source_dialog.dart';
 class ProfileScreen extends StatefulWidget {
@@ -115,33 +113,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final source = await showAvatarSourceDialog(context);
     if (!mounted || source == null) return;
 
-    // Ya no es necesario un `result` de tipo String, puede ser dinámico
-    final result = await Navigator.push<Map<String, dynamic>>(
+    // El resultado puede ser nulo si el usuario vuelve atrás desde
+    // la pantalla de opciones, por eso lo manejamos.
+    final result = await Navigator.pushNamed(
       context,
-      MaterialPageRoute(
-        builder: (context) {
-          switch (source) {
-            case AvatarSource.generativeAI:
-              return const GenerativeAiScreen();
-            case AvatarSource.metaImport:
-              return const MetaImportScreen();
-          }
-        },
-      ),
+      // Cambiamos la navegación según la selección inicial
+      switch (source) {
+        AvatarSource.generativeAI => '/avatar/ai-options',
+        AvatarSource.metaImport => '/avatar/meta-import',
+      },
     );
 
     if (!mounted) return;
 
-    if (result != null && result['url'] != null) {
+    // La lógica para manejar el resultado se mantiene, pero ahora puede venir
+    // de la pantalla de texto, la de imagen, o la de meta.
+    if (result != null && result is Map<String, dynamic> && result['url'] != null) {
       setState(() {
         _avatarUrl = result['url'];
       });
-      // Opcional: podrías querer guardar el perfil aquí automáticamente
-      // await _updateProfile(); 
     } else {
-        // Si el usuario vuelve sin seleccionar nada, recargamos el perfil
-        // para asegurar que no se quede ninguna imagen temporal.
-        await _getProfile();
+      await _getProfile();
     }
   }
 
