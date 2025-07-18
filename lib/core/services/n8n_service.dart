@@ -7,23 +7,32 @@ class N8nService {
   /// Llama al workflow de n8n para generar avatares.
   /// Puede recibir un [prompt] de texto o la URL de una [baseImage] subida.
   Future<List<String>> generateAvatar({
+    required String type,
     String? prompt,
-    String? baseImage, // URL de la imagen que el usuario suba
-    String? style,      // "Cartoon", "Pixar", etc.
+    String? baseImage,
+    String? style,
   }) async {
     final url = Uri.parse(dotenv.env['N8N_WEBHOOK_URL']!);
     final apiKey = dotenv.env['N8N_API_KEY'];
     final userId = Supabase.instance.client.auth.currentUser?.id;
 
     final body = {
+      'type': type,
       'userId': userId,
       'prompt': prompt,
       'baseImage': baseImage,
       'style': style,
     };
 
-    // Eliminamos del cuerpo los valores que sean nulos para no enviarlos
     body.removeWhere((key, value) => value == null);
+    final jsonBody = json.encode(body);
+
+    // --- DEPURACIÓN AÑADIDA ---
+    print('--- Enviando a n8n ---');
+    print('URL: $url');
+    print('Body: $jsonBody');
+    print('----------------------');
+    // -------------------------
 
     try {
       final response = await http.post(
@@ -32,21 +41,35 @@ class N8nService {
           'Content-Type': 'application/json',
           if (apiKey != null) 'X-N8N-API-KEY': apiKey,
         },
-        body: json.encode(body), // Importante: codificar el mapa a un string JSON
+        body: jsonBody,
       );
 
+      print('--- Respuesta de n8n ---');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      print('--------------------------');
+
       if (response.statusCode == 200) {
+        if (response.body.isEmpty) {
+          throw Exception('n8n devolvió una respuesta vacía. Revisa el nodo "Respond to Webhook".');
+        }
+        
         final responseData = json.decode(response.body);
-        // Asumimos que n8n devuelve un JSON con una lista de URLs, ej: {"image_urls": ["url1", "url2"]}
+        
+        if (responseData['image_urls'] == null) {
+          throw Exception('La respuesta de n8n es un JSON válido, pero no contiene la clave "image_urls". Revisa el nodo "Code" en n8n.');
+        }
+
         final List<dynamic> imageUrls = responseData['image_urls'];
         return imageUrls.cast<String>();
       } else {
-        // Lanza una excepción que la UI puede capturar y mostrar
         throw Exception('Error en la llamada a n8n: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      // Relanza el error para que la UI lo gestione
-      throw Exception('Error de conexión con el servicio de avatares: $e');
+      if (e is FormatException) {
+        throw Exception('La respuesta de n8n no es un JSON válido. Revisa que el flujo esté devolviendo datos.');
+      }
+      rethrow;
     }
   }
 }
