@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../core/services/n8n_service.dart';
 
@@ -20,6 +21,9 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
   String? _error;
   List<String> _generatedUrls = [];
 
+  bool _canGenerate = true;
+  int _countdownSeconds = 15;
+
   final N8nService _n8nService = N8nService();
   final List<String> _styles = ['Cartoon', 'Pixar', 'Ghibli', 'Realista', 'Anime', 'Cyberpunk'];
 
@@ -40,7 +44,12 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
       return;
     }
 
-    setState(() { _isLoading = true; _error = null; _generatedUrls = []; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+      _generatedUrls = [];
+      _canGenerate = false;
+    });
 
     try {
       final generatedUrls = await _n8nService.generateAvatar(
@@ -51,19 +60,44 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
         background: _backgroundController.text.trim(),
         perspective: _perspectiveController.text.trim(),
       );
-      setState(() { _generatedUrls = generatedUrls; });
+      setState(() {
+        _generatedUrls = generatedUrls;
+      });
     } catch (e) {
-      setState(() { _error = e.toString(); });
-      if(mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al generar el avatar: $_error')),
-          );
+      setState(() {
+        _error = e.toString();
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al generar el avatar: $_error')),
+        );
       }
     } finally {
       if (mounted) {
-        setState(() { _isLoading = false; });
+        setState(() {
+          _isLoading = false;
+        });
+        _startCooldown();
       }
     }
+  }
+
+  void _startCooldown() {
+    const oneSec = Duration(seconds: 1);
+    int count = _countdownSeconds;
+
+    Timer.periodic(oneSec, (Timer timer) {
+      if (count == 0) {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _canGenerate = true;
+          });
+        }
+      } else {
+        count--;
+      }
+    });
   }
 
   @override
@@ -133,11 +167,14 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
             const SizedBox(height: 32),
             
             ElevatedButton(
-              onPressed: (_promptController.text.isNotEmpty && _selectedStyle != null && !_isLoading) ? _generateAvatar : null,
-              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+              onPressed: (_canGenerate && !_isLoading) ? _generateAvatar : null,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: _canGenerate ? Theme.of(context).colorScheme.primary : Colors.grey,
+              ),
               child: _isLoading
                   ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,))
-                  : const Text('Generar Avatar', style: TextStyle(fontSize: 16)),
+                  : Text(_canGenerate ? 'Generar Avatar' : 'Espera un momento...', style: const TextStyle(fontSize: 16)),
             ),
 
             const SizedBox(height: 24),
