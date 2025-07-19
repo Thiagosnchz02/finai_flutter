@@ -11,12 +11,15 @@ class N8nService {
     String? prompt,
     String? baseImage,
     String? style,
+    String? action,
+    String? background,
+    String? perspective,
   }) async {
     final url = Uri.parse(dotenv.env['N8N_WEBHOOK_URL']!);
     final apiKey = dotenv.env['N8N_API_KEY'];
     final userId = Supabase.instance.client.auth.currentUser?.id;
 
-    final body = {
+    final Map<String, dynamic> body = {
       'type': type,
       'userId': userId,
       'prompt': prompt,
@@ -24,7 +27,18 @@ class N8nService {
       'style': style,
     };
 
-    body.removeWhere((key, value) => value == null);
+    // Creamos el objeto anidado solo si estamos en el flujo de texto a imagen
+    if (type == 'TEXT_TO_IMAGE') {
+      body['enrichment'] = {
+        'action': action,
+        'background': background,
+        'perspective': perspective,
+      };
+      // Limpiamos los valores nulos o vacíos dentro del objeto de enriquecimiento
+      (body['enrichment'] as Map).removeWhere((key, value) => value == null || (value is String && value.isEmpty));
+    }
+    
+    body.removeWhere((key, value) => value == null || (value is String && value.isEmpty));
     final jsonBody = json.encode(body);
 
     // --- DEPURACIÓN AÑADIDA ---

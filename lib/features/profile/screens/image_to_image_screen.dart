@@ -25,7 +25,13 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
   final List<String> _styles = ['Cartoon', 'Pixar', 'Ghibli', 'Realista', 'Anime', 'Cyberpunk'];
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    // Limpiamos resultados anteriores al elegir una nueva foto
+    setState(() {
+      _generatedUrls = [];
+      _error = null;
+    });
+
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
     if (image != null) {
       setState(() {
         _selectedImage = image;
@@ -52,7 +58,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
       final imageBytes = await File(_selectedImage!.path).readAsBytes();
       final base64Image = base64Encode(imageBytes);
 
-      // 2. Llamar al servicio de n8n
+      // 2. Llamar al servicio de n8n con el tipo 'IMAGE_TO_IMAGE'
       final generatedUrls = await _n8nService.generateAvatar(
         type: 'IMAGE_TO_IMAGE',
         baseImage: base64Image,
@@ -94,11 +100,14 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
             // --- Sección de Carga de Imagen ---
             Text('1. Sube una foto', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
+            Text('Sube un selfie o un retrato donde tu cara se vea con claridad para obtener los mejores resultados.', style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 12),
             GestureDetector(
               onTap: _pickImage,
               child: Container(
-                height: 200,
+                height: 250,
                 decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
                   border: Border.all(color: Theme.of(context).dividerColor),
                   borderRadius: BorderRadius.circular(16),
                   image: _selectedImage != null
@@ -130,7 +139,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
             const SizedBox(height: 8),
             Wrap(
               spacing: 8.0,
-              runSpacing: 8.0,
+              runSpacing: 4.0,
               children: _styles.map((style) {
                 return ChoiceChip(
                   label: Text(style),
@@ -143,6 +152,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
                   selectedColor: Theme.of(context).colorScheme.primary,
                   labelStyle: TextStyle(
                     color: _selectedStyle == style ? Colors.white : Theme.of(context).textTheme.bodyLarge?.color,
+                    fontWeight: _selectedStyle == style ? FontWeight.bold : FontWeight.normal,
                   ),
                 );
               }).toList(),
@@ -158,16 +168,18 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
               ),
               child: _isLoading
                   ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,))
-                  : const Text('Generar Avatar', style: TextStyle(fontSize: 16)),
+                  : const Text('Generar Avatar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
 
             const SizedBox(height: 24),
 
             // --- Sección de Resultados ---
+            if (_isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text('Generando avatares... Esto puede tardar unos segundos.'))),
             if (_generatedUrls.isNotEmpty)
               Text('3. Elige tu favorito', style: Theme.of(context).textTheme.titleLarge),
             if (_generatedUrls.isNotEmpty)
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
             if (_generatedUrls.isNotEmpty)
               GridView.builder(
                 shrinkWrap: true,
@@ -194,6 +206,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
                               ? child
                               : const Center(child: CircularProgressIndicator());
                         },
+                        errorBuilder: (context, error, stacktrace) => const Icon(Icons.error),
                       ),
                     ),
                   );

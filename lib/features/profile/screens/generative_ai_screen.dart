@@ -9,20 +9,26 @@ class GenerativeAiScreen extends StatefulWidget {
 }
 
 class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
-  // Estado del widget
+  // Controladores para todos los campos de texto
   final TextEditingController _promptController = TextEditingController();
+  final TextEditingController _actionController = TextEditingController();
+  final TextEditingController _backgroundController = TextEditingController();
+  final TextEditingController _perspectiveController = TextEditingController();
+  
   String? _selectedStyle;
   bool _isLoading = false;
   String? _error;
   List<String> _generatedUrls = [];
 
   final N8nService _n8nService = N8nService();
-
   final List<String> _styles = ['Cartoon', 'Pixar', 'Ghibli', 'Realista', 'Anime', 'Cyberpunk'];
 
   @override
   void dispose() {
     _promptController.dispose();
+    _actionController.dispose();
+    _backgroundController.dispose();
+    _perspectiveController.dispose();
     super.dispose();
   }
 
@@ -34,27 +40,20 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _error = null;
-      _generatedUrls = [];
-    });
+    setState(() { _isLoading = true; _error = null; _generatedUrls = []; });
 
     try {
-      // Llamamos a nuestro servicio n8n con el tipo correcto
       final generatedUrls = await _n8nService.generateAvatar(
         type: 'TEXT_TO_IMAGE',
         prompt: _promptController.text.trim(),
         style: _selectedStyle,
+        action: _actionController.text.trim(),
+        background: _backgroundController.text.trim(),
+        perspective: _perspectiveController.text.trim(),
       );
-
-      setState(() {
-        _generatedUrls = generatedUrls;
-      });
+      setState(() { _generatedUrls = generatedUrls; });
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
+      setState(() { _error = e.toString(); });
       if(mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Error al generar el avatar: $_error')),
@@ -62,9 +61,7 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        setState(() { _isLoading = false; });
       }
     }
   }
@@ -80,7 +77,6 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- Sección de Prompt ---
             Text('1. Describe tu avatar', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             TextField(
@@ -88,14 +84,32 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
               maxLength: 300,
               maxLines: 4,
               decoration: const InputDecoration(
-                hintText: 'Ej: Un gato astronauta con gafas de sol, fondo de galaxias...',
+                hintText: 'Ej: Un gato astronauta con gafas de sol...',
                 border: OutlineInputBorder(),
               ),
             ),
+            const SizedBox(height: 16),
 
+            // --- SECCIÓN DE OPCIONES AVANZADAS ---
+            ExpansionTile(
+              title: Text('Opciones avanzadas (Opcional)', style: Theme.of(context).textTheme.titleMedium),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                  child: Column(
+                    children: [
+                      _buildAdvancedTextField(_actionController, 'Acción', 'Ej: saltando, sonriendo...'),
+                      const SizedBox(height: 12),
+                      _buildAdvancedTextField(_backgroundController, 'Fondo', 'Ej: un bosque, una ciudad...'),
+                      const SizedBox(height: 12),
+                      _buildAdvancedTextField(_perspectiveController, 'Perspectiva', 'Ej: vista frontal, plano cenital...'),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            
             const SizedBox(height: 24),
-
-            // --- Sección de Selección de Estilo ---
             Text('2. Elige un estilo', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             Wrap(
@@ -106,9 +120,7 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
                   label: Text(style),
                   selected: _selectedStyle == style,
                   onSelected: (selected) {
-                    setState(() {
-                      _selectedStyle = selected ? style : null;
-                    });
+                    setState(() { _selectedStyle = selected ? style : null; });
                   },
                   selectedColor: Theme.of(context).colorScheme.primary,
                   labelStyle: TextStyle(
@@ -120,20 +132,16 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
 
             const SizedBox(height: 32),
             
-            // --- Botón de Generar ---
             ElevatedButton(
               onPressed: (_promptController.text.isNotEmpty && _selectedStyle != null && !_isLoading) ? _generateAvatar : null,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
+              style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
               child: _isLoading
                   ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,))
                   : const Text('Generar Avatar', style: TextStyle(fontSize: 16)),
             ),
 
             const SizedBox(height: 24),
-
-            // --- Sección de Resultados ---
+            
             if (_generatedUrls.isNotEmpty)
               Text('3. Elige tu favorito', style: Theme.of(context).textTheme.titleLarge),
             if (_generatedUrls.isNotEmpty)
@@ -143,26 +151,20 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+                  crossAxisCount: 2, crossAxisSpacing: 16, mainAxisSpacing: 16,
                 ),
                 itemCount: _generatedUrls.length,
                 itemBuilder: (context, index) {
                   final url = _generatedUrls[index];
                   return GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pop({'type': 'ai', 'url': url});
-                    },
+                    onTap: () { Navigator.of(context).pop({'type': 'ai', 'url': url}); },
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.network(
                         url,
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, progress) {
-                          return progress == null
-                              ? child
-                              : const Center(child: CircularProgressIndicator());
+                          return progress == null ? child : const Center(child: CircularProgressIndicator());
                         },
                       ),
                     ),
@@ -171,6 +173,19 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Widget helper para los campos de texto avanzados
+  Widget _buildAdvancedTextField(TextEditingController controller, String label, String hint) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
     );
   }
