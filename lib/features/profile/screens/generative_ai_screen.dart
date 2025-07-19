@@ -20,6 +20,7 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
   String? _error;
   List<String> _generatedUrls = [];
 
+
   final N8nService _n8nService = N8nService();
   final List<String> _styles = ['Cartoon', 'Pixar', 'Ghibli', 'Realista', 'Anime', 'Cyberpunk'];
 
