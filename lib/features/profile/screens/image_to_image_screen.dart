@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -18,6 +19,9 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
   bool _isLoading = false;
   String? _error;
   List<String> _generatedUrls = [];
+
+  bool _canGenerate = true;
+  int _countdownSeconds = 15;
 
   final ImagePicker _picker = ImagePicker();
   final N8nService _n8nService = N8nService();
@@ -51,6 +55,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
       _isLoading = true;
       _error = null;
       _generatedUrls = [];
+      _canGenerate = false;
     });
 
     try {
@@ -82,8 +87,27 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
         setState(() {
           _isLoading = false;
         });
+        _startCooldown();
       }
     }
+  }
+
+  void _startCooldown() {
+    const oneSec = Duration(seconds: 1);
+    int count = _countdownSeconds;
+
+    Timer.periodic(oneSec, (Timer timer) {
+      if (count == 0) {
+        timer.cancel();
+        if (mounted) {
+          setState(() {
+            _canGenerate = true;
+          });
+        }
+      } else {
+        count--;
+      }
+    });
   }
 
   @override
@@ -162,13 +186,14 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
             
             // --- Botón de Generar ---
             ElevatedButton(
-              onPressed: (_selectedImage != null && _selectedStyle != null && !_isLoading) ? _generateAvatar : null,
+              onPressed: (_canGenerate && !_isLoading) ? _generateAvatar : null,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: _canGenerate ? Theme.of(context).colorScheme.primary : Colors.grey,
               ),
               child: _isLoading
                   ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2,))
-                  : const Text('Generar Avatar', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  : Text(_canGenerate ? 'Generar Avatar' : 'Espera un momento...', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
 
             const SizedBox(height: 24),
