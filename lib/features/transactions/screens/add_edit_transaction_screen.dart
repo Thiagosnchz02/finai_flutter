@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/transaction_model.dart'; // Asegúrate de que la ruta es correcta
+import '../models/transaction_model.dart';
 
 // Modelo simple para las categorías que cargaremos en el dropdown
 class Category {
@@ -39,25 +39,38 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     _categoriesFuture = _fetchCategories();
 
     if (widget.transaction != null) {
-      // Si estamos editando, rellenamos los campos
+      // Si estamos editando, rellenamos los campos del formulario
       final tx = widget.transaction!;
       _descriptionController.text = tx.description;
       _amountController.text = tx.amount.toString();
       _transactionType = tx.type;
       _selectedDate = tx.date;
-      // El ID de la categoría no está en el modelo Transaction, necesitaríamos ajustarlo o buscarlo
-      // Por ahora, lo dejamos así para la creación.
+      // NOTA: Para que la categoría aparezca seleccionada al editar,
+      // el modelo 'Transaction' debería incluir el 'category_id'.
+      // Lo implementaremos en un siguiente paso de mejora.
     }
   }
 
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
   Future<List<Category>> _fetchCategories() async {
-    final userId = Supabase.instance.client.auth.currentUser!.id;
-    final response = await Supabase.instance.client
-        .from('categories')
-        .select('id, name')
-        .eq('user_id', userId);
-    
-    return response.map<Category>((item) => Category(id: item['id'], name: item['name'])).toList();
+    try {
+      final userId = Supabase.instance.client.auth.currentUser!.id;
+      final response = await Supabase.instance.client
+          .from('categories')
+          .select('id, name')
+          .eq('user_id', userId);
+      
+      return response.map<Category>((item) => Category(id: item['id'], name: item['name'])).toList();
+    } catch (e) {
+      // Si no se pueden cargar, devolvemos una lista vacía
+      return [];
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -80,7 +93,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
       try {
         final userId = Supabase.instance.client.auth.currentUser!.id;
-        final amount = double.parse(_amountController.text);
+        final amount = double.parse(_amountController.text.replaceAll(',', '.'));
         final description = _descriptionController.text;
 
         final dataToUpsert = {
@@ -92,7 +105,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           'category_id': _selectedCategoryId,
         };
 
-        // Si estamos editando, añadimos el ID para que Supabase actualice en lugar de crear
         if (widget.transaction != null) {
           dataToUpsert['id'] = widget.transaction!.id;
         }
@@ -103,7 +115,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Transacción guardada con éxito'), backgroundColor: Colors.green),
           );
-          Navigator.of(context).pop(true); // Devuelve 'true' para indicar que hay que refrescar
+          Navigator.of(context).pop(true); // Devuelve 'true' para indicar que hay que refrescar la lista
         }
 
       } catch (e) {
@@ -126,12 +138,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       appBar: AppBar(
         title: Text(widget.transaction == null ? 'Nueva Transacción' : 'Editar Transacción'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: widget.transaction == null ? null : () {
-              // TODO: Lógica para eliminar
-            },
-          )
+          if (widget.transaction != null) // Solo muestra el botón de borrar si estamos editando
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () {
+                // TODO: Lógica para eliminar transacción
+              },
+            )
         ],
       ),
       body: Form(
@@ -141,7 +154,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Selector de Gasto / Ingreso
               SegmentedButton<String>(
                 segments: const [
                   ButtonSegment(value: 'gasto', label: Text('Gasto'), icon: Icon(FontAwesomeIcons.arrowDown)),
@@ -155,34 +167,31 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              // Campo de Descripción
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Descripción', border: OutlineInputBorder()),
                 validator: (value) => value == null || value.isEmpty ? 'Introduce una descripción' : null,
               ),
               const SizedBox(height: 20),
-              // Campo de Cantidad
               TextFormField(
                 controller: _amountController,
                 decoration: const InputDecoration(labelText: 'Cantidad (€)', border: OutlineInputBorder()),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Introduce una cantidad';
-                  if (double.tryParse(value) == null) return 'Introduce un número válido';
+                  if (double.tryParse(value.replaceAll(',', '.')) == null) return 'Introduce un número válido';
                   return null;
                 },
               ),
               const SizedBox(height: 20),
-              // Selector de Categoría
               FutureBuilder<List<Category>>(
                 future: _categoriesFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  if (snapshot.hasError || !snapshot.hasData) {
-                    return const Text('No se pudieron cargar las categorías');
+                  if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Text('No se pudieron cargar las categorías. Asegúrate de haber creado alguna.');
                   }
                   final categories = snapshot.data!;
                   return DropdownButtonFormField<String>(
@@ -199,7 +208,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              // Selector de Fecha
               ListTile(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
@@ -210,13 +218,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 onTap: () => _selectDate(context),
               ),
               const SizedBox(height: 32),
-              // Botón de Guardar
               ElevatedButton(
                 onPressed: _isLoading ? null : _saveTransaction,
                 style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                 child: _isLoading
                     ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Guardar Transacción', style: TextStyle(fontSize: 16)),
+                    : const Text('Guardar Transacción', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
