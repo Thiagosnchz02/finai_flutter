@@ -17,7 +17,6 @@ class N8nService {
     final apiKey = dotenv.env['N8N_API_KEY'];
     final userId = Supabase.instance.client.auth.currentUser?.id;
 
-    // --- CONSTRUCCIÓN DEL CUERPO (BODY) ---
     final Map<String, dynamic> body = {
       'type': type,
       'userId': userId,
@@ -67,36 +66,35 @@ class N8nService {
         }
         
         final dynamic responseData = json.decode(response.body);
+        
+        // --- LÓGICA DE PROCESAMIENTO CORREGIDA ---
+        // Esta es la clave: ahora manejamos tanto una lista como un objeto único.
 
-        // --- LÓGICA DE PROCESAMIENTO ACTUALIZADA ---
-        if (responseData is List) {
-          // Obtenemos las variables para construir la URL de Supabase Storage
-          final projectId = dotenv.env['SUPABASE_PROJECT_ID'];
-
-          if (projectId == null) {
-            throw Exception('Falta SUPABASE_PROJECT_ID en el archivo .env');
-          }
-
-          final List<String> finalUrls = [];
-          for (var item in responseData) {
-            if (item is Map && item.containsKey('Key')) {
-              final String key = item['Key'];
-              // Construimos la URL pública completa
-              final publicUrl = 'https://$projectId.supabase.co/storage/v1/object/public/$key';
-              finalUrls.add(publicUrl);
-            }
-          }
-          
-          if (finalUrls.isEmpty) {
-            throw Exception('La respuesta de n8n no contenía ninguna "Key" válida.');
-          }
-
-          return finalUrls;
-
-        } else {
-          // Si la respuesta no es una lista, es un formato inesperado
-          throw Exception('Formato de respuesta de n8n inesperado. Se esperaba una lista de objetos.');
+        final List<dynamic> items = responseData is List ? responseData : [responseData];
+        
+        if (items.isEmpty) {
+            throw Exception('La respuesta de n8n estaba vacía o en un formato no reconocido.');
         }
+
+        final projectId = dotenv.env['SUPABASE_PROJECT_ID'];
+        if (projectId == null) {
+          throw Exception('Falta SUPABASE_PROJECT_ID en el archivo .env');
+        }
+
+        final List<String> finalUrls = [];
+        for (var item in items) {
+          if (item is Map && item.containsKey('Key')) {
+            final String key = item['Key'];
+            final publicUrl = 'https://$projectId.supabase.co/storage/v1/object/public/$key';
+            finalUrls.add(publicUrl);
+          }
+        }
+        
+        if (finalUrls.isEmpty) {
+          throw Exception('La respuesta de n8n no contenía ninguna "Key" válida.');
+        }
+
+        return finalUrls;
 
       } else {
         throw Exception('Error en la llamada a n8n: ${response.statusCode} - ${response.body}');
