@@ -97,8 +97,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Navegar a la pantalla de añadir/editar transacción
+        onPressed: () async {
+          // NAVEGAMOS A LA NUEVA PANTALLA
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (context) => const AddEditTransactionScreen(),
+            ),
+          );
+          // Si la pantalla devuelve 'true', refrescamos la lista
+          if (result == true) {
+            setState(() {
+              _groupedTransactionsFuture = _fetchAndGroupTransactions();
+            });
+          }
         },
         child: const Icon(Icons.add),
         backgroundColor: Theme.of(context).colorScheme.primary,
