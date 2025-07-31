@@ -9,6 +9,8 @@ class Transaction {
   final String categoryName;
   final String categoryIcon;
   final Color categoryColor;
+  final String? accountId;
+  final String? notes;
 
   Transaction({
     required this.id,
@@ -19,6 +21,8 @@ class Transaction {
     required this.categoryName,
     required this.categoryIcon,
     required this.categoryColor,
+    this.accountId,
+    this.notes,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -44,6 +48,8 @@ class Transaction {
       categoryName: (json['categories'] as Map<String, dynamic>?)?['name'] as String? ?? 'Sin Categoría',
       categoryIcon: (json['categories'] as Map<String, dynamic>?)?['icon'] as String? ?? 'fas fa-question-circle',
       categoryColor: parseColor((json['categories'] as Map<String, dynamic>?)?['color'] as String?),
+      accountId: json['account_id'] as String?,
+      notes: json['notes'] as String?,
     );
   }
 }

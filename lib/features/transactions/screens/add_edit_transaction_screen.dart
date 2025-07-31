@@ -19,6 +19,11 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
 
+  // Controllers y estado para notas y cuentas
+  final _notesController = TextEditingController();
+  String? _selectedAccountId;
+  late Future<List<Map<String, dynamic>>> _accountsFuture;
+
   String _transactionType = 'gasto';
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
@@ -32,6 +37,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     super.initState();
     // Cargamos las categorías iniciales (por defecto, las de 'gasto')
     _categoriesFuture = _fetchCategories(_transactionType);
+    _accountsFuture = _fetchAccounts();
 
     if (widget.transaction != null) {
       final tx = widget.transaction!;
@@ -40,6 +46,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _transactionType = tx.type;
       _selectedDate = tx.date;
       // TODO: Implementar la selección de la categoría al editar
+      _notesController.text = widget.transaction!.notes ?? '';
+      _selectedAccountId = widget.transaction!.accountId;
     }
   }
 
@@ -47,6 +55,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -66,6 +75,20 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       return categories;
     } catch (e) {
       print('ERROR en _fetchCategories: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchAccounts() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser!.id;
+      final data = await Supabase.instance.client
+          .from('accounts')
+          .select('id, name')
+          .eq('user_id', userId);
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      print('ERROR en _fetchAccounts: $e');
       return [];
     }
   }
@@ -102,6 +125,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           'transaction_date': _selectedDate.toIso8601String(),
           'type': _transactionType,
           'category_id': _selectedCategoryId,
+          'account_id': _selectedAccountId,
+          'notes': _notesController.text.isNotEmpty ? _notesController.text : null,
         };
 
         if (widget.transaction != null) {
@@ -232,11 +257,64 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         _selectedCategoryId = value;
                       });
                     },
-                    validator: (value) => value == null ? 'Por favor, selecciona una categoría' : null,
+                validator: (value) => value == null ? 'Por favor, selecciona una categoría' : null,
+                );
+              },
+              ),
+
+              const SizedBox(height: 20), // Espaciador
+
+              // WIDGET PARA SELECCIONAR LA CUENTA
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _accountsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const ListTile(
+                      title: Text('Cuenta'),
+                      subtitle: Text('No se encontraron cuentas'),
+                      trailing: Icon(Icons.error),
+                    );
+                  }
+
+                  final accounts = snapshot.data!;
+                  // Asegurarse de que el ID seleccionado es válido
+                  if (_selectedAccountId != null && !accounts.any((acc) => acc['id'] == _selectedAccountId)) {
+                      _selectedAccountId = null;
+                  }
+
+                  return DropdownButtonFormField<String>(
+                    value: _selectedAccountId,
+                    decoration: const InputDecoration(
+                      labelText: 'Cuenta',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: accounts.map((account) {
+                      return DropdownMenuItem<String>(
+                        value: account['id'] as String,
+                        child: Text(account['name'] as String),
+                      );
+                    }).toList(),
+                    onChanged: (value) => setState(() => _selectedAccountId = value),
+                    validator: (value) => value == null ? 'Por favor, selecciona una cuenta' : null,
                   );
                 },
               ),
-              
+
+              const SizedBox(height: 20), // Espaciador
+
+              // WIDGET PARA LAS NOTAS
+              TextFormField(
+                controller: _notesController,
+                decoration: const InputDecoration(
+                  labelText: 'Notas (opcional)',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+
               const SizedBox(height: 20),
               ListTile(
                 shape: RoundedRectangleBorder(
