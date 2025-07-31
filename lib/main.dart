@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 // Importa todas las pantallas que vamos a usar como rutas
 import 'features/auth/screens/login_screen.dart';
@@ -29,6 +30,7 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!, // Usamos '!' para asegurar que no son nulas. La app debe fallar si no están.
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+  await initializeDateFormatting('es_ES', null);
   runApp(const MyApp());
 }
 

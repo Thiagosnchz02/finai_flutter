@@ -61,7 +61,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           .eq('type', transactionType);
       print('DEBUG: Respuesta de Supabase: $data');
       // Asegúrate de que la conversión es segura.
-      final categories = List<Map<String, dynamic>>.from(data ?? []);
+      final categories = List<Map<String, dynamic>>.from(data);
       print("DEBUG: Categorías procesadas: ${categories.map((c) => c['name']).toList()}");
       return categories;
     } catch (e) {
