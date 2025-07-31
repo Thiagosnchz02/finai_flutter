@@ -12,7 +12,6 @@ class Category {
 }
 
 class AddEditTransactionScreen extends StatefulWidget {
-  // Si se pasa una transacción, estamos en modo "Editar"
   final Transaction? transaction;
 
   const AddEditTransactionScreen({super.key, this.transaction});
@@ -26,28 +25,28 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
   
-  String _transactionType = 'gasto'; // 'gasto' o 'ingreso'
+  String _transactionType = 'gasto';
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
   
-  late Future<List<Category>> _categoriesFuture;
+  // Lista para almacenar las categorías cargadas
+  List<Category> _categories = [];
+  bool _isLoadingCategories = true;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = _fetchCategories();
+    // Cargamos las categorías iniciales (por defecto, las de 'gasto')
+    _fetchCategories();
 
     if (widget.transaction != null) {
-      // Si estamos editando, rellenamos los campos del formulario
       final tx = widget.transaction!;
       _descriptionController.text = tx.description;
       _amountController.text = tx.amount.toString();
       _transactionType = tx.type;
       _selectedDate = tx.date;
-      // NOTA: Para que la categoría aparezca seleccionada al editar,
-      // el modelo 'Transaction' debería incluir el 'category_id'.
-      // Lo implementaremos en un siguiente paso de mejora.
+      // TODO: Implementar la selección de la categoría al editar
     }
   }
 
@@ -58,20 +57,45 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     super.dispose();
   }
 
-  Future<List<Category>> _fetchCategories() async {
+  // --- LÓGICA DE DATOS MEJORADA ---
+
+  Future<void> _fetchCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+      // Reseteamos la categoría seleccionada para evitar inconsistencias
+      _selectedCategoryId = null; 
+    });
+
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
       final response = await Supabase.instance.client
           .from('categories')
           .select('id, name')
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .eq('type', _transactionType); // <-- Filtramos por el tipo seleccionado
       
-      return response.map<Category>((item) => Category(id: item['id'], name: item['name'])).toList();
+      final loadedCategories = response
+          .map<Category>((item) => Category(id: item['id'], name: item['name']))
+          .toList();
+      
+      setState(() {
+        _categories = loadedCategories;
+        _isLoadingCategories = false;
+      });
+
     } catch (e) {
-      // Si no se pueden cargar, devolvemos una lista vacía
-      return [];
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al cargar categorías: ${e.toString()}'), backgroundColor: Colors.red),
+        );
+        setState(() {
+          _isLoadingCategories = false;
+        });
+      }
     }
   }
+
+  // --- LÓGICA DE UI Y GUARDADO (sin cambios) ---
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -115,7 +139,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Transacción guardada con éxito'), backgroundColor: Colors.green),
           );
-          Navigator.of(context).pop(true); // Devuelve 'true' para indicar que hay que refrescar la lista
+          Navigator.of(context).pop(true);
         }
 
       } catch (e) {
@@ -138,12 +162,10 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       appBar: AppBar(
         title: Text(widget.transaction == null ? 'Nueva Transacción' : 'Editar Transacción'),
         actions: [
-          if (widget.transaction != null) // Solo muestra el botón de borrar si estamos editando
+          if (widget.transaction != null)
             IconButton(
               icon: const Icon(Icons.delete_outline),
-              onPressed: () {
-                // TODO: Lógica para eliminar transacción
-              },
+              onPressed: () { /* TODO: Lógica para eliminar */ },
             )
         ],
       ),
@@ -163,6 +185,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 onSelectionChanged: (newSelection) {
                   setState(() {
                     _transactionType = newSelection.first;
+                    // --- CAMBIO CLAVE: Volvemos a cargar las categorías ---
+                    _fetchCategories();
                   });
                 },
               ),
@@ -184,29 +208,25 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              FutureBuilder<List<Category>>(
-                future: _categoriesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Text('No se pudieron cargar las categorías. Asegúrate de haber creado alguna.');
-                  }
-                  final categories = snapshot.data!;
-                  return DropdownButtonFormField<String>(
-                    value: _selectedCategoryId,
-                    decoration: const InputDecoration(labelText: 'Categoría', border: OutlineInputBorder()),
-                    items: categories.map((cat) => DropdownMenuItem(value: cat.id, child: Text(cat.name))).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategoryId = value;
-                      });
-                    },
-                    validator: (value) => value == null ? 'Selecciona una categoría' : null,
-                  );
-                },
-              ),
+
+              // --- WIDGET DE CATEGORÍAS MEJORADO ---
+              _isLoadingCategories
+              ? const Center(child: CircularProgressIndicator())
+              : DropdownButtonFormField<String>(
+                  value: _selectedCategoryId,
+                  decoration: const InputDecoration(labelText: 'Categoría', border: OutlineInputBorder()),
+                  // Si no hay categorías, mostramos un item deshabilitado
+                  items: _categories.isEmpty
+                    ? [const DropdownMenuItem(value: null, child: Text('No hay categorías de este tipo'))]
+                    : _categories.map((cat) => DropdownMenuItem(value: cat.id, child: Text(cat.name))).toList(),
+                  onChanged: _categories.isEmpty ? null : (value) {
+                    setState(() {
+                      _selectedCategoryId = value;
+                    });
+                  },
+                  validator: (value) => value == null ? 'Selecciona una categoría' : null,
+                ),
+              
               const SizedBox(height: 20),
               ListTile(
                 shape: RoundedRectangleBorder(
