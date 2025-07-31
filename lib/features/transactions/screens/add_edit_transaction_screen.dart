@@ -4,12 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/transaction_model.dart';
 
-// Modelo simple para las categorías que cargaremos en el dropdown
-class Category {
-  final String id;
-  final String name;
-  Category({required this.id, required this.name});
-}
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
@@ -24,21 +18,20 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
-  
+
   String _transactionType = 'gasto';
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
-  
-  // Lista para almacenar las categorías cargadas
-  List<Category> _categories = [];
-  bool _isLoadingCategories = true;
+
+  // Future que manejará la carga de categorías
+  late Future<List<Map<String, dynamic>>> _categoriesFuture;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
     // Cargamos las categorías iniciales (por defecto, las de 'gasto')
-    _fetchCategories();
+    _categoriesFuture = _fetchCategories(_transactionType);
 
     if (widget.transaction != null) {
       final tx = widget.transaction!;
@@ -59,45 +52,21 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
   // --- LÓGICA DE DATOS MEJORADA ---
 
-  Future<void> _fetchCategories() async {
-    print('DEBUG: _fetchCategories llamado para el tipo: $_transactionType');
-    setState(() {
-      _isLoadingCategories = true;
-      // Reseteamos los datos de categorías para evitar inconsistencias
-      _categories = [];
-      _selectedCategoryId = null;
-    });
-
+  Future<List<Map<String, dynamic>>> _fetchCategories(String transactionType) async {
+    print('DEBUG: _fetchCategories llamado para el tipo: $transactionType');
     try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
       final data = await Supabase.instance.client
           .from('categories')
           .select('id, name')
-          .eq('user_id', userId)
-          .eq('type', _transactionType); // <-- Filtramos por el tipo seleccionado
-
+          .eq('type', transactionType);
       print('DEBUG: Respuesta de Supabase: $data');
-
-      final loadedCategories = data
-          .map<Category>((item) => Category(id: item['id'], name: item['name']))
-          .toList();
-
-      setState(() {
-        _categories = loadedCategories;
-        _isLoadingCategories = false;
-      });
-
-      print('DEBUG: Categorías procesadas: ${_categories.map((c) => c.name).toList()}');
-
+      // Asegúrate de que la conversión es segura.
+      final categories = List<Map<String, dynamic>>.from(data ?? []);
+      print("DEBUG: Categorías procesadas: ${categories.map((c) => c['name']).toList()}");
+      return categories;
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al cargar categorías: ${e.toString()}'), backgroundColor: Colors.red),
-        );
-        setState(() {
-          _isLoadingCategories = false;
-        });
-      }
+      print('ERROR en _fetchCategories: $e');
+      return [];
     }
   }
 
@@ -188,13 +157,14 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                   ButtonSegment(value: 'ingreso', label: Text('Ingreso'), icon: Icon(FontAwesomeIcons.arrowUp)),
                 ],
                 selected: {_transactionType},
-                onSelectionChanged: (newSelection) {
-                  print('DEBUG: El tipo de transacción cambió a: ${newSelection.first}');
+                onSelectionChanged: (Set<String> newSelection) {
                   setState(() {
                     _transactionType = newSelection.first;
+                    // Reinicia el future para que se vuelva a ejecutar con el nuevo tipo
+                    _categoriesFuture = _fetchCategories(_transactionType);
+                    // Resetea la categoría seleccionada para evitar inconsistencias
+                    _selectedCategoryId = null;
                   });
-                  // --- CAMBIO CLAVE: Volvemos a cargar las categorías ---
-                  _fetchCategories();
                 },
               ),
               const SizedBox(height: 20),
@@ -217,22 +187,55 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
               const SizedBox(height: 20),
 
               // --- WIDGET DE CATEGORÍAS MEJORADO ---
-              _isLoadingCategories
-              ? const Center(child: CircularProgressIndicator())
-              : DropdownButtonFormField<String>(
-                  value: _selectedCategoryId,
-                  decoration: const InputDecoration(labelText: 'Categoría', border: OutlineInputBorder()),
-                  // Si no hay categorías, mostramos un item deshabilitado
-                  items: _categories.isEmpty
-                    ? [const DropdownMenuItem(value: null, child: Text('No hay categorías de este tipo'))]
-                    : _categories.map((cat) => DropdownMenuItem(value: cat.id, child: Text(cat.name))).toList(),
-                  onChanged: _categories.isEmpty ? null : (value) {
-                    setState(() {
-                      _selectedCategoryId = value;
-                    });
-                  },
-                  validator: (value) => value == null ? 'Selecciona una categoría' : null,
-                ),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _categoriesFuture,
+                builder: (context, snapshot) {
+                  // Caso 1: El future se está ejecutando
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  // Caso 2: El future terminó con un error
+                  if (snapshot.hasError) {
+                    return const Text('Error al cargar las categorías');
+                  }
+
+                  // Caso 3: El future terminó, pero no hay datos o la lista está vacía
+                  final categories = snapshot.data;
+                  if (categories == null || categories.isEmpty) {
+                    return const ListTile(
+                      title: Text('Categoría'),
+                      subtitle: Text('No hay categorías para este tipo'),
+                      trailing: Icon(Icons.arrow_drop_down),
+                    );
+                  }
+
+                  // Caso 4: El future terminó con éxito y hay datos
+                  if (_selectedCategoryId != null && !categories.any((c) => c['id'] == _selectedCategoryId)) {
+                      _selectedCategoryId = null;
+                  }
+
+                  return DropdownButtonFormField<String>(
+                    value: _selectedCategoryId,
+                    decoration: const InputDecoration(
+                      labelText: 'Categoría',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: categories.map((category) {
+                      return DropdownMenuItem<String>(
+                        value: category['id'] as String,
+                        child: Text(category['name'] as String),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategoryId = value;
+                      });
+                    },
+                    validator: (value) => value == null ? 'Por favor, selecciona una categoría' : null,
+                  );
+                },
+              ),
               
               const SizedBox(height: 20),
               ListTile(
