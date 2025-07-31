@@ -62,8 +62,9 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   Future<void> _fetchCategories() async {
     setState(() {
       _isLoadingCategories = true;
-      // Reseteamos la categoría seleccionada para evitar inconsistencias
-      _selectedCategoryId = null; 
+      // Reseteamos los datos de categorías para evitar inconsistencias
+      _categories = [];
+      _selectedCategoryId = null;
     });
 
     try {
@@ -185,9 +186,9 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 onSelectionChanged: (newSelection) {
                   setState(() {
                     _transactionType = newSelection.first;
-                    // --- CAMBIO CLAVE: Volvemos a cargar las categorías ---
-                    _fetchCategories();
                   });
+                  // --- CAMBIO CLAVE: Volvemos a cargar las categorías ---
+                  _fetchCategories();
                 },
               ),
               const SizedBox(height: 20),
