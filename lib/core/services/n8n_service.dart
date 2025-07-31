@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class N8nService {
-  /// Llama al workflow de n8n para generar avatares.
-  /// Puede recibir un [prompt] de texto o la URL de una [baseImage] subida.
   Future<List<String>> generateAvatar({
     required String type,
     String? prompt,
@@ -19,6 +17,7 @@ class N8nService {
     final apiKey = dotenv.env['N8N_API_KEY'];
     final userId = Supabase.instance.client.auth.currentUser?.id;
 
+    // --- CONSTRUCCIÓN DEL CUERPO (BODY) ---
     final Map<String, dynamic> body = {
       'type': type,
       'userId': userId,
@@ -27,26 +26,25 @@ class N8nService {
       'style': style,
     };
 
-    // Creamos el objeto anidado solo si estamos en el flujo de texto a imagen
     if (type == 'TEXT_TO_IMAGE') {
       body['enrichment'] = {
         'action': action,
         'background': background,
         'perspective': perspective,
       };
-      // Limpiamos los valores nulos o vacíos dentro del objeto de enriquecimiento
       (body['enrichment'] as Map).removeWhere((key, value) => value == null || (value is String && value.isEmpty));
+      if ((body['enrichment'] as Map).isEmpty) {
+        body.remove('enrichment');
+      }
     }
     
     body.removeWhere((key, value) => value == null || (value is String && value.isEmpty));
     final jsonBody = json.encode(body);
 
-    // --- DEPURACIÓN AÑADIDA ---
     print('--- Enviando a n8n ---');
     print('URL: $url');
     print('Body: $jsonBody');
     print('----------------------');
-    // -------------------------
 
     try {
       final response = await http.post(
@@ -65,23 +63,48 @@ class N8nService {
 
       if (response.statusCode == 200) {
         if (response.body.isEmpty) {
-          throw Exception('n8n devolvió una respuesta vacía. Revisa el nodo "Respond to Webhook".');
+          throw Exception('n8n devolvió una respuesta vacía. Revisa el flujo.');
         }
         
-        final responseData = json.decode(response.body);
-        
-        if (responseData['image_urls'] == null) {
-          throw Exception('La respuesta de n8n es un JSON válido, pero no contiene la clave "image_urls". Revisa el nodo "Code" en n8n.');
+        final dynamic responseData = json.decode(response.body);
+
+        // --- LÓGICA DE PROCESAMIENTO ACTUALIZADA ---
+        if (responseData is List) {
+          // Obtenemos las variables para construir la URL de Supabase Storage
+          final projectId = dotenv.env['SUPABASE_PROJECT_ID'];
+          final bucketName = dotenv.env['SUPABASE_AVATARS_BUCKET'];
+
+          if (projectId == null || bucketName == null) {
+            throw Exception('Faltan SUPABASE_PROJECT_ID o SUPABASE_AVATARS_BUCKET en el archivo .env');
+          }
+
+          final List<String> finalUrls = [];
+          for (var item in responseData) {
+            if (item is Map && item.containsKey('Key')) {
+              final String key = item['Key'];
+              // Construimos la URL pública completa
+              final publicUrl = 'https://$projectId.supabase.co/storage/v1/object/public/$bucketName/$key';
+              finalUrls.add(publicUrl);
+            }
+          }
+          
+          if (finalUrls.isEmpty) {
+            throw Exception('La respuesta de n8n no contenía ninguna "Key" válida.');
+          }
+
+          return finalUrls;
+
+        } else {
+          // Si la respuesta no es una lista, es un formato inesperado
+          throw Exception('Formato de respuesta de n8n inesperado. Se esperaba una lista de objetos.');
         }
 
-        final List<dynamic> imageUrls = responseData['image_urls'];
-        return imageUrls.cast<String>();
       } else {
         throw Exception('Error en la llamada a n8n: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
       if (e is FormatException) {
-        throw Exception('La respuesta de n8n no es un JSON válido. Revisa que el flujo esté devolviendo datos.');
+        throw Exception('La respuesta de n8n no es un JSON válido.');
       }
       rethrow;
     }
