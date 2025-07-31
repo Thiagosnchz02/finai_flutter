@@ -31,8 +31,13 @@ class AiAvatarOptionsScreen extends StatelessWidget {
               title: 'Generar desde Foto',
               subtitle: 'Sube un selfie y transfórmalo en diferentes estilos artísticos.',
               tooltipText: 'Usaremos tu foto como base para crear un avatar que se parezca a ti, aplicando el estilo que elijas (ej. Pixar, Ghibli, etc.).',
-              onTap: () {
-                Navigator.of(context).pushNamed('/avatar/image-to-image');
+              onTap: () async {
+                final result = await Navigator.of(context).pushNamed('/avatar/image-to-image');
+                // Si la pantalla de generación devuelve un resultado, cerramos esta pantalla
+                // y pasamos el resultado a la pantalla anterior (la de perfil).
+                if (result != null && context.mounted) {
+                  Navigator.of(context).pop(result);
+                }
               },
             ),
             const SizedBox(height: 16),
@@ -41,8 +46,11 @@ class AiAvatarOptionsScreen extends StatelessWidget {
               title: 'Generar desde Texto',
               subtitle: 'Usa tu imaginación y describe el avatar que quieres crear.',
               tooltipText: 'Escribe una descripción detallada (ej. "astronauta con pelo azul, estilo cartoon") y la IA la convertirá en una imagen. ¡El límite es tu creatividad!',
-              onTap: () {
-                Navigator.of(context).pushNamed('/avatar/generative');
+              onTap: () async {
+                final result = await Navigator.of(context).pushNamed('/avatar/generative');
+                if (result != null && context.mounted) {
+                  Navigator.of(context).pop(result);
+                }
               },
             ),
           ],
@@ -52,7 +60,7 @@ class AiAvatarOptionsScreen extends StatelessWidget {
   }
 }
 
-// Widget interno reutilizable para las tarjetas de opción
+// Widget interno reutilizable para las tarjetas de opción (sin cambios)
 class _OptionCard extends StatelessWidget {
   final IconData icon;
   final String title;
