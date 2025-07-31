@@ -72,10 +72,9 @@ class N8nService {
         if (responseData is List) {
           // Obtenemos las variables para construir la URL de Supabase Storage
           final projectId = dotenv.env['SUPABASE_PROJECT_ID'];
-          final bucketName = dotenv.env['SUPABASE_AVATARS_BUCKET'];
 
-          if (projectId == null || bucketName == null) {
-            throw Exception('Faltan SUPABASE_PROJECT_ID o SUPABASE_AVATARS_BUCKET en el archivo .env');
+          if (projectId == null) {
+            throw Exception('Falta SUPABASE_PROJECT_ID en el archivo .env');
           }
 
           final List<String> finalUrls = [];
@@ -83,7 +82,7 @@ class N8nService {
             if (item is Map && item.containsKey('Key')) {
               final String key = item['Key'];
               // Construimos la URL pública completa
-              final publicUrl = 'https://$projectId.supabase.co/storage/v1/object/public/$bucketName/$key';
+              final publicUrl = 'https://$projectId.supabase.co/storage/v1/object/public/$key';
               finalUrls.add(publicUrl);
             }
           }
