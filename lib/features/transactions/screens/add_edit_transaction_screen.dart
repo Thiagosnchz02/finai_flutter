@@ -60,6 +60,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   // --- LÓGICA DE DATOS MEJORADA ---
 
   Future<void> _fetchCategories() async {
+    print('DEBUG: _fetchCategories llamado para el tipo: $_transactionType');
     setState(() {
       _isLoadingCategories = true;
       // Reseteamos los datos de categorías para evitar inconsistencias
@@ -69,20 +70,24 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
     try {
       final userId = Supabase.instance.client.auth.currentUser!.id;
-      final response = await Supabase.instance.client
+      final data = await Supabase.instance.client
           .from('categories')
           .select('id, name')
           .eq('user_id', userId)
           .eq('type', _transactionType); // <-- Filtramos por el tipo seleccionado
-      
-      final loadedCategories = response
+
+      print('DEBUG: Respuesta de Supabase: $data');
+
+      final loadedCategories = data
           .map<Category>((item) => Category(id: item['id'], name: item['name']))
           .toList();
-      
+
       setState(() {
         _categories = loadedCategories;
         _isLoadingCategories = false;
       });
+
+      print('DEBUG: Categorías procesadas: ${_categories.map((c) => c.name).toList()}');
 
     } catch (e) {
       if (mounted) {
@@ -184,6 +189,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 ],
                 selected: {_transactionType},
                 onSelectionChanged: (newSelection) {
+                  print('DEBUG: El tipo de transacción cambió a: ${newSelection.first}');
                   setState(() {
                     _transactionType = newSelection.first;
                   });
