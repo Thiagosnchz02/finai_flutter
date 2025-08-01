@@ -156,7 +156,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   /// Muestra un diálogo de confirmación y luego cierra sesión en otros dispositivos.
   Future<void> _signOutOthers() async {
-    // ... (Tu código para _signOutOthers se mantiene igual)
+    final shouldSignOut = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Confirmar acción'),
+          content: const Text('Esto cerrará tu sesión en todos los demás dispositivos. ¿Estás seguro?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Cerrar Sesión', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldSignOut != true) {
+      return;
+    }
+
+    try {
+      await _supabase.auth.signOut(scope: SignOutScope.others);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Sesión cerrada en otros dispositivos con éxito.'),
+          backgroundColor: Colors.green,
+        ));
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Error: ${e.message}'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ));
+      }
+    }
   }
 
   @override
