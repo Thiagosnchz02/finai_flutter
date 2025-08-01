@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../core/services/n8n_service.dart';
+import '../../../core/services/avatar_service.dart';
 
 class GenerativeAiScreen extends StatefulWidget {
   const GenerativeAiScreen({super.key});
@@ -24,7 +24,7 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
   bool _canGenerate = true;
   int _countdownSeconds = 15;
 
-  final N8nService _n8nService = N8nService();
+  final AvatarService _avatarService = AvatarService();
   final List<String> _styles = ['Cartoon', 'Pixar', 'Ghibli', 'Realista', 'Anime', 'Cyberpunk'];
 
   @override
@@ -52,7 +52,7 @@ class _GenerativeAiScreenState extends State<GenerativeAiScreen> {
     });
 
     try {
-      final generatedUrls = await _n8nService.generateAvatar(
+      final generatedUrls = await _avatarService.generateAvatar(
         type: 'TEXT_TO_IMAGE',
         prompt: _promptController.text.trim(),
         style: _selectedStyle,

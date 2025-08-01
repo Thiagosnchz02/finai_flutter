@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../core/services/n8n_service.dart';
+import '../../../core/services/avatar_service.dart';
 
 class ImageToImageScreen extends StatefulWidget {
   const ImageToImageScreen({super.key});
@@ -24,7 +24,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
   int _countdownSeconds = 15;
 
   final ImagePicker _picker = ImagePicker();
-  final N8nService _n8nService = N8nService();
+  final AvatarService _avatarService = AvatarService();
 
   final List<String> _styles = ['Cartoon', 'Pixar', 'Ghibli', 'Realista', 'Anime', 'Cyberpunk'];
 
@@ -64,7 +64,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> {
       final base64Image = base64Encode(imageBytes);
 
       // 2. Llamar al servicio de n8n con el tipo 'IMAGE_TO_IMAGE'
-      final generatedUrls = await _n8nService.generateAvatar(
+      final generatedUrls = await _avatarService.generateAvatar(
         type: 'IMAGE_TO_IMAGE',
         baseImage: base64Image,
         style: _selectedStyle,
