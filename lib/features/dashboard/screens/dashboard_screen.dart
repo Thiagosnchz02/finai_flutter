@@ -1,46 +1,124 @@
+// lib/features/dashboard/screens/dashboard_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DashboardScreen extends StatelessWidget {
+// Importaciones de las pantallas y widgets necesarios
+import 'package:finai_flutter/features/accounts/screens/accounts_screen.dart';
+import 'package:finai_flutter/features/dashboard/widgets/accounts_widget.dart';
+import 'package:finai_flutter/features/profile/screens/profile_screen.dart'; // <-- CAMBIO: Importamos la pantalla de Perfil real
+
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _selectedIndex = 0;
+
+  // Lista de las pantallas principales que se mostrarán
+  static const List<Widget> _widgetOptions = <Widget>[
+    DashboardView(),
+    AccountsScreen(),
+    Text(
+      'Próximamente: Metas',
+    ),
+    ProfileScreen(), // Ahora usa la pantalla de Perfil real
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Obtenemos el usuario para mostrar su email
+    return Scaffold(
+      body: Center(
+        child: _widgetOptions.elementAt(_selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_balance_wallet),
+            label: 'Cuentas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.savings),
+            label: 'Metas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Perfil',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Colors.grey,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+      ),
+    );
+  }
+}
+
+class DashboardView extends StatelessWidget {
+  const DashboardView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
-          // Botón para cerrar sesión
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await Supabase.instance.client.auth.signOut();
-              // El listener en main.dart se encargará de la navegación al login.
             },
-            tooltip: 'Cerrar Sesión',
           ),
         ],
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              '¡Bienvenido a FinAi!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      body: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          if (user?.userMetadata?['full_name'] != null)
+            Text(
+              'Bienvenido, ${user!.userMetadata!['full_name']}!',
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-            const SizedBox(height: 16),
-            if (user != null)
-              Text(
-                'Sesión iniciada como: ${user.email}',
-                style: const TextStyle(fontSize: 16),
+          const SizedBox(height: 24),
+
+          const AccountsDashboardWidget(),
+
+          const SizedBox(height: 24),
+
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Próximos Pagos', style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 12),
+                  const Text('Funcionalidad en desarrollo...'),
+                ],
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
+// <-- CAMBIO: La clase 'ProfileScreen' de ejemplo ha sido eliminada de aquí.

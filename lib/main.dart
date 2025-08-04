@@ -17,6 +17,7 @@ import 'features/profile/screens/meta_import_screen.dart';
 import 'features/profile/screens/ai_avatar_options_screen.dart';
 import 'features/profile/screens/image_to_image_screen.dart';
 import 'features/transactions/screens/transactions_screen.dart';
+import 'features/accounts/screens/accounts_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,7 +83,7 @@ class _MyAppState extends State<MyApp> {
         // Si el usuario inicia sesión (ya sea por confirmación de email, Google, etc.)
         // lo llevamos al dashboard (o perfil para probar), limpiando cualquier pantalla anterior.
         _navigatorKey.currentState?.pushNamedAndRemoveUntil(
-            '/transactions', (route) => false); // Redirige a Perfil para probar
+            '/dashboard', (route) => false); // Redirige a Perfil para probar
       } else if (event == AuthChangeEvent.signedOut) {
         // Si el usuario cierra sesión, lo llevamos al login.
          _navigatorKey.currentState?.pushNamedAndRemoveUntil(
@@ -119,7 +120,7 @@ class _MyAppState extends State<MyApp> {
           
           if (snapshot.hasData && snapshot.data?.session != null) {
             // AHORA REDIRIGE AL PERFIL PARA PROBARLO
-            return const ProfileScreen(); 
+            return const DashboardScreen(); 
           }
 
           return const LoginScreen();
@@ -133,7 +134,8 @@ class _MyAppState extends State<MyApp> {
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/update-password': (context) => const UpdatePasswordScreen(),
         '/dashboard': (context) => const DashboardScreen(),
-        '/profile': (context) => const ProfileScreen(), // <-- Nueva ruta
+        '/profile': (context) => const ProfileScreen(),
+        '/accounts': (context) => const AccountsScreen(),
         '/avatar/generative': (context) => const GenerativeAiScreen(),
         '/avatar/meta-import': (context) => const MetaImportScreen(),
         '/avatar/ai-options': (context) => const AiAvatarOptionsScreen(),
