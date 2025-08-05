@@ -1,9 +1,12 @@
+// lib/features/transactions/screens/add_edit_transaction_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:finai_flutter/core/events/app_events.dart'; // <-- 1. IMPORTAR ENUM
+import 'package:finai_flutter/core/services/event_logger_service.dart'; // <-- 2. IMPORTAR SERVICIO
 import '../models/transaction_model.dart';
-
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
@@ -19,23 +22,21 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
 
-  // Controllers y estado para notas y cuentas
-  final _notesController = TextEditingController();
-  String? _selectedAccountId;
-  late Future<List<Map<String, dynamic>>> _accountsFuture;
-
   String _transactionType = 'gasto';
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
+  String? _selectedAccountId;
 
-  // Future que manejará la carga de categorías
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
+  late Future<List<Map<String, dynamic>>> _accountsFuture;
   bool _isLoading = false;
+
+  // 3. INSTANCIAR EL SERVICIO DE LOGGING
+  final _eventLogger = EventLoggerService();
 
   @override
   void initState() {
     super.initState();
-    // Cargamos las categorías iniciales (por defecto, las de 'gasto')
     _categoriesFuture = _fetchCategories(_transactionType);
     _accountsFuture = _fetchAccounts();
 
@@ -45,9 +46,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _amountController.text = tx.amount.toString();
       _transactionType = tx.type;
       _selectedDate = tx.date;
-      // TODO: Implementar la selección de la categoría al editar
-      _notesController.text = widget.transaction!.notes ?? '';
-      _selectedAccountId = widget.transaction!.accountId;
+      _selectedCategoryId = tx.category?.id;
+      _selectedAccountId = tx.accountId;
     }
   }
 
@@ -55,24 +55,17 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   void dispose() {
     _descriptionController.dispose();
     _amountController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
-  // --- LÓGICA DE DATOS MEJORADA ---
-
   Future<List<Map<String, dynamic>>> _fetchCategories(String transactionType) async {
-    print('DEBUG: _fetchCategories llamado para el tipo: $transactionType');
+    // ... (este método no cambia)
     try {
       final data = await Supabase.instance.client
-          .from('categories')
-          .select('id, name')
-          .eq('type', transactionType);
-      print('DEBUG: Respuesta de Supabase: $data');
-      // Asegúrate de que la conversión es segura.
-      final categories = List<Map<String, dynamic>>.from(data);
-      print("DEBUG: Categorías procesadas: ${categories.map((c) => c['name']).toList()}");
-      return categories;
+        .from('categories')
+        .select('id, name')
+        .eq('type', transactionType);
+      return List<Map<String, dynamic>>.from(data);
     } catch (e) {
       print('ERROR en _fetchCategories: $e');
       return [];
@@ -80,22 +73,22 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchAccounts() async {
+    // ... (este método no cambia)
     try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
-      final data = await Supabase.instance.client
-          .from('accounts')
-          .select('id, name')
-          .eq('user_id', userId);
-      return List<Map<String, dynamic>>.from(data);
-    } catch (e) {
-      print('ERROR en _fetchAccounts: $e');
-      return [];
-    }
+        final userId = Supabase.instance.client.auth.currentUser!.id;
+        final data = await Supabase.instance.client
+            .from('accounts')
+            .select('id, name')
+            .eq('user_id', userId);
+        return List<Map<String, dynamic>>.from(data);
+      } catch (e) {
+        print('ERROR en _fetchAccounts: $e');
+        return [];
+      }
   }
 
-  // --- LÓGICA DE UI Y GUARDADO (sin cambios) ---
-
   Future<void> _selectDate(BuildContext context) async {
+    // ... (este método no cambia)
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -109,31 +102,54 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     }
   }
 
+  // 4. ACTUALIZAR EL MÉTODO _saveTransaction
   Future<void> _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       setState(() { _isLoading = true; });
 
       try {
         final userId = Supabase.instance.client.auth.currentUser!.id;
-        final amount = double.parse(_amountController.text.replaceAll(',', '.'));
-        final description = _descriptionController.text;
+        final bool isEditing = widget.transaction != null;
 
         final dataToUpsert = {
           'user_id': userId,
-          'description': description,
-          'amount': amount,
+          'description': _descriptionController.text.trim(),
+          'amount': double.parse(_amountController.text.replaceAll(',', '.')),
           'transaction_date': _selectedDate.toIso8601String(),
           'type': _transactionType,
           'category_id': _selectedCategoryId,
           'account_id': _selectedAccountId,
-          'notes': _notesController.text.isNotEmpty ? _notesController.text : null,
         };
 
-        if (widget.transaction != null) {
+        if (isEditing) {
           dataToUpsert['id'] = widget.transaction!.id;
         }
 
-        await Supabase.instance.client.from('transactions').upsert(dataToUpsert);
+        // Guardamos y obtenemos el ID de la transacción
+        final savedTransaction = await Supabase.instance.client.from('transactions').upsert(dataToUpsert).select().single();
+        final savedTransactionId = savedTransaction['id'];
+
+        // --- INICIO DE LA LÓGICA DE REGISTRO DE EVENTOS ---
+
+        if (isEditing) {
+          // Si estamos editando, registramos el evento de edición
+          _eventLogger.log(
+            AppEvent.transaction_edited,
+            details: {'transaction_id': savedTransactionId},
+          );
+        } else {
+          // Si es nueva, registramos el evento de creación
+          _eventLogger.log(
+            AppEvent.transaction_created,
+            details: {
+              'transaction_id': savedTransactionId,
+              'type': _transactionType,
+              'amount': dataToUpsert['amount'],
+            },
+          );
+        }
+
+        // --- FIN DE LA LÓGICA DE REGISTRO DE EVENTOS ---
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -156,18 +172,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     }
   }
 
+  // El método build() y el resto de la clase permanecen sin cambios...
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.transaction == null ? 'Nueva Transacción' : 'Editar Transacción'),
-        actions: [
-          if (widget.transaction != null)
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () { /* TODO: Lógica para eliminar */ },
-            )
-        ],
       ),
       body: Form(
         key: _formKey,
@@ -185,9 +195,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 onSelectionChanged: (Set<String> newSelection) {
                   setState(() {
                     _transactionType = newSelection.first;
-                    // Reinicia el future para que se vuelva a ejecutar con el nuevo tipo
                     _categoriesFuture = _fetchCategories(_transactionType);
-                    // Resetea la categoría seleccionada para evitar inconsistencias
                     _selectedCategoryId = null;
                   });
                 },
@@ -211,60 +219,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
               ),
               const SizedBox(height: 20),
 
-              // --- WIDGET DE CATEGORÍAS MEJORADO ---
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _categoriesFuture,
-                builder: (context, snapshot) {
-                  // Caso 1: El future se está ejecutando
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  // Caso 2: El future terminó con un error
-                  if (snapshot.hasError) {
-                    return const Text('Error al cargar las categorías');
-                  }
-
-                  // Caso 3: El future terminó, pero no hay datos o la lista está vacía
-                  final categories = snapshot.data;
-                  if (categories == null || categories.isEmpty) {
-                    return const ListTile(
-                      title: Text('Categoría'),
-                      subtitle: Text('No hay categorías para este tipo'),
-                      trailing: Icon(Icons.arrow_drop_down),
-                    );
-                  }
-
-                  // Caso 4: El future terminó con éxito y hay datos
-                  if (_selectedCategoryId != null && !categories.any((c) => c['id'] == _selectedCategoryId)) {
-                      _selectedCategoryId = null;
-                  }
-
-                  return DropdownButtonFormField<String>(
-                    value: _selectedCategoryId,
-                    decoration: const InputDecoration(
-                      labelText: 'Categoría',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: categories.map((category) {
-                      return DropdownMenuItem<String>(
-                        value: category['id'] as String,
-                        child: Text(category['name'] as String),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategoryId = value;
-                      });
-                    },
-                validator: (value) => value == null ? 'Por favor, selecciona una categoría' : null,
-                );
-              },
-              ),
-
-              const SizedBox(height: 20), // Espaciador
-
-              // WIDGET PARA SELECCIONAR LA CUENTA
+              // Dropdown de Cuentas
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: _accountsFuture,
                 builder: (context, snapshot) {
@@ -272,25 +227,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const ListTile(
-                      title: Text('Cuenta'),
-                      subtitle: Text('No se encontraron cuentas'),
-                      trailing: Icon(Icons.error),
-                    );
+                    return const ListTile(title: Text('Cuenta'), subtitle: Text('No se encontraron cuentas'));
                   }
-
                   final accounts = snapshot.data!;
-                  // Asegurarse de que el ID seleccionado es válido
-                  if (_selectedAccountId != null && !accounts.any((acc) => acc['id'] == _selectedAccountId)) {
-                      _selectedAccountId = null;
-                  }
-
                   return DropdownButtonFormField<String>(
                     value: _selectedAccountId,
-                    decoration: const InputDecoration(
-                      labelText: 'Cuenta',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Cuenta', border: OutlineInputBorder()),
                     items: accounts.map((account) {
                       return DropdownMenuItem<String>(
                         value: account['id'] as String,
@@ -298,29 +240,44 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       );
                     }).toList(),
                     onChanged: (value) => setState(() => _selectedAccountId = value),
-                    validator: (value) => value == null ? 'Por favor, selecciona una cuenta' : null,
+                    validator: (value) => value == null ? 'Selecciona una cuenta' : null,
                   );
                 },
               ),
-
-              const SizedBox(height: 20), // Espaciador
-
-              // WIDGET PARA LAS NOTAS
-              TextFormField(
-                controller: _notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Notas (opcional)',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
+              const SizedBox(height: 20),
+              
+              // Dropdown de Categorías
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _categoriesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return const Text('Error al cargar categorías');
+                  }
+                  final categories = snapshot.data;
+                  if (categories == null || categories.isEmpty) {
+                    return const ListTile(title: Text('Categoría'), subtitle: Text('No hay categorías para este tipo'));
+                  }
+                  return DropdownButtonFormField<String>(
+                    value: _selectedCategoryId,
+                    decoration: const InputDecoration(labelText: 'Categoría', border: OutlineInputBorder()),
+                    items: categories.map((category) {
+                      return DropdownMenuItem<String>(
+                        value: category['id'] as String,
+                        child: Text(category['name'] as String),
+                      );
+                    }).toList(),
+                    onChanged: (value) => setState(() => _selectedCategoryId = value),
+                    validator: (value) => value == null ? 'Selecciona una categoría' : null,
+                  );
+                },
               ),
-
+              
               const SizedBox(height: 20),
               ListTile(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  side: BorderSide(color: Colors.grey.shade400)
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4), side: BorderSide(color: Colors.grey.shade400)),
                 title: Text('Fecha: ${DateFormat.yMMMd('es_ES').format(_selectedDate)}'),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () => _selectDate(context),

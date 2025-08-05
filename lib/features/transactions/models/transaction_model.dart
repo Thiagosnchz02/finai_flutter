@@ -1,55 +1,56 @@
-import 'package:flutter/material.dart';
+// lib/features/transactions/models/transaction_model.dart
 
+// Modelo para la categoría, que ahora viene anidada en la transacción
+class Category {
+  final String id;
+  final String name;
+  final String type;
+
+  Category({required this.id, required this.name, required this.type});
+
+  factory Category.fromMap(Map<String, dynamic> map) {
+    return Category(
+      id: map['id'] as String,
+      name: map['name'] as String,
+      type: map['type'] as String,
+    );
+  }
+}
+
+// Modelo principal de la transacción
 class Transaction {
   final String id;
-  final DateTime date;
   final String description;
   final double amount;
   final String type; // 'gasto' o 'ingreso'
-  final String categoryName;
-  final String categoryIcon;
-  final Color categoryColor;
+  final DateTime date;
   final String? accountId;
   final String? notes;
+  final Category? category; // La categoría puede ser nula
 
   Transaction({
     required this.id,
-    required this.date,
     required this.description,
     required this.amount,
     required this.type,
-    required this.categoryName,
-    required this.categoryIcon,
-    required this.categoryColor,
-    this.accountId,
+    required this.date,
+     this.accountId,
     this.notes,
+    this.category,
   });
 
-  factory Transaction.fromJson(Map<String, dynamic> json) {
-    // Helper para parsear el color hexadecimal
-    Color parseColor(String? colorStr) {
-      if (colorStr == null || colorStr.isEmpty) return Colors.grey;
-      final buffer = StringBuffer();
-      if (colorStr.length == 6 || colorStr.length == 7) buffer.write('ff');
-      buffer.write(colorStr.replaceFirst('#', ''));
-      try {
-        return Color(int.parse(buffer.toString(), radix: 16));
-      } catch (e) {
-        return Colors.grey;
-      }
-    }
-
+  factory Transaction.fromMap(Map<String, dynamic> map) {
     return Transaction(
-      id: json['id'] as String,
-      date: DateTime.parse(json['transaction_date'] as String),
-      description: json['description'] as String,
-      amount: (json['amount'] as num).toDouble(),
-      type: json['type'] as String,
-      categoryName: (json['categories'] as Map<String, dynamic>?)?['name'] as String? ?? 'Sin Categoría',
-      categoryIcon: (json['categories'] as Map<String, dynamic>?)?['icon'] as String? ?? 'fas fa-question-circle',
-      categoryColor: parseColor((json['categories'] as Map<String, dynamic>?)?['color'] as String?),
-      accountId: json['account_id'] as String?,
-      notes: json['notes'] as String?,
+      id: map['id'] as String,
+      description: map['description'] as String,
+      amount: (map['amount'] as num).toDouble(),
+      type: map['type'] as String,
+      date: DateTime.parse(map['transaction_date'] as String),
+      accountId: map['account_id'] as String?,
+      notes: map['notes'] as String?,
+      category: map['categories'] != null
+          ? Category.fromMap(map['categories'] as Map<String, dynamic>)
+          : null,
     );
   }
 }

@@ -1,10 +1,13 @@
+// lib/features/transactions/screens/transactions_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:collection/collection.dart'; // Necesario para groupBy
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../models/transaction_model.dart';
-import 'add_edit_transaction_screen.dart';
+
+import 'package:finai_flutter/features/transactions/models/transaction_model.dart';
+import 'package:finai_flutter/features/transactions/services/transactions_service.dart';
+import 'package:finai_flutter/features/transactions/screens/add_edit_transaction_screen.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -14,104 +17,57 @@ class TransactionsScreen extends StatefulWidget {
 }
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
-  late Future<Map<String, List<Transaction>>> _groupedTransactionsFuture;
+  final _service = TransactionsService();
+  late Future<List<Transaction>> _transactionsFuture;
 
   @override
   void initState() {
     super.initState();
-    // Inicializamos la localización para español para los nombres de los meses
-    initializeDateFormatting('es_ES', null);
-    _groupedTransactionsFuture = _fetchAndGroupTransactions();
+    _loadTransactions();
   }
 
-  Future<Map<String, List<Transaction>>> _fetchAndGroupTransactions() async {
-    try {
-      final userId = Supabase.instance.client.auth.currentUser!.id;
-      final response = await Supabase.instance.client
-          .from('transactions')
-          .select('*, categories(*)') // Hacemos JOIN con la tabla de categorías
-          .eq('user_id', userId)
-          .order('transaction_date', ascending: false)
-          .limit(100); // Límite inicial, la paginación se añadirá después
+  void _loadTransactions() {
+    setState(() {
+      // Usamos el nuevo servicio para obtener las transacciones y las convertimos al modelo correcto.
+      _transactionsFuture = _service.fetchTransactions()
+          .then((maps) => maps.map((map) => Transaction.fromMap(map)).toList());
+    });
+  }
 
-      final List<Transaction> transactions = response
-          .map((item) => Transaction.fromJson(item))
-          .toList();
+  // Navega a la pantalla de añadir/editar y recarga los datos si es necesario.
+  void _navigateAndRefresh({Transaction? transaction}) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => AddEditTransactionScreen(transaction: transaction),
+      ),
+    );
+    if (result == true && mounted) {
+      _loadTransactions();
+    }
+  }
+
+  // Agrupa las transacciones por fecha.
+  Map<DateTime, List<Transaction>> _groupTransactionsByDate(List<Transaction> transactions) {
+    return groupBy(transactions, (Transaction t) => DateTime(t.date.year, t.date.month, t.date.day));
+  }
+  
+  // Formatea el encabezado de cada grupo de fechas.
+  String _formatDateHeader(DateTime date) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+
+      if (date == today) return 'Hoy';
+      if (date == yesterday) return 'Ayer';
       
-      return _groupTransactionsByDate(transactions);
-
-    } catch (e) {
-      // Si algo falla, lanzamos una excepción para que el FutureBuilder la capture
-      throw Exception('Error al cargar las transacciones: $e');
-    }
+      return DateFormat.yMMMd('es_ES').format(date);
   }
-
-  Map<String, List<Transaction>> _groupTransactionsByDate(List<Transaction> transactions) {
-    final grouped = <String, List<Transaction>>{};
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    
-    final DateFormat formatter = DateFormat('d \'de\' MMMM', 'es_ES');
-
-    for (var tx in transactions) {
-      final txDate = DateTime(tx.date.year, tx.date.month, tx.date.day);
-      String groupKey;
-
-      if (txDate.isAtSameMomentAs(today)) {
-        groupKey = 'HOY';
-      } else if (txDate.isAtSameMomentAs(yesterday)) {
-        groupKey = 'AYER';
-      } else {
-        groupKey = formatter.format(tx.date).toUpperCase();
-      }
-      
-      if (grouped[groupKey] == null) {
-        grouped[groupKey] = [];
-      }
-      grouped[groupKey]!.add(tx);
-    }
-    return grouped;
-  }
-
-  // Mapea los nombres de FontAwesome a objetos IconData
-  IconData _getIconData(String iconName) {
-    // Esta es una lista básica, habría que expandirla o usar un mapa más completo
-    switch (iconName) {
-      case 'fas fa-utensils':
-        return FontAwesomeIcons.utensils;
-      case 'fas fa-money-bill-transfer':
-        return FontAwesomeIcons.moneyBillTransfer;
-      case 'fas fa-shopping-cart':
-        return FontAwesomeIcons.cartShopping;
-      case 'fas fa-file-invoice-dollar':
-         return FontAwesomeIcons.fileInvoiceDollar;
-      case 'fas fa-house-user':
-         return FontAwesomeIcons.houseUser;
-      default:
-        return FontAwesomeIcons.circleQuestion; // Icono por defecto
-    }
-  }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // NAVEGAMOS A LA NUEVA PANTALLA
-          final result = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(
-              builder: (context) => const AddEditTransactionScreen(),
-            ),
-          );
-          // Si la pantalla devuelve 'true', refrescamos la lista
-          if (result == true) {
-            setState(() {
-              _groupedTransactionsFuture = _fetchAndGroupTransactions();
-            });
-          }
-        },
+        onPressed: () => _navigateAndRefresh(),
         child: const Icon(Icons.add),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
@@ -120,11 +76,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
             children: [
-              _buildHeader(),
+              _buildHeader(), // Mantenemos tu cabecera
               const SizedBox(height: 20),
               Expanded(
-                child: FutureBuilder<Map<String, List<Transaction>>>(
-                  future: _groupedTransactionsFuture,
+                child: FutureBuilder<List<Transaction>>(
+                  future: _transactionsFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -132,25 +88,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     }
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    final transactions = snapshot.data ?? [];
+                    if (transactions.isEmpty) {
                       return const Center(child: Text('No hay transacciones todavía.'));
                     }
 
-                    final groupedTransactions = snapshot.data!;
-                    final dateKeys = groupedTransactions.keys.toList();
+                    final groupedTransactions = _groupTransactionsByDate(transactions);
+                    final dateKeys = groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
 
                     return ListView.builder(
                       itemCount: dateKeys.length,
                       itemBuilder: (context, index) {
                         final dateKey = dateKeys[index];
                         final transactionsInGroup = groupedTransactions[dateKey]!;
-                        return _buildTransactionGroup(dateKey, transactionsInGroup);
+                        return _buildTransactionGroup(_formatDateHeader(dateKey), transactionsInGroup);
                       },
                     );
                   },
                 ),
               ),
-              _buildPaginationControls(),
+              _buildPaginationControls(), // Mantenemos tus controles de paginación
             ],
           ),
         ),
@@ -158,6 +115,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
+  // TU WIDGET DE CABECERA (INTACTO)
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
@@ -175,15 +133,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             children: [
               IconButton(
                 icon: const Icon(FontAwesomeIcons.filter),
-                onPressed: () {
-                  // TODO: Lógica de filtros
-                },
+                onPressed: () { /* TODO: Lógica de filtros */ },
               ),
               IconButton(
                 icon: const Icon(Icons.list),
-                onPressed: () {
-                  // TODO: Lógica de cambio de vista
-                },
+                onPressed: () { /* TODO: Lógica de cambio de vista */ },
               ),
             ],
           ),
@@ -192,6 +146,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
+  // TU WIDGET DE GRUPO DE TRANSACCIONES (MODIFICADO PARA USAR EL NUEVO MODELO)
   Widget _buildTransactionGroup(String title, List<Transaction> transactions) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,11 +161,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
           ),
         ),
-        ...transactions.map((tx) => _TransactionListItem(transaction: tx, iconData: _getIconData(tx.categoryIcon))).toList(),
+        ...transactions.map((tx) => _TransactionListItem(
+          transaction: tx,
+          onTap: () => _navigateAndRefresh(transaction: tx),
+        )).toList(),
       ],
     );
   }
 
+  // TU WIDGET DE PAGINACIÓN (INTACTO)
   Widget _buildPaginationControls() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -237,11 +196,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 }
 
+// TU WIDGET PARA UN ITEM DE LA LISTA (MODIFICADO PARA EL NUEVO MODELO)
 class _TransactionListItem extends StatelessWidget {
   final Transaction transaction;
-  final IconData iconData;
+  final VoidCallback onTap;
 
-  const _TransactionListItem({required this.transaction, required this.iconData});
+  const _TransactionListItem({required this.transaction, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -252,56 +212,22 @@ class _TransactionListItem extends StatelessWidget {
     return Card(
       elevation: 0,
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: Theme.of(context).cardColor,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: transaction.categoryColor.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(iconData, color: transaction.categoryColor, size: 22),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.description,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Chip(
-                    label: Text(transaction.categoryName),
-                    labelStyle: TextStyle(fontSize: 11, color: transaction.categoryColor.withOpacity(0.9)),
-                    backgroundColor: transaction.categoryColor.withOpacity(0.1),
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
-                    visualDensity: VisualDensity.compact,
-                    side: BorderSide.none,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              amountString,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: amountColor,
-                fontSize: 16,
-              ),
-            ),
-          ],
+      child: ListTile(
+        onTap: onTap,
+        title: Text(
+          transaction.description,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(transaction.category?.name ?? 'Sin Categoría'),
+        trailing: Text(
+          amountString,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: amountColor,
+            fontSize: 16,
+          ),
         ),
       ),
     );

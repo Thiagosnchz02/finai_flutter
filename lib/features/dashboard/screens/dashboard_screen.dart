@@ -6,7 +6,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // Importaciones de las pantallas y widgets necesarios
 import 'package:finai_flutter/features/accounts/screens/accounts_screen.dart';
 import 'package:finai_flutter/features/dashboard/widgets/accounts_widget.dart';
-import 'package:finai_flutter/features/profile/screens/profile_screen.dart'; // <-- CAMBIO: Importamos la pantalla de Perfil real
+import 'package:finai_flutter/features/profile/screens/profile_screen.dart';
+import 'package:finai_flutter/features/transactions/screens/transactions_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -21,6 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // Lista de las pantallas principales que se mostrarán
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardView(),
+    TransactionsScreen(),
     AccountsScreen(),
     Text(
       'Próximamente: Metas',
@@ -45,6 +47,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
             label: 'Dashboard',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.swap_horiz), // Icono para transacciones
+            label: 'Transacciones',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet),

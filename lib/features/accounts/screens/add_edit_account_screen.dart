@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:finai_flutter/core/events/app_events.dart';
+import 'package:finai_flutter/core/services/event_logger_service.dart';
 import '../models/account_model.dart'; // Asegúrate que la ruta sea correcta
 
 class AddEditAccountScreen extends StatefulWidget {
@@ -22,6 +24,8 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
   String _conceptualType = 'nomina'; // 'nomina' o 'ahorro'
   bool _isLoading = false;
   final _supabase = Supabase.instance.client;
+
+  final _eventLogger = EventLoggerService();
 
   @override
   void initState() {
@@ -50,33 +54,49 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
 
     try {
       final userId = _supabase.auth.currentUser!.id;
-      final initialBalance = double.tryParse(_initialBalanceController.text.replaceAll(',', '.')) ?? 0.0;
+      final isEditing = widget.account != null; // Saber si estamos editando
       
       final upsertData = {
         'user_id': userId,
         'name': _nameController.text.trim(),
         'bank_name': _bankNameController.text.trim(),
-        'type': 'corriente', // TODO: Añadir selector para el tipo real si es necesario
+        'type': 'corriente',
         'conceptual_type': _conceptualType,
       };
 
-      if (widget.account != null) {
+      if (isEditing) {
         upsertData['id'] = widget.account!.id;
       }
 
       final savedAccount = await _supabase.from('accounts').upsert(upsertData).select().single();
       final savedAccountId = savedAccount['id'];
 
-      // Si se designó como AHORRO, llamar a la RPC para asegurar que sea la única
+      // --- INICIO DE LA LÓGICA DE REGISTRO DE EVENTOS ---
+      
+      if (isEditing) {
+        // Si estamos editando, registramos el evento de edición.
+        _eventLogger.log(AppEvent.account_edited, details: {'account_id': savedAccountId});
+      } else {
+        // Si es una cuenta nueva, registramos el evento de creación.
+        _eventLogger.log(AppEvent.account_created, details: {'account_id': savedAccountId});
+      }
+
+      // Si se designó como AHORRO, registramos este evento tan importante.
       if (_conceptualType == 'ahorro') {
         await _supabase.rpc('set_primary_savings_account', params: {
           'p_user_id': userId,
           'p_account_id': savedAccountId,
         });
+        
+        // Registrar que esta cuenta ha sido designada como la principal de ahorro.
+        _eventLogger.log(AppEvent.savings_account_designated, details: {'account_id': savedAccountId});
       }
+      
+      // --- FIN DE LA LÓGICA DE REGISTRO DE EVENTOS ---
 
-      // Si es una cuenta nueva y tiene saldo inicial, crear la transacción
-      if (widget.account == null && initialBalance != 0.0) {
+      // La lógica de la transacción de saldo inicial se mantiene igual
+      final initialBalance = double.tryParse(_initialBalanceController.text.replaceAll(',', '.')) ?? 0.0;
+      if (!isEditing && initialBalance != 0.0) {
         await _supabase.from('transactions').insert({
           'user_id': userId,
           'account_id': savedAccountId,
@@ -91,7 +111,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cuenta guardada con éxito'), backgroundColor: Colors.green),
         );
-        Navigator.of(context).pop(true); // Devuelve true para indicar éxito
+        Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
