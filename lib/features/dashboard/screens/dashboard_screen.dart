@@ -9,6 +9,8 @@ import 'package:finai_flutter/features/dashboard/widgets/accounts_widget.dart';
 import 'package:finai_flutter/features/profile/screens/profile_screen.dart';
 import 'package:finai_flutter/features/transactions/screens/transactions_screen.dart';
 import 'package:finai_flutter/features/dashboard/widgets/recent_transactions_widget.dart';
+import 'package:finai_flutter/features/fixed_expenses/screens/fixed_expenses_screen.dart'; 
+import 'package:finai_flutter/features/dashboard/widgets/upcoming_fixed_expenses_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -25,6 +27,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     DashboardView(),
     TransactionsScreen(),
     AccountsScreen(),
+    FixedExpensesScreen(),
     Text(
       'Próximamente: Metas',
     ),
@@ -56,6 +59,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet),
             label: 'Cuentas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.schedule), // <-- AÑADIR NUEVO ÍTEM
+            label: 'Fijos',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.savings),
@@ -110,6 +117,9 @@ class DashboardView extends StatelessWidget {
           const SizedBox(height: 24),
 
           const RecentTransactionsDashboardWidget(),
+
+          const SizedBox(height: 24),
+          const UpcomingFixedExpensesWidget(),
 
           Card(
             child: Padding(

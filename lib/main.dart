@@ -18,6 +18,7 @@ import 'features/profile/screens/ai_avatar_options_screen.dart';
 import 'features/profile/screens/image_to_image_screen.dart';
 import 'features/transactions/screens/transactions_screen.dart';
 import 'features/accounts/screens/accounts_screen.dart';
+import 'features/fixed_expenses/screens/fixed_expenses_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -141,6 +142,7 @@ class _MyAppState extends State<MyApp> {
         '/avatar/ai-options': (context) => const AiAvatarOptionsScreen(),
         '/avatar/image-to-image': (context) => const ImageToImageScreen(),
         '/transactions': (context) => const TransactionsScreen(),
+        '/fixed-expenses': (context) => const FixedExpensesScreen(),
       },
     );
   }

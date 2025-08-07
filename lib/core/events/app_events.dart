@@ -16,6 +16,14 @@ enum AppEvent {
   transaction_edited,
   transaction_deleted,
 
+    // --- NUEVOS EVENTOS ---
+  // Eventos del Módulo de Gastos Fijos
+  fixed_expense_created,
+  fixed_expense_updated,
+  fixed_expense_deleted,
+  fixed_expense_toggled,
+  // --- FIN NUEVOS EVENTOS ---
+
   // Eventos de Metas (futuro)
   goal_created,
   goal_updated,
