@@ -34,6 +34,33 @@ class TransactionsService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> fetchRecentTransactions({int limit = 5}) async {
+    try {
+      final userId = _supabase.auth.currentUser!.id;
+      final response = await _supabase
+          .from('transactions')
+          .select('''
+            id,
+            description,
+            amount,
+            type,
+            transaction_date,
+            notes,
+            account_id, 
+            categories (id, name, type)
+          ''')
+          .eq('user_id', userId)
+          .order('transaction_date', ascending: false)
+          .limit(limit); // <-- Usamos el límite aquí
+          
+      return List<Map<String, dynamic>>.from(response);
+
+    } catch (e) {
+      print('Error en fetchRecentTransactions: $e');
+      rethrow;
+    }
+  }
+
   Future<void> deleteTransaction(String transactionId) async {
     try {
       await _supabase.from('transactions').delete().eq('id', transactionId);

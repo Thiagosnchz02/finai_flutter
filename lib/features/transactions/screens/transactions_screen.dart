@@ -8,6 +8,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:finai_flutter/features/transactions/models/transaction_model.dart';
 import 'package:finai_flutter/features/transactions/services/transactions_service.dart';
 import 'package:finai_flutter/features/transactions/screens/add_edit_transaction_screen.dart';
+import 'package:finai_flutter/features/transactions/widgets/transaction_tile.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -161,7 +162,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 ),
           ),
         ),
-        ...transactions.map((tx) => _TransactionListItem(
+        ...transactions.map((tx) => TransactionTile(
           transaction: tx,
           onTap: () => _navigateAndRefresh(transaction: tx),
         )).toList(),
@@ -191,44 +192,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             icon: const Icon(Icons.chevron_right),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// TU WIDGET PARA UN ITEM DE LA LISTA (MODIFICADO PARA EL NUEVO MODELO)
-class _TransactionListItem extends StatelessWidget {
-  final Transaction transaction;
-  final VoidCallback onTap;
-
-  const _TransactionListItem({required this.transaction, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isIncome = transaction.type == 'ingreso';
-    final amountColor = isIncome ? Colors.green.shade400 : Theme.of(context).colorScheme.onSurface;
-    final amountString = '${isIncome ? '+' : '-'}${NumberFormat.currency(locale: 'es_ES', symbol: '€').format(transaction.amount)}';
-
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Theme.of(context).cardColor,
-      child: ListTile(
-        onTap: onTap,
-        title: Text(
-          transaction.description,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(transaction.category?.name ?? 'Sin Categoría'),
-        trailing: Text(
-          amountString,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: amountColor,
-            fontSize: 16,
-          ),
-        ),
       ),
     );
   }

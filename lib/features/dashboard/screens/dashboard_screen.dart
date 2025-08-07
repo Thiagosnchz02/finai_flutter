@@ -8,6 +8,7 @@ import 'package:finai_flutter/features/accounts/screens/accounts_screen.dart';
 import 'package:finai_flutter/features/dashboard/widgets/accounts_widget.dart';
 import 'package:finai_flutter/features/profile/screens/profile_screen.dart';
 import 'package:finai_flutter/features/transactions/screens/transactions_screen.dart';
+import 'package:finai_flutter/features/dashboard/widgets/recent_transactions_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -108,6 +109,8 @@ class DashboardView extends StatelessWidget {
 
           const SizedBox(height: 24),
 
+          const RecentTransactionsDashboardWidget(),
+
           Card(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -126,5 +129,3 @@ class DashboardView extends StatelessWidget {
     );
   }
 }
-
-// <-- CAMBIO: La clase 'ProfileScreen' de ejemplo ha sido eliminada de aquí.
