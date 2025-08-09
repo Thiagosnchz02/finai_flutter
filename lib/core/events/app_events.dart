@@ -27,5 +27,8 @@ enum AppEvent {
   // Eventos de Metas (futuro)
   goal_created,
   goal_updated,
-  goal_achieved,
+  goal_archived,
+  goal_contribution_added,
+  goal_achieved, // Este es registrado por la RPC, pero lo tenemos para consistencia
+  trip_expense_created_from_goal,
 }

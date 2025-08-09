@@ -11,6 +11,8 @@ import 'package:finai_flutter/features/transactions/screens/transactions_screen.
 import 'package:finai_flutter/features/dashboard/widgets/recent_transactions_widget.dart';
 import 'package:finai_flutter/features/fixed_expenses/screens/fixed_expenses_screen.dart'; 
 import 'package:finai_flutter/features/dashboard/widgets/upcoming_fixed_expenses_widget.dart';
+import 'package:finai_flutter/features/goals/screens/goals_screen.dart';
+import 'package:finai_flutter/features/dashboard/widgets/goals_dashboard_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -28,10 +30,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     TransactionsScreen(),
     AccountsScreen(),
     FixedExpensesScreen(),
+    GoalsScreen(),
+    ProfileScreen(), // Ahora usa la pantalla de Perfil real
     Text(
       'Próximamente: Metas',
     ),
-    ProfileScreen(), // Ahora usa la pantalla de Perfil real
   ];
 
   void _onItemTapped(int index) {
@@ -120,6 +123,9 @@ class DashboardView extends StatelessWidget {
 
           const SizedBox(height: 24),
           const UpcomingFixedExpensesWidget(),
+          const SizedBox(height: 24),
+
+          const GoalsDashboardWidget(),
 
           Card(
             child: Padding(

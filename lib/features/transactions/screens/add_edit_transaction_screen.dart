@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:finai_flutter/core/events/app_events.dart'; // <-- 1. IMPORTAR ENUM
-import 'package:finai_flutter/core/services/event_logger_service.dart'; // <-- 2. IMPORTAR SERVICIO
+import 'package:finai_flutter/core/events/app_events.dart';
+import 'package:finai_flutter/core/services/event_logger_service.dart';
 import '../models/transaction_model.dart';
 
 class AddEditTransactionScreen extends StatefulWidget {
@@ -31,7 +31,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   late Future<List<Map<String, dynamic>>> _accountsFuture;
   bool _isLoading = false;
 
-  // 3. INSTANCIAR EL SERVICIO DE LOGGING
   final _eventLogger = EventLoggerService();
 
   @override
@@ -43,7 +42,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     if (widget.transaction != null) {
       final tx = widget.transaction!;
       _descriptionController.text = tx.description;
-      _amountController.text = tx.amount.toString();
+      // CORRECCIÓN: Mostramos siempre el valor absoluto en el campo de texto
+      _amountController.text = tx.amount.abs().toString();
       _transactionType = tx.type;
       _selectedDate = tx.date;
       _selectedCategoryId = tx.category?.id;
@@ -59,7 +59,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchCategories(String transactionType) async {
-    // ... (este método no cambia)
     try {
       final data = await Supabase.instance.client
         .from('categories')
@@ -73,7 +72,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _fetchAccounts() async {
-    // ... (este método no cambia)
     try {
         final userId = Supabase.instance.client.auth.currentUser!.id;
         final data = await Supabase.instance.client
@@ -88,7 +86,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    // ... (este método no cambia)
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedDate,
@@ -102,7 +99,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     }
   }
 
-  // 4. ACTUALIZAR EL MÉTODO _saveTransaction
   Future<void> _saveTransaction() async {
     if (_formKey.currentState!.validate()) {
       setState(() { _isLoading = true; });
@@ -111,10 +107,15 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         final userId = Supabase.instance.client.auth.currentUser!.id;
         final bool isEditing = widget.transaction != null;
 
+        final rawAmount = double.parse(_amountController.text.replaceAll(',', '.'));
+        // --- LÓGICA CORREGIDA AQUÍ ---
+        // Si es un gasto, nos aseguramos de que sea negativo. Si es un ingreso, positivo.
+        final finalAmount = _transactionType == 'gasto' ? -rawAmount.abs() : rawAmount.abs();
+
         final dataToUpsert = {
           'user_id': userId,
           'description': _descriptionController.text.trim(),
-          'amount': double.parse(_amountController.text.replaceAll(',', '.')),
+          'amount': finalAmount, // Usamos el importe corregido con el signo correcto
           'transaction_date': _selectedDate.toIso8601String(),
           'type': _transactionType,
           'category_id': _selectedCategoryId,
@@ -125,31 +126,24 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           dataToUpsert['id'] = widget.transaction!.id;
         }
 
-        // Guardamos y obtenemos el ID de la transacción
         final savedTransaction = await Supabase.instance.client.from('transactions').upsert(dataToUpsert).select().single();
         final savedTransactionId = savedTransaction['id'];
 
-        // --- INICIO DE LA LÓGICA DE REGISTRO DE EVENTOS ---
-
         if (isEditing) {
-          // Si estamos editando, registramos el evento de edición
           _eventLogger.log(
             AppEvent.transaction_edited,
             details: {'transaction_id': savedTransactionId},
           );
         } else {
-          // Si es nueva, registramos el evento de creación
           _eventLogger.log(
             AppEvent.transaction_created,
             details: {
               'transaction_id': savedTransactionId,
               'type': _transactionType,
-              'amount': dataToUpsert['amount'],
+              'amount': finalAmount, // Registramos el importe con su signo
             },
           );
         }
-
-        // --- FIN DE LA LÓGICA DE REGISTRO DE EVENTOS ---
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -172,7 +166,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     }
   }
 
-  // El método build() y el resto de la clase permanecen sin cambios...
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -218,8 +211,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Dropdown de Cuentas
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: _accountsFuture,
                 builder: (context, snapshot) {
@@ -245,8 +236,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 },
               ),
               const SizedBox(height: 20),
-              
-              // Dropdown de Categorías
               FutureBuilder<List<Map<String, dynamic>>>(
                 future: _categoriesFuture,
                 builder: (context, snapshot) {
@@ -274,7 +263,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                   );
                 },
               ),
-              
               const SizedBox(height: 20),
               ListTile(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4), side: BorderSide(color: Colors.grey.shade400)),
