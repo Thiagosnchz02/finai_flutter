@@ -289,8 +289,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
+                                 const SizedBox(height: 20),
+                 _InfoCard(
+                   title: 'Datos y Exportación', // Un título para la nueva tarjeta
+                   children: [
+                     // Usamos tu widget _ActionRow para mantener la consistencia
+                     _ActionRow(
+                       icon: Icons.description_outlined,
+                       label: 'Informes y Exportación',
+                       onTap: () async {
+                         // Lógica de protección para funcionalidad Pro
+                         final user = Supabase.instance.client.auth.currentUser;
+                         if (user == null) return;
+
+                         final profile = await Supabase.instance.client
+                             .from('profiles')
+                             .select('plan_type')
+                             .eq('id', user.id)
+                             .single();
+                         
+                         final plan = profile['plan_type'] as String?;
+
+                         if (plan == 'pro') {
+                           Navigator.of(context).pushNamed('/reports');
+                         } else {
+                           // Si el usuario no es Pro, le mostramos un diálogo para que actualice su plan.
+                           showDialog(
+                             context: context,
+                             builder: (context) => AlertDialog(
+                               title: const Text('Funcionalidad Pro'),
+                               content: const Text('La generación de informes y la exportación de datos es una característica exclusiva del plan Pro.'),
+                               actions: [
+                                 TextButton(
+                                   onPressed: () => Navigator.of(context).pop(),
+                                   child: const Text('Entendido'),
+                                 ),
+                                 ElevatedButton(
+                                   onPressed: () {
+                                     // TODO: Navegar a la pantalla de compra/upgrade
+                                     Navigator.of(context).pop();
+                                   },
+                                   child: const Text('Actualizar a Pro'),
+                                 ),
+                               ],
+                             ),
+                           );
+                         }
+                       },
+                     ),
+                   ],
+                 ),
               ],
             ),
+            
     );
   }
 
