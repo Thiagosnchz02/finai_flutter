@@ -19,6 +19,8 @@ import 'features/profile/screens/image_to_image_screen.dart';
 import 'features/transactions/screens/transactions_screen.dart';
 import 'features/accounts/screens/accounts_screen.dart';
 import 'features/fixed_expenses/screens/fixed_expenses_screen.dart';
+import 'features/goals/screens/goals_screen.dart';
+import 'features/budgets/screens/budget_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -143,6 +145,8 @@ class _MyAppState extends State<MyApp> {
         '/avatar/image-to-image': (context) => const ImageToImageScreen(),
         '/transactions': (context) => const TransactionsScreen(),
         '/fixed-expenses': (context) => const FixedExpensesScreen(),
+        '/goals': (context) => const GoalsScreen(),
+        '/budgets': (context) => const BudgetScreen(),
       },
     );
   }

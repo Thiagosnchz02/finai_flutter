@@ -13,6 +13,8 @@ import 'package:finai_flutter/features/fixed_expenses/screens/fixed_expenses_scr
 import 'package:finai_flutter/features/dashboard/widgets/upcoming_fixed_expenses_widget.dart';
 import 'package:finai_flutter/features/goals/screens/goals_screen.dart';
 import 'package:finai_flutter/features/dashboard/widgets/goals_dashboard_widget.dart';
+import 'package:finai_flutter/features/budgets/screens/budget_screen.dart';
+import 'package:finai_flutter/features/dashboard/widgets/budgets_dashboard_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -30,11 +32,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     TransactionsScreen(),
     AccountsScreen(),
     FixedExpensesScreen(),
+    BudgetScreen(),
     GoalsScreen(),
     ProfileScreen(), // Ahora usa la pantalla de Perfil real
-    Text(
-      'Próximamente: Metas',
-    ),
   ];
 
   void _onItemTapped(int index) {
@@ -66,6 +66,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.schedule), // <-- AÑADIR NUEVO ÍTEM
             label: 'Fijos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.pie_chart), 
+            label: 'Presupuesto'
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.savings),
@@ -126,6 +130,8 @@ class DashboardView extends StatelessWidget {
           const SizedBox(height: 24),
 
           const GoalsDashboardWidget(),
+          const SizedBox(height: 24), // Espaciador
+          const BudgetsDashboardWidget(),
 
           Card(
             child: Padding(

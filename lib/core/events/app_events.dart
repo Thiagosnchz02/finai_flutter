@@ -31,4 +31,10 @@ enum AppEvent {
   goal_contribution_added,
   goal_achieved, // Este es registrado por la RPC, pero lo tenemos para consistencia
   trip_expense_created_from_goal,
+
+  // Eventos del Módulo de Presupuestos
+  budget_created,
+  budget_updated,
+  budget_deleted,
+  budget_rollover_toggled,
 }
