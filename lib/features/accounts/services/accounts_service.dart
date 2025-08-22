@@ -9,48 +9,25 @@ class AccountsService {
   Future<AccountSummary> getAccountSummary() async {
     try {
       final userId = _supabase.auth.currentUser!.id;
-
-      // 1. Obtener todas las cuentas (activas) del usuario
-      final accountsResponse = await _supabase
-          .from('accounts')
-          .select()
-          .eq('user_id', userId)
-          .eq('is_archived', false);
-
+      final accountsResponse = await _supabase.from('accounts').select().eq('user_id', userId).eq('is_archived', false);
       if (accountsResponse.isEmpty) {
-        return AccountSummary(); // Devuelve un resumen vacío si no hay cuentas
+        return AccountSummary(spendingAccounts: [], savingsAccount: null, totalSpendingBalance: 0.0, totalSavingsBalance: 0.0);
       }
-      
       final List<Map<String, dynamic>> accountMaps = List<Map<String, dynamic>>.from(accountsResponse);
-
-      // 2. Obtener los saldos de todas esas cuentas con la RPC
-      // LA LÍNEA INNECESARIA HA SIDO ELIMINADA DE AQUÍ
-      final balancesResponse = await _supabase.rpc(
-        'get_account_balances',
-        params: {'user_id_param': userId},
-      );
-
+      
+      // Asumimos que tienes una RPC 'get_account_balances' que funciona correctamente
+      final balancesResponse = await _supabase.rpc('get_account_balances', params: {'user_id_param': userId});
+      
       final Map<String, double> balancesMap = {
         for (var item in List<Map<String, dynamic>>.from(balancesResponse))
           item['account_id']: (item['balance'] as num).toDouble()
       };
       
-      // 3. Crear objetos Account combinando datos y saldos
       final allAccounts = accountMaps.map((accountData) {
         final balance = balancesMap[accountData['id']] ?? 0.0;
-        return Account(
-          id: accountData['id'],
-          name: accountData['name'],
-          bankName: accountData['bank_name'],
-          conceptualType: accountData['conceptual_type'] ?? 'nomina',
-          type: accountData['type'],
-          balance: balance,
-          currency: accountData['currency'],
-          isArchived: accountData['is_archived'],
-        );
+        return Account.fromMap(accountData).copyWith(balance: balance);
       }).toList();
 
-      // 4. Agrupar, procesar y calcular totales
       List<Account> spendingAccounts = [];
       Account? savingsAccount;
       double totalSpending = 0.0;
@@ -65,10 +42,7 @@ class AccountsService {
           totalSpending += acc.balance;
         }
       }
-
-      // Ordenar cuentas para gastar por nombre
       spendingAccounts.sort((a, b) => a.name.compareTo(b.name));
-
       return AccountSummary(
         spendingAccounts: spendingAccounts,
         savingsAccount: savingsAccount,
@@ -77,7 +51,24 @@ class AccountsService {
       );
     } catch (e) {
       print('Error en AccountsService: $e');
-      rethrow; // Relanza el error para que la UI lo pueda manejar
+      rethrow;
     }
+  }
+
+  // --- MÉTODO ACTUALIZADO ---
+  /// Ejecuta una transferencia interna llamando a la función RPC.
+  Future<void> executeInternalTransfer({
+    required String fromAccountId,
+    required String toAccountId,
+    required double amount,
+  }) async {
+    final userId = _supabase.auth.currentUser!.id; // Obtenemos el ID del usuario actual
+    
+    await _supabase.rpc('execute_internal_transfer', params: {
+      'p_user_id': userId, // <-- Le pasamos el ID del usuario a la función
+      'p_from_account_id': fromAccountId,
+      'p_to_account_id': toAccountId,
+      'p_amount': amount,
+    });
   }
 }

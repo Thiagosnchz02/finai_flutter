@@ -21,7 +21,7 @@ class EventLoggerService {
       await _supabase.from('user_events').insert({
         'user_id': user.id,
         'event_type': event.name, // .name convierte el enum a su nombre en String
-        'event_details': details, // Puede ser nulo si no se proporcionan detalles
+        'payload': details, // Puede ser nulo si no se proporcionan detalles
       });
 
     } catch (e) {

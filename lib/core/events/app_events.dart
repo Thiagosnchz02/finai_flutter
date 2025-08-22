@@ -37,4 +37,8 @@ enum AppEvent {
   budget_updated,
   budget_deleted,
   budget_rollover_toggled,
+
+  // Evento de Transferencias Internas
+  internal_transfer_executed,
+  // --- FIN NUEVO EVENTO ---
 }

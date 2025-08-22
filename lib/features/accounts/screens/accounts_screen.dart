@@ -2,10 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../models/account_model.dart';
-import '../services/accounts_service.dart';
-import '../widgets/account_card.dart';
-import '../widgets/accounts_summary_card.dart';
+import 'package:finai_flutter/features/accounts/models/account_model.dart';
+import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
+import 'package:finai_flutter/features/accounts/widgets/account_card.dart';
+import 'package:finai_flutter/features/accounts/widgets/accounts_summary_card.dart';
+import 'package:finai_flutter/features/accounts/widgets/empty_accounts_widget.dart';
+import '../widgets/internal_transfer_dialog.dart';
 import 'add_edit_account_screen.dart';
 
 class AccountsScreen extends StatefulWidget {
@@ -39,16 +41,47 @@ class _AccountsScreenState extends State<AccountsScreen> {
       _loadData();
     }
   }
+
+  void _showTransferDialog(List<Account> spendingAccounts, Account savingsAccount) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => InternalTransferDialog(
+        spendingAccounts: spendingAccounts,
+        savingsAccount: savingsAccount,
+      ),
+    );
+    if (result == true && mounted) {
+      _loadData();
+    }
+  }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1E22), // Fondo oscuro del mockup
+      backgroundColor: const Color(0xFF1C1E22),
       appBar: AppBar(
         title: const Text('Mis Cuentas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
-        backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: false,
+        actions: [
+          // 3. AÑADIMOS EL BOTÓN DE TRANSFERENCIA A LA APPBAR
+          FutureBuilder<AccountSummary>(
+            future: _accountSummaryFuture,
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!.spendingAccounts.isNotEmpty && snapshot.data!.savingsAccount != null) {
+                return IconButton(
+                  icon: const Icon(FontAwesomeIcons.rightLeft),
+                  tooltip: 'Realizar Traspaso',
+                  onPressed: () => _showTransferDialog(
+                    snapshot.data!.spendingAccounts,
+                    snapshot.data!.savingsAccount!,
+                  ),
+                );
+              }
+              return const SizedBox.shrink(); // Oculta el botón si no se cumplen las condiciones
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateToAddAccount,
@@ -66,11 +99,16 @@ class _AccountsScreenState extends State<AccountsScreen> {
             return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
           }
           if (!snapshot.hasData) {
-            return const Center(child: Text('No hay datos', style: TextStyle(color: Colors.white)));
+            return const EmptyAccountsWidget(); // Fallback por si no hay datos
           }
 
           final summary = snapshot.data!;
           
+          // --- LÓGICA CORREGIDA PARA EL ESTADO VACÍO ---
+          if (summary.spendingAccounts.isEmpty && summary.savingsAccount == null) {
+            return const EmptyAccountsWidget();
+          }
+
           return RefreshIndicator(
             onRefresh: () async => _loadData(),
             child: ListView(
@@ -83,7 +121,10 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   iconData: FontAwesomeIcons.wallet,
                   neonColor: Colors.blueAccent,
                   child: summary.spendingAccounts.isEmpty
-                      ? const Text('No hay cuentas para gastos.', style: TextStyle(color: Colors.white70))
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text('No hay cuentas para gastos.', style: TextStyle(color: Colors.white70, fontStyle: FontStyle.italic)),
+                        )
                       : Column(
                           children: summary.spendingAccounts
                               .map((acc) => AccountCard(account: acc))
@@ -92,7 +133,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // SECCIÓN 2: CUENTA DE AHORRO
+                // SECCIÓN 2: CUENTA DE AHORRO (CON TARJETA REDISEÑADA)
                 if (summary.savingsAccount != null)
                   AccountsSummaryCard(
                     title: 'Total Ahorrado',
@@ -103,24 +144,29 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         AccountCard(account: summary.savingsAccount!),
-                        const SizedBox(height: 12),
-                        // Placeholder para la barra de progreso y CTA de Huchas
-                        LinearProgressIndicator(
-                          value: 0.7, // Valor de ejemplo
-                          backgroundColor: Colors.white.withOpacity(0.2),
-                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.purpleAccent),
-                        ),
                         const SizedBox(height: 8),
+                        // 2. El texto ahora es un botón funcional.
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () { /* TODO: Navegar a pantalla de Huchas */ },
-                            child: const Text(
-                              'Gestionar mis Huchas →',
-                              style: TextStyle(color: Colors.purpleAccent),
+                            onPressed: () {
+                              // Navegamos a la pantalla de Metas
+                              Navigator.of(context).pushNamed('/goals');
+                            },
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Gestionar mis Huchas',
+                                  style: TextStyle(color: Colors.purpleAccent),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(Icons.arrow_forward, color: Colors.purpleAccent, size: 16),
+                              ],
                             ),
                           ),
                         )
+                        // --- FIN DE LA MODIFICACIÓN ---
                       ],
                     ),
                   ),

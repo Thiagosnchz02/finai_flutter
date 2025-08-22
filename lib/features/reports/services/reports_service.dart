@@ -3,23 +3,15 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:open_filex/open_filex.dart';
 
 class ReportsService {
   final _supabase = Supabase.instance.client;
 
   Future<void> generateReport(Map<String, dynamic> filters) async {
-    var status = await Permission.storage.status;
-    if (!status.isGranted) {
-      status = await Permission.storage.request();
-      if (!status.isGranted) {
-        throw Exception('Permiso de almacenamiento denegado.');
-      }
-    }
 
     final response = await _supabase.functions.invoke(
-      'generate-filtered-report',
+      'generate_filtered_report',
       body: {
         'reportType': 'transactions',
         'filters': filters,
