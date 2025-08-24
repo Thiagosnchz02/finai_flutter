@@ -339,6 +339,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                      ),
                    ],
                  ),
+                 ListTile(
+                  leading: const Icon(Icons.settings_outlined),
+                  title: const Text('Configuración Avanzada'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                  Navigator.of(context).pushNamed('/settings');
+                  },
+                ),
               ],
             ),
             
