@@ -213,10 +213,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ]
             : [
-                // Botón para ir a la pantalla de Ajustes
+                // Botón para ir a la pantalla de Configuración avanzada
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
-                  onPressed: () { /* TODO: Navegar a Ajustes */ },
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/settings');
+                  },
+                  tooltip: 'Configuración',
                 ),
                 // Botón para cerrar sesión
                 IconButton(
@@ -338,18 +341,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                        },
                      ),
                    ],
-                 ),
-                 ListTile(
-                  leading: const Icon(Icons.settings_outlined),
-                  title: const Text('Configuración Avanzada'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                  Navigator.of(context).pushNamed('/settings');
-                  },
-                ),
-              ],
-            ),
-            
+                  ),
+                ],
+              ),
+
     );
   }
 
