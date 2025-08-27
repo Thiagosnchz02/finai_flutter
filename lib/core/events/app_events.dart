@@ -42,12 +42,17 @@ enum AppEvent {
   // Evento del Módulo de Informes
   report_generated,
 
-  // --- NUEVOS EVENTOS ---
   // Eventos del Módulo de Configuración
   settings_theme_changed,
   settings_2fa_toggled,
   settings_notification_toggled,
   user_data_exported,
   user_account_deleted,
+
+  // --- NUEVOS EVENTOS ---
+  // Eventos del Módulo de Inversiones
+  investment_created,
+  investment_updated,
+  investment_deleted,
   // --- FIN NUEVOS EVENTOS ---
 }
