@@ -9,6 +9,8 @@ import 'package:finai_flutter/features/budgets/widgets/budget_distribution_chart
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'add_edit_budget_screen.dart';
 
+enum _CopyAction { overwrite, addOnly, cancel }
+
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
   @override
@@ -50,10 +52,39 @@ class _BudgetScreenState extends State<BudgetScreen> {
       _loadData();
     }
   }
-  
+
   Future<void> _onCopyFromLastMonth() async {
     try {
-      await _service.copyBudgetsFromLastMonth();
+      bool overwrite = false;
+      final hasConflicts = await _service.hasConflictingBudgetsFromLastMonth();
+      if (hasConflicts && mounted) {
+        final action = await showDialog<_CopyAction>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Conflicto de presupuestos'),
+            content: const Text(
+                'Algunas categorías ya tienen presupuesto este mes. ¿Deseas sobrescribirlos o agregar solo los que faltan?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, _CopyAction.cancel),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, _CopyAction.addOnly),
+                child: const Text('Solo nuevos'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, _CopyAction.overwrite),
+                child: const Text('Sobrescribir'),
+              ),
+            ],
+          ),
+        );
+        if (action == null || action == _CopyAction.cancel) return;
+        overwrite = action == _CopyAction.overwrite;
+      }
+
+      await _service.copyBudgetsFromLastMonth(overwriteExisting: overwrite);
       _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
