@@ -113,26 +113,86 @@ class BudgetService {
     }
   }
 
-  Future<void> copyBudgetsFromLastMonth() async {
+  Future<bool> hasConflictingBudgetsFromLastMonth() async {
     final userId = _supabase.auth.currentUser!.id;
     final now = DateTime.now();
     final firstDayCurrentMonth = DateTime(now.year, now.month, 1);
     final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
     final lastDayLastMonth = firstDayCurrentMonth.subtract(const Duration(days: 1));
-    final lastMonthBudgets = await _supabase.from('budgets').select('category_id, amount, period').eq('user_id', userId).gte('start_date', firstDayLastMonth.toIso8601String()).lte('start_date', lastDayLastMonth.toIso8601String());
+
+    final lastMonthBudgets = await _supabase
+        .from('budgets')
+        .select('category_id')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayLastMonth.toIso8601String())
+        .lte('start_date', lastDayLastMonth.toIso8601String());
+    if (lastMonthBudgets.isEmpty) return false;
+
+    final currentBudgets = await _supabase
+        .from('budgets')
+        .select('category_id')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayCurrentMonth.toIso8601String());
+
+    final lastMonthCategoryIds =
+        lastMonthBudgets.map((b) => b['category_id'] as String).toSet();
+    final currentCategoryIds =
+        currentBudgets.map((b) => b['category_id'] as String).toSet();
+
+    return lastMonthCategoryIds.intersection(currentCategoryIds).isNotEmpty;
+  }
+
+  Future<void> copyBudgetsFromLastMonth({bool overwriteExisting = false}) async {
+    final userId = _supabase.auth.currentUser!.id;
+    final now = DateTime.now();
+    final firstDayCurrentMonth = DateTime(now.year, now.month, 1);
+    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
+    final lastDayLastMonth = firstDayCurrentMonth.subtract(const Duration(days: 1));
+
+    final lastMonthBudgets = await _supabase
+        .from('budgets')
+        .select('category_id, amount, period')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayLastMonth.toIso8601String())
+        .lte('start_date', lastDayLastMonth.toIso8601String());
     if (lastMonthBudgets.isEmpty) {
       throw Exception('No se encontraron presupuestos en el mes anterior para copiar.');
     }
-    final newBudgets = lastMonthBudgets.map((budget) {
-      return {
+
+    final currentBudgets = await _supabase
+        .from('budgets')
+        .select('id, category_id')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayCurrentMonth.toIso8601String());
+
+    final currentMap = {for (var b in currentBudgets) b['category_id']: b['id']};
+
+    final List<Map<String, dynamic>> newBudgets = [];
+    final List<Map<String, dynamic>> existingBudgets = [];
+
+    for (var budget in lastMonthBudgets) {
+      final categoryId = budget['category_id'] as String;
+      final data = {
         'user_id': userId,
-        'category_id': budget['category_id'],
+        'category_id': categoryId,
         'amount': budget['amount'],
         'start_date': firstDayCurrentMonth.toIso8601String(),
         'period': budget['period'],
       };
-    }).toList();
-    await _supabase.from('budgets').insert(newBudgets);
+      if (currentMap.containsKey(categoryId)) {
+        data['id'] = currentMap[categoryId];
+        existingBudgets.add(data);
+      } else {
+        newBudgets.add(data);
+      }
+    }
+
+    if (newBudgets.isNotEmpty) {
+      await _supabase.from('budgets').insert(newBudgets);
+    }
+    if (overwriteExisting && existingBudgets.isNotEmpty) {
+      await _supabase.from('budgets').upsert(existingBudgets);
+    }
   }
 
   Future<void> updateBudgetRollover(bool isEnabled) async {
