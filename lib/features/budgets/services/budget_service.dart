@@ -103,7 +103,14 @@ class BudgetService {
       totalRollover += rollover;
     });
 
-    final totalAvailableBudget = totalBaseBudget + totalRollover;
+    // Ajuste según la preferencia de rollover
+    double totalAvailableBudget;
+    if (!enableRollover) {
+      totalRollover = 0;
+      totalAvailableBudget = totalBaseBudget;
+    } else {
+      totalAvailableBudget = totalBaseBudget + totalRollover;
+    }
 
     return BudgetSummary(
       spendingBalance: totalSpendingBalance,
@@ -122,6 +129,16 @@ class BudgetService {
     final userId = _supabase.auth.currentUser!.id;
     final now = DateTime.now();
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
+
+    // Preferencia de rollover del perfil
+    final profileResponse = await _supabase
+        .from('profiles')
+        .select('enable_budget_rollover')
+        .eq('id', userId)
+        .single();
+    final enableRollover =
+        profileResponse['enable_budget_rollover'] as bool? ?? true;
+
     final budgetsResponse = await _supabase
         .from('budgets')
         .select('*, categories(name, icon)')
@@ -182,8 +199,12 @@ class BudgetService {
       final budgetAmount = (budgetData['amount'] as num).toDouble();
       final lastAmount = lastBudgetAmounts[categoryId] ?? 0.0;
       final lastSpent = lastSpendingByCategory[categoryId] ?? 0.0;
-      final rollover = lastAmount - lastSpent;
-      final availableAmount = budgetAmount + rollover;
+      double rollover = lastAmount - lastSpent;
+      double availableAmount = budgetAmount + rollover;
+      if (!enableRollover) {
+        rollover = 0;
+        availableAmount = budgetAmount;
+      }
       final progress = availableAmount > 0
           ? (spentAmount / availableAmount).clamp(0.0, 1.0)
           : 0.0;

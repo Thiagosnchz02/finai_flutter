@@ -194,6 +194,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                             final budget = budgets[index];
                             return BudgetCard(
                               budget: budget,
+                              enableRollover: enableRollover,
                               onTap: () => _openBudgetDialog(budget: budget),
                               onDelete: () => _deleteBudget(budget.id),
                             );
