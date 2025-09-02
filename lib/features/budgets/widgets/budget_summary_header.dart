@@ -51,6 +51,24 @@ class BudgetSummaryHeader extends StatelessWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Presupuesto base:'),
+                Text(formatter.format(summary.totalBaseBudget),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Presupuesto disponible:'),
+                Text(formatter.format(summary.totalAvailableBudget),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
           ],
         ),
       ),

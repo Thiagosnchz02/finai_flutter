@@ -77,9 +77,14 @@ class BudgetCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Gastado: ${formatter.format(budget.spentAmount)}'),
-                  Text('Límite: ${formatter.format(budget.amount)}',
+                  Text('Disponible: ${formatter.format(budget.availableAmount)}',
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Base: ${formatter.format(budget.amount)} | Rollover: ${formatter.format(budget.rolloverAmount)}',
+                style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 4),
               Text(

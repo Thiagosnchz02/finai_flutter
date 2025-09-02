@@ -47,6 +47,64 @@ class BudgetService {
       }
     }
 
+    // Presupuestos del mes actual
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final currentBudgets = await _supabase
+        .from('budgets')
+        .select('category_id, amount')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayOfMonth.toIso8601String());
+
+    double totalBaseBudget = 0;
+    final Map<String, double> currentBudgetAmounts = {};
+    for (var b in currentBudgets) {
+      final amount = (b['amount'] as num).toDouble();
+      totalBaseBudget += amount;
+      currentBudgetAmounts[b['category_id'] as String] = amount;
+    }
+
+    // Datos del mes anterior para rollover
+    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
+    final lastDayLastMonth = DateTime(now.year, now.month, 0);
+
+    final lastBudgetsResponse = await _supabase
+        .from('budgets')
+        .select('category_id, amount')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayLastMonth.toIso8601String())
+        .lte('start_date', lastDayLastMonth.toIso8601String());
+    final lastBudgetAmounts = <String, double>{};
+    for (var b in lastBudgetsResponse) {
+      lastBudgetAmounts[b['category_id'] as String] =
+          (b['amount'] as num).toDouble();
+    }
+
+    final lastSpendingResponse = await _supabase
+        .from('transactions')
+        .select('category_id, amount')
+        .eq('user_id', userId)
+        .eq('type', 'gasto')
+        .gte('transaction_date', firstDayLastMonth.toIso8601String())
+        .lte('transaction_date', lastDayLastMonth.toIso8601String());
+    final lastSpendingByCategory = <String, double>{};
+    for (var spent in lastSpendingResponse) {
+      if (spent['category_id'] == null) continue;
+      final categoryId = spent['category_id'] as String;
+      final amount = (spent['amount'] as num).abs().toDouble();
+      lastSpendingByCategory[categoryId] =
+          (lastSpendingByCategory[categoryId] ?? 0) + amount;
+    }
+
+    double totalRollover = 0;
+    currentBudgetAmounts.forEach((cat, amount) {
+      final rollover =
+          (lastBudgetAmounts[cat] ?? 0) - (lastSpendingByCategory[cat] ?? 0);
+      totalRollover += rollover;
+    });
+
+    final totalAvailableBudget = totalBaseBudget + totalRollover;
+
     return BudgetSummary(
       spendingBalance: totalSpendingBalance,
       committedFixed: committedFixed,
@@ -54,6 +112,8 @@ class BudgetService {
       userPlan: userPlan,
       // CORRECCIÓN: Pasamos el parámetro requerido
       enableBudgetRollover: enableRollover,
+      totalBaseBudget: totalBaseBudget,
+      totalAvailableBudget: totalAvailableBudget,
     );
   }
 
@@ -120,6 +180,15 @@ class BudgetService {
       final categoryId = budgetData['category_id'] as String;
       final spentAmount = spendingByCategory[categoryId] ?? 0.0;
       final budgetAmount = (budgetData['amount'] as num).toDouble();
+      final lastAmount = lastBudgetAmounts[categoryId] ?? 0.0;
+      final lastSpent = lastSpendingByCategory[categoryId] ?? 0.0;
+      final rollover = lastAmount - lastSpent;
+      final availableAmount = budgetAmount + rollover;
+      final progress = availableAmount > 0
+          ? (spentAmount / availableAmount).clamp(0.0, 1.0)
+          : 0.0;
+      final remaining = availableAmount - spentAmount;
+
       budgets.add(Budget(
         id: budgetData['id'],
         categoryId: categoryId,
@@ -129,12 +198,12 @@ class BudgetService {
         amount: budgetAmount,
         startDate: DateTime.parse(budgetData['start_date']),
         spentAmount: spentAmount,
-        progress: budgetAmount > 0
-            ? (spentAmount / budgetAmount).clamp(0.0, 1.0)
-            : 0.0,
-        remainingAmount: budgetAmount - spentAmount,
-        lastMonthSpent: lastSpendingByCategory[categoryId] ?? 0.0,
-        lastMonthAmount: lastBudgetAmounts[categoryId] ?? 0.0,
+        progress: progress,
+        remainingAmount: remaining,
+        lastMonthSpent: lastSpent,
+        lastMonthAmount: lastAmount,
+        rolloverAmount: rollover,
+        availableAmount: availableAmount,
       ));
     }
     return budgets;
