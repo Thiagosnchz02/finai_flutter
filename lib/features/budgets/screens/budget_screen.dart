@@ -6,8 +6,10 @@ import 'package:finai_flutter/features/budgets/services/budget_service.dart';
 import 'package:finai_flutter/features/budgets/widgets/budget_card.dart';
 import 'package:finai_flutter/features/budgets/widgets/budget_summary_header.dart';
 import 'package:finai_flutter/features/budgets/widgets/budget_distribution_chart.dart';
+import 'package:finai_flutter/features/budgets/widgets/add_edit_budget_dialog.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'add_edit_budget_screen.dart';
+
+enum _CopyAction { overwrite, addOnly, cancel }
 
 class BudgetScreen extends StatefulWidget {
   const BudgetScreen({super.key});
@@ -42,18 +44,48 @@ class _BudgetScreenState extends State<BudgetScreen> {
     return {'summary': summary, 'budgets': budgets, 'enableRollover': enableRollover};
   }
 
-  void _navigateAndRefresh({Budget? budget}) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => AddEditBudgetScreen(budget: budget)),
+  Future<void> _openBudgetDialog({Budget? budget}) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AddEditBudgetDialog(budget: budget),
     );
     if (result == true && mounted) {
       _loadData();
     }
   }
-  
+
   Future<void> _onCopyFromLastMonth() async {
     try {
-      await _service.copyBudgetsFromLastMonth();
+      bool overwrite = false;
+      final hasConflicts = await _service.hasConflictingBudgetsFromLastMonth();
+      if (hasConflicts && mounted) {
+        final action = await showDialog<_CopyAction>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Conflicto de presupuestos'),
+            content: const Text(
+                'Algunas categorías ya tienen presupuesto este mes. ¿Deseas sobrescribirlos o agregar solo los que faltan?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, _CopyAction.cancel),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, _CopyAction.addOnly),
+                child: const Text('Solo nuevos'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, _CopyAction.overwrite),
+                child: const Text('Sobrescribir'),
+              ),
+            ],
+          ),
+        );
+        if (action == null || action == _CopyAction.cancel) return;
+        overwrite = action == _CopyAction.overwrite;
+      }
+
+      await _service.copyBudgetsFromLastMonth(overwriteExisting: overwrite);
       _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -100,7 +132,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateAndRefresh(),
+        onPressed: () => _openBudgetDialog(),
         child: const Icon(Icons.add),
       ),
       body: FutureBuilder<Map<String, dynamic>>(
@@ -149,7 +181,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           itemBuilder: (context, index) {
                             final budget = budgets[index];
                             return GestureDetector(
-                              onTap: () => _navigateAndRefresh(budget: budget),
+                              onTap: () => _openBudgetDialog(budget: budget),
                               child: BudgetCard(budget: budget),
                             );
                           },
