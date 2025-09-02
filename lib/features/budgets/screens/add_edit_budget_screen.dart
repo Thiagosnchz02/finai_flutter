@@ -22,6 +22,7 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
   String? _selectedCategoryId;
   bool _isLoading = false;
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
+  double? _suggestedAmount;
 
   bool get isEditing => widget.budget != null;
 
@@ -38,6 +39,21 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
     } else {
       // Si estamos creando, cargamos las categorías disponibles.
       _categoriesFuture = _service.getAvailableCategoriesForBudget();
+    }
+  }
+
+  Future<void> _onCategoryChanged(String? value) async {
+    setState(() {
+      _selectedCategoryId = value;
+      _suggestedAmount = null;
+    });
+    if (value != null) {
+      final suggestion = await _service.getCategorySpendingSuggestion(value);
+      if (mounted) {
+        setState(() {
+          _suggestedAmount = suggestion;
+        });
+      }
     }
   }
 
@@ -109,15 +125,15 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
-                DropdownButtonFormField<String>(
-                  value: _selectedCategoryId,
-                  decoration: const InputDecoration(labelText: 'Categoría'),
-                  // Si estamos editando, el dropdown se deshabilita.
-                  onChanged: isEditing ? null : (value) => setState(() => _selectedCategoryId = value),
-                  items: categories.map<DropdownMenuItem<String>>((cat) {
-                    return DropdownMenuItem<String>(
-                      value: cat['id'] as String,
-                      child: Text(cat['name'] as String),
+              DropdownButtonFormField<String>(
+                value: _selectedCategoryId,
+                decoration: const InputDecoration(labelText: 'Categoría'),
+                // Si estamos editando, el dropdown se deshabilita.
+                onChanged: isEditing ? null : _onCategoryChanged,
+                items: categories.map<DropdownMenuItem<String>>((cat) {
+                  return DropdownMenuItem<String>(
+                    value: cat['id'] as String,
+                    child: Text(cat['name'] as String),
                     );
                   }).toList(),
                   validator: (value) => value == null ? 'Selecciona una categoría' : null,
@@ -133,6 +149,14 @@ class _AddEditBudgetScreenState extends State<AddEditBudgetScreen> {
                     return null;
                   },
                 ),
+                if (_suggestedAmount != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      'Sugerencia: €${_suggestedAmount!.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
               ],
             ),
           );
