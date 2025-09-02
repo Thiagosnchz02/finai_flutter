@@ -194,7 +194,8 @@ class BudgetService {
       await _supabase.from('budgets').upsert(existingBudgets);
     }
   }
-
+  
+  // >>> Añadido desde la rama de Codex: sugerencia de gasto por categoría
   Future<double?> getCategorySpendingSuggestion(String categoryId) async {
     final userId = _supabase.auth.currentUser!.id;
     final response = await _supabase.rpc(
@@ -204,6 +205,7 @@ class BudgetService {
         'p_category_id': categoryId,
       },
     );
+
     if (response == null) return null;
     if (response is num) return (response as num).toDouble();
     if (response is Map && response['suggested_amount'] != null) {
