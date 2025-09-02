@@ -6,12 +6,14 @@ import '../models/budget_model.dart';
 
 class BudgetCard extends StatelessWidget {
   final Budget budget;
+  final bool enableRollover;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
   const BudgetCard({
     super.key,
     required this.budget,
+    required this.enableRollover,
     this.onTap,
     this.onDelete,
   });
@@ -82,10 +84,16 @@ class BudgetCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 4),
-              Text(
-                'Base: ${formatter.format(budget.amount)} | Rollover: ${formatter.format(budget.rolloverAmount)}',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              if (enableRollover)
+                Text(
+                  'Base: ${formatter.format(budget.amount)} | Rollover: ${formatter.format(budget.rolloverAmount)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                )
+              else
+                Text(
+                  'Rollover: 0',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               const SizedBox(height: 4),
               Text(
                 'Mes anterior: ${formatter.format(budget.lastMonthSpent)} de ${formatter.format(budget.lastMonthAmount)}',
