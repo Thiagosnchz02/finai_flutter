@@ -14,6 +14,8 @@ class Budget {
   final double remainingAmount; // Cuánto queda
   final double lastMonthSpent; // Gastado en el mes anterior
   final double lastMonthAmount; // Presupuesto del mes anterior
+  final double rolloverAmount; // Diferencia del mes anterior
+  final double availableAmount; // Presupuesto base + rollover
 
   Budget({
     required this.id,
@@ -27,6 +29,8 @@ class Budget {
     this.remainingAmount = 0.0,
     this.lastMonthSpent = 0.0,
     this.lastMonthAmount = 0.0,
+    this.rolloverAmount = 0.0,
+    this.availableAmount = 0.0,
   });
 }
 
@@ -36,6 +40,8 @@ class BudgetSummary {
   final double availableToBudget; // Lo que realmente queda para presupuestar
   final String userPlan; // 'free' o 'pro'
   final bool enableBudgetRollover;
+  final double totalBaseBudget; // Suma de presupuestos del mes
+  final double totalAvailableBudget; // Suma con rollover aplicado
 
   BudgetSummary({
     this.spendingBalance = 0.0,
@@ -43,5 +49,7 @@ class BudgetSummary {
     this.availableToBudget = 0.0,
     required this.userPlan,
     required this.enableBudgetRollover,
+    this.totalBaseBudget = 0.0,
+    this.totalAvailableBudget = 0.0,
   });
 }
