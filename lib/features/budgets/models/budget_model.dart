@@ -12,6 +12,8 @@ class Budget {
   final double spentAmount; // Cuánto se ha gastado
   final double progress; // 0.0 a 1.0
   final double remainingAmount; // Cuánto queda
+  final double lastMonthSpent; // Gastado en el mes anterior
+  final double lastMonthAmount; // Presupuesto del mes anterior
 
   Budget({
     required this.id,
@@ -23,6 +25,8 @@ class Budget {
     this.spentAmount = 0.0,
     this.progress = 0.0,
     this.remainingAmount = 0.0,
+    this.lastMonthSpent = 0.0,
+    this.lastMonthAmount = 0.0,
   });
 }
 

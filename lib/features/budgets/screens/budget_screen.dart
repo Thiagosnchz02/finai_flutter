@@ -54,6 +54,18 @@ class _BudgetScreenState extends State<BudgetScreen> {
     }
   }
 
+  Future<void> _deleteBudget(String id) async {
+    await _service.deleteBudget(id);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Presupuesto eliminado'),
+            backgroundColor: Colors.redAccent),
+      );
+    }
+    _loadData();
+  }
+
   Future<void> _onCopyFromLastMonth() async {
     try {
       bool overwrite = false;
@@ -180,9 +192,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                           itemCount: budgets.length,
                           itemBuilder: (context, index) {
                             final budget = budgets[index];
-                            return GestureDetector(
+                            return BudgetCard(
+                              budget: budget,
                               onTap: () => _openBudgetDialog(budget: budget),
-                              child: BudgetCard(budget: budget),
+                              onDelete: () => _deleteBudget(budget.id),
                             );
                           },
                         ),
