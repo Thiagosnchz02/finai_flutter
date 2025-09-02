@@ -197,22 +197,29 @@ class BudgetService {
   
   // >>> Añadido desde la rama de Codex: sugerencia de gasto por categoría
   Future<double?> getCategorySpendingSuggestion(String categoryId) async {
-    final userId = _supabase.auth.currentUser!.id;
-    final response = await _supabase.rpc(
-      'get_category_spending_suggestion',
-      params: {
-        'p_user_id': userId,
-        'p_category_id': categoryId,
-      },
-    );
+  final userId = _supabase.auth.currentUser!.id;
+  final response = await _supabase.rpc(
+    'get_category_spending_suggestion',
+    params: {
+      'p_user_id': userId,
+      'p_category_id': categoryId,
+    },
+  );
 
-    if (response == null) return null;
-    if (response is num) return (response as num).toDouble();
-    if (response is Map && response['suggested_amount'] != null) {
-      return (response['suggested_amount'] as num).toDouble();
-    }
-    return null;
+  if (response == null) return null;
+
+  // Si viene como número (int/double)
+  if (response is num) return response.toDouble();
+
+  // Si viene como objeto { suggested_amount: ... }
+  if (response is Map && response['suggested_amount'] != null) {
+    final v = response['suggested_amount'];
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v);
   }
+
+  return null;
+}
 
   Future<void> updateBudgetRollover(bool isEnabled) async {
     final userId = _supabase.auth.currentUser!.id;

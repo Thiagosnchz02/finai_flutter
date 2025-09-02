@@ -1,7 +1,6 @@
 // lib/features/investments/screens/add_edit_investment_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:finai_flutter/features/investments/models/investment_model.dart';
 import 'package:finai_flutter/features/investments/services/investments_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
