@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:finai_flutter/features/budgets/models/budget_model.dart';
 import 'package:finai_flutter/features/budgets/services/budget_service.dart';
+import 'package:intl/intl.dart';
 
 class BudgetsDashboardWidget extends StatefulWidget {
   const BudgetsDashboardWidget({super.key});
@@ -14,6 +15,17 @@ class BudgetsDashboardWidget extends StatefulWidget {
 class _BudgetsDashboardWidgetState extends State<BudgetsDashboardWidget> {
   final _service = BudgetService();
   late Future<List<Budget>> _budgetsFuture;
+
+  IconData _parseIcon(String? iconStr) {
+    if (iconStr == null) return Icons.category;
+    try {
+      final cleaned = iconStr.startsWith('0x') ? iconStr.substring(2) : iconStr;
+      final codePoint = int.parse(cleaned, radix: 16);
+      return IconData(codePoint, fontFamily: 'MaterialIcons');
+    } catch (_) {
+      return Icons.category;
+    }
+  }
 
   @override
   void initState() {
@@ -59,24 +71,39 @@ class _BudgetsDashboardWidgetState extends State<BudgetsDashboardWidget> {
                 
                 // Mostramos los 3 presupuestos con mayor progreso
                 budgets.sort((a, b) => b.progress.compareTo(a.progress));
+                 final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
 
                 return Column(
                   children: budgets.take(3).map((budget) {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(budget.categoryName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              Text('${(budget.progress * 100).toStringAsFixed(0)}%'),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          LinearProgressIndicator(value: budget.progress),
-                        ],
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: Icon(_parseIcon(budget.categoryIcon)),
+                        title: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                budget.categoryName,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text('${(budget.progress * 100).toStringAsFixed(0)}%'),
+                          ],
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            LinearProgressIndicator(value: budget.progress),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${formatter.format(budget.spentAmount)} / ${formatter.format(budget.amount)}',
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }).toList(),
