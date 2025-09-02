@@ -60,17 +60,61 @@ class BudgetService {
   // ... (El resto del archivo permanece igual)
   Future<List<Budget>> getBudgetsForCurrentMonth() async {
     final userId = _supabase.auth.currentUser!.id;
-    final firstDayOfMonth = DateTime(DateTime.now().year, DateTime.now().month, 1);
-    final budgetsResponse = await _supabase.from('budgets').select('*, categories(name, icon)').eq('user_id', userId).gte('start_date', firstDayOfMonth.toIso8601String());
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final budgetsResponse = await _supabase
+        .from('budgets')
+        .select('*, categories(name, icon)')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayOfMonth.toIso8601String());
     if (budgetsResponse.isEmpty) return [];
-    final spendingResponse = await _supabase.from('transactions').select('category_id, amount').eq('user_id', userId).eq('type', 'gasto').gte('transaction_date', firstDayOfMonth.toIso8601String());
+
+    // Gastos del mes actual
+    final spendingResponse = await _supabase
+        .from('transactions')
+        .select('category_id, amount')
+        .eq('user_id', userId)
+        .eq('type', 'gasto')
+        .gte('transaction_date', firstDayOfMonth.toIso8601String());
     final spendingByCategory = <String, double>{};
     for (var spent in spendingResponse) {
       if (spent['category_id'] == null) continue;
       final categoryId = spent['category_id'] as String;
       final amount = (spent['amount'] as num).abs().toDouble();
-      spendingByCategory[categoryId] = (spendingByCategory[categoryId] ?? 0) + amount;
+      spendingByCategory[categoryId] =
+          (spendingByCategory[categoryId] ?? 0) + amount;
     }
+
+    // Datos del mes anterior
+    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
+    final lastDayLastMonth = DateTime(now.year, now.month, 0);
+    final lastBudgetsResponse = await _supabase
+        .from('budgets')
+        .select('category_id, amount')
+        .eq('user_id', userId)
+        .gte('start_date', firstDayLastMonth.toIso8601String())
+        .lte('start_date', lastDayLastMonth.toIso8601String());
+    final lastBudgetAmounts = <String, double>{};
+    for (var b in lastBudgetsResponse) {
+      lastBudgetAmounts[b['category_id'] as String] =
+          (b['amount'] as num).toDouble();
+    }
+    final lastSpendingResponse = await _supabase
+        .from('transactions')
+        .select('category_id, amount')
+        .eq('user_id', userId)
+        .eq('type', 'gasto')
+        .gte('transaction_date', firstDayLastMonth.toIso8601String())
+        .lte('transaction_date', lastDayLastMonth.toIso8601String());
+    final lastSpendingByCategory = <String, double>{};
+    for (var spent in lastSpendingResponse) {
+      if (spent['category_id'] == null) continue;
+      final categoryId = spent['category_id'] as String;
+      final amount = (spent['amount'] as num).abs().toDouble();
+      lastSpendingByCategory[categoryId] =
+          (lastSpendingByCategory[categoryId] ?? 0) + amount;
+    }
+
     final List<Budget> budgets = [];
     for (var budgetData in budgetsResponse) {
       final categoryId = budgetData['category_id'] as String;
@@ -79,13 +123,18 @@ class BudgetService {
       budgets.add(Budget(
         id: budgetData['id'],
         categoryId: categoryId,
-        categoryName: budgetData['categories']?['name'] ?? 'Categoría eliminada',
+        categoryName:
+            budgetData['categories']?['name'] ?? 'Categoría eliminada',
         categoryIcon: budgetData['categories']?['icon'],
         amount: budgetAmount,
         startDate: DateTime.parse(budgetData['start_date']),
         spentAmount: spentAmount,
-        progress: budgetAmount > 0 ? (spentAmount / budgetAmount).clamp(0.0, 1.0) : 0.0,
+        progress: budgetAmount > 0
+            ? (spentAmount / budgetAmount).clamp(0.0, 1.0)
+            : 0.0,
         remainingAmount: budgetAmount - spentAmount,
+        lastMonthSpent: lastSpendingByCategory[categoryId] ?? 0.0,
+        lastMonthAmount: lastBudgetAmounts[categoryId] ?? 0.0,
       ));
     }
     return budgets;
@@ -111,6 +160,12 @@ class BudgetService {
     } else {
       await _eventLogger.log(AppEvent.budget_created, details: {'budget_id': budgetId, 'category_id': data['category_id'], 'amount': data['amount']});
     }
+  }
+
+  Future<void> deleteBudget(String id) async {
+    await _supabase.from('budgets').delete().eq('id', id);
+    await _eventLogger
+        .log(AppEvent.budget_deleted, details: {'budget_id': id});
   }
 
   Future<bool> hasConflictingBudgetsFromLastMonth() async {
