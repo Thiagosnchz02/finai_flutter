@@ -72,6 +72,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         child: const Icon(Icons.add),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),

@@ -87,6 +87,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
         },
         child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<List<FixedExpense>>(
         future: _fixedExpensesFuture,
         builder: (context, snapshot) {

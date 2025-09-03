@@ -118,6 +118,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
         onPressed: () => _navigateAndRefresh(),
         child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<Map<String, dynamic>>(
         future: _dataFuture,
         builder: (context, snapshot) {
