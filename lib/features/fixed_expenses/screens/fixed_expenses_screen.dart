@@ -76,18 +76,17 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
             icon: Icon(_isListView ? Icons.calendar_month_outlined : Icons.list_alt_outlined),
             onPressed: () => setState(() => _isListView = !_isListView),
           ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              final result = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (context) => const AddEditFixedExpenseScreen()),
+              );
+              if (result == true) _loadData();
+            },
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (context) => const AddEditFixedExpenseScreen()),
-          );
-          if (result == true) _loadData();
-        },
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<List<FixedExpense>>(
         future: _fixedExpensesFuture,
         builder: (context, snapshot) {
