@@ -81,15 +81,13 @@ class _AccountsScreenState extends State<AccountsScreen> {
               return const SizedBox.shrink(); // Oculta el botón si no se cumplen las condiciones
             },
           ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Añadir cuenta',
+            onPressed: _navigateToAddAccount,
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToAddAccount,
-        backgroundColor: Colors.blueAccent.withOpacity(0.8),
-        child: const Icon(Icons.add, color: Colors.white),
-        shape: const CircleBorder(),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<AccountSummary>(
         future: _accountSummaryFuture,
         builder: (context, snapshot) {
