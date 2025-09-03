@@ -67,12 +67,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateAndRefresh(),
-        child: const Icon(Icons.add),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -140,6 +134,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               IconButton(
                 icon: const Icon(Icons.list),
                 onPressed: () { /* TODO: Lógica de cambio de vista */ },
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () => _navigateAndRefresh(),
               ),
             ],
           ),
