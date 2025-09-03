@@ -141,13 +141,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
               ),
             ],
           ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _openBudgetDialog(),
+          ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openBudgetDialog(),
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<Map<String, dynamic>>(
         future: _dataFuture,
         builder: (context, snapshot) {
