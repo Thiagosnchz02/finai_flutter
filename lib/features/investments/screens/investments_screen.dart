@@ -70,6 +70,7 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
         onPressed: () => _navigateAndRefresh(),
         child: const Icon(Icons.add),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<List<Investment>>(
         future: _investmentsFuture,
         builder: (context, snapshot) {

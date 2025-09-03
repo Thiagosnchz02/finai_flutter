@@ -89,6 +89,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
         child: const Icon(Icons.add, color: Colors.white),
         shape: const CircleBorder(),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<AccountSummary>(
         future: _accountSummaryFuture,
         builder: (context, snapshot) {
