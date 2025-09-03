@@ -65,12 +65,15 @@ class _InvestmentsScreenState extends State<InvestmentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis Inversiones')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateAndRefresh(),
-        child: const Icon(Icons.add),
+      appBar: AppBar(
+        title: const Text('Mis Inversiones'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => _navigateAndRefresh(),
+          ),
+        ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       body: FutureBuilder<List<Investment>>(
         future: _investmentsFuture,
         builder: (context, snapshot) {
