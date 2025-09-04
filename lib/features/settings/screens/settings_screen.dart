@@ -6,6 +6,7 @@ import 'package:finai_flutter/features/settings/services/settings_service.dart';
 import 'package:finai_flutter/features/settings/widgets/settings_widgets.dart';
 import 'package:finai_flutter/features/profile/screens/change_password_screen.dart';
 import '../widgets/mfa_dialogs.dart';
+import '../widgets/delete_account_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -118,7 +119,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Datos de la Cuenta',
                 children: [
                   SettingsActionRow(label: 'Exportar mis Datos', icon: Icons.download_outlined, onTap: () {}),
-                  SettingsActionRow(label: 'Eliminar mi Cuenta', icon: Icons.delete_forever_outlined, color: Colors.red, onTap: () {}),
+                  SettingsActionRow(
+                    label: 'Eliminar mi Cuenta',
+                    icon: Icons.delete_forever_outlined,
+                    color: Colors.red,
+                    onTap: () => showDeleteAccountDialog(context),
+                  ),
                 ],
               ),
             ],
