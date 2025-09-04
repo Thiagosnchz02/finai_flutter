@@ -5,6 +5,7 @@ import 'package:finai_flutter/features/settings/models/profile_model.dart';
 import 'package:finai_flutter/features/settings/services/settings_service.dart';
 import 'package:finai_flutter/features/settings/widgets/settings_widgets.dart';
 import 'package:finai_flutter/features/profile/screens/change_password_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/mfa_dialogs.dart';
 import '../widgets/delete_account_dialog.dart';
 
@@ -263,7 +264,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     label: 'Eliminar mi Cuenta',
                     icon: Icons.delete_forever_outlined,
                     color: Colors.red,
-                    onTap: () => showDeleteAccountDialog(context),
+                    onTap: () async {
+                      final success = await showDeleteAccountDialog(context);
+                      if (success) {
+                        try {
+                          await Supabase.instance.client.auth.signOut();
+                        } on AuthException catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error: ${e.message}'),
+                                backgroundColor: Theme.of(context).colorScheme.error,
+                              ),
+                            );
+                          }
+                          return;
+                        }
+                        if (context.mounted) {
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            '/login',
+                            (route) => false,
+                          );
+                        }
+                      }
+                    },
                   ),
                 ],
               ),
