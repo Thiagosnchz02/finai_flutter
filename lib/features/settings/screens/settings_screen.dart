@@ -79,7 +79,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SettingsCard(
                 title: 'Apariencia',
                 children: [
-                  SettingsNavigationRow(label: 'Tema de la Aplicación', icon: Icons.palette_outlined, onTap: () {}),
+                  SettingsNavigationRow(
+                    label: 'Tema de la Aplicación',
+                    icon: Icons.palette_outlined,
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) {
+                          return SafeArea(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ListTile(
+                                  title: const Text('Predeterminado del sistema'),
+                                  trailing: profile.theme == 'system'
+                                      ? const Icon(Icons.check)
+                                      : null,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _updateSetting('theme', 'system');
+                                  },
+                                ),
+                                ListTile(
+                                  title: const Text('Claro'),
+                                  trailing: profile.theme == 'light'
+                                      ? const Icon(Icons.check)
+                                      : null,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _updateSetting('theme', 'light');
+                                  },
+                                ),
+                                ListTile(
+                                  title: const Text('Oscuro'),
+                                  trailing: profile.theme == 'dark'
+                                      ? const Icon(Icons.check)
+                                      : null,
+                                  onTap: () {
+                                    Navigator.pop(context);
+                                    _updateSetting('theme', 'dark');
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                   SettingsNavigationRow(label: 'Idioma', icon: Icons.language, onTap: () {}),
                 ],
               ),
