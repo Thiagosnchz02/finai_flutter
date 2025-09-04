@@ -12,7 +12,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLoading = false;
   final _supabase = Supabase.instance.client;
 
@@ -22,7 +22,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     _confirmPasswordController.dispose();
     super.dispose();
   }
-  
+
   /// Función para manejar la actualización de la contraseña
   Future<void> _updatePassword() async {
     // Verificamos que exista una sesión activa
@@ -55,29 +55,34 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('¡Contraseña actualizada con éxito!'),
-          backgroundColor: Colors.green,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Contraseña actualizada con éxito!'),
+            backgroundColor: Colors.green,
+          ),
+        );
         // Limpiamos los controladores y redirigimos a la configuración
         _newPasswordController.clear();
         _confirmPasswordController.clear();
         Navigator.pushReplacementNamed(context, '/settings');
       }
-
     } on AuthException catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error al actualizar: ${e.message}'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al actualizar: ${e.message}'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Ocurrió un error inesperado'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Ocurrió un error inesperado'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
       }
     }
 
@@ -91,15 +96,16 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cambiar Contraseña'),
-      ),
+      appBar: AppBar(title: const Text('Cambiar Contraseña')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 children: [
                   Text(
                     'Tu nueva contraseña debe tener al menos 8 caracteres y ser segura.',
@@ -148,6 +154,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ),
                     onPressed: _isLoading ? null : _updatePassword,
                     child: const Text('Actualizar Contraseña'),
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
                   ),
                 ],
               ),
