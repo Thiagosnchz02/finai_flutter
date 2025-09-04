@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:finai_flutter/features/settings/models/profile_model.dart';
 import 'package:finai_flutter/features/settings/services/settings_service.dart';
 import 'package:finai_flutter/features/settings/widgets/settings_widgets.dart';
+import 'package:finai_flutter/features/profile/screens/change_password_screen.dart';
 import '../widgets/mfa_dialogs.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -92,7 +93,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SettingsCard(
                 title: 'Seguridad',
                 children: [
-                  SettingsNavigationRow(label: 'Cambiar Contraseña', icon: Icons.lock_outline, onTap: () {}),
+                  SettingsNavigationRow(
+                    label: 'Cambiar Contraseña',
+                    icon: Icons.lock_outline,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ChangePasswordScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   // --- CORRECCIÓN AQUÍ ---
                   // Conectamos el interruptor con el método que ya habíamos creado.
                   SettingsToggleRow(
