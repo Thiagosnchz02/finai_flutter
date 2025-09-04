@@ -20,12 +20,13 @@ Future<bool> showMfaEnrollDialog(BuildContext context) async {
   final qrCodeSvg = factor.totp!.qrCode;
   final secret = factor.totp!.secret;
   
-  final code = await showDialog<String>(
+  final success = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
     builder: (context) {
       final codeController = TextEditingController();
       bool isValid = false;
+      bool isVerifying = false;
       String? errorText;
       final regExp = RegExp(r'^[0-9]{6}$');
       return StatefulBuilder(
@@ -80,12 +81,38 @@ Future<bool> showMfaEnrollDialog(BuildContext context) async {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: isVerifying ? null : () => Navigator.of(context).pop(false),
                 child: const Text('Cancelar'),
               ),
               ElevatedButton(
-                onPressed: isValid ? () => Navigator.of(context).pop(codeController.text) : null,
-                child: const Text('Verificar'),
+                onPressed: isValid && !isVerifying
+                    ? () async {
+                        setState(() => isVerifying = true);
+                        try {
+                          await settingsService.verifyMfa(factor.id, codeController.text);
+                          if (context.mounted) {
+                            Navigator.of(context).pop(true);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            setState(() {
+                              isVerifying = false;
+                              errorText = 'Código inválido';
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error al verificar el código: ${e.toString()}'), backgroundColor: Colors.red),
+                            );
+                          }
+                        }
+                      }
+                    : null,
+                child: isVerifying
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Verificar'),
               ),
             ],
           );
@@ -94,20 +121,13 @@ Future<bool> showMfaEnrollDialog(BuildContext context) async {
     },
   );
 
-  if (code == null || code.isEmpty) return false;
-
-  try {
-    await settingsService.verifyMfa(factor.id, code);
+  if (success == true) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('¡2FA activado con éxito!'), backgroundColor: Colors.green),
     );
     return true;
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error al verificar el código: ${e.toString()}'), backgroundColor: Colors.red),
-    );
-    return false;
   }
+  return false;
 }
 
 /// Diálogo para confirmar la desactivación de 2FA.
@@ -122,37 +142,61 @@ Future<bool> showMfaUnenrollDialog(BuildContext context) async {
     orElse: () => throw Exception('No se encontró un factor TOTP activo')
   );
 
-  final confirmed = await showDialog<bool>(
+  final success = await showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('¿Desactivar 2FA?'),
-      content: const Text('¿Estás seguro de que quieres desactivar la autenticación de dos factores? Tu cuenta será menos segura.'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Confirmar Desactivación'),
-        ),
-      ],
-    ),
+    barrierDismissible: false,
+    builder: (context) {
+      bool isVerifying = false;
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('¿Desactivar 2FA?'),
+            content: const Text('¿Estás seguro de que quieres desactivar la autenticación de dos factores? Tu cuenta será menos segura.'),
+            actions: [
+              TextButton(
+                onPressed: isVerifying ? null : () => Navigator.of(context).pop(false),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: isVerifying
+                    ? null
+                    : () async {
+                        setState(() => isVerifying = true);
+                        try {
+                          await settingsService.unenrollMfa(totpFactor.id);
+                          if (context.mounted) {
+                            Navigator.of(context).pop(true);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            setState(() => isVerifying = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error al desactivar 2FA: ${e.toString()}'), backgroundColor: Colors.red),
+                            );
+                          }
+                        }
+                      },
+                child: isVerifying
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Confirmar Desactivación'),
+              ),
+            ],
+          );
+        },
+      );
+    },
   );
 
-  if (confirmed != true) return false;
-
-  try {
-    await settingsService.unenrollMfa(totpFactor.id);
+  if (success == true) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('2FA desactivado con éxito.'), backgroundColor: Colors.orange),
     );
     return true;
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error al desactivar 2FA: ${e.toString()}'), backgroundColor: Colors.red),
-    );
-    return false;
   }
+  return false;
 }
