@@ -244,6 +244,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Datos de la Cuenta',
                 children: [
                   SettingsActionRow(
+                    label: 'Importar mis Datos',
+                    icon: Icons.upload_outlined,
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Funcionalidad no disponible.'),
+                        ),
+                      );
+                    },
+                  ),
+                  SettingsActionRow(
                     label: 'Exportar mis Datos',
                     icon: Icons.download_outlined,
                     onTap: _exportData,
