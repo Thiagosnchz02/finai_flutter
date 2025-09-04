@@ -6,6 +6,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:finai_flutter/features/fixed_expenses/models/fixed_expense_model.dart';
 import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
 import 'add_edit_fixed_expense_screen.dart';
+import '../widgets/expense_day_details_dialog.dart';
 
 class FixedExpensesScreen extends StatefulWidget {
   const FixedExpensesScreen({super.key});
@@ -149,25 +150,12 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
 
                           final expensesForDay = _events[_getDayKey(selectedDay)] ?? [];
                           if (expensesForDay.isNotEmpty) {
-                            showModalBottomSheet(
+                            showDialog(
                               context: context,
-                              builder: (context) {
-                                return ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount: expensesForDay.length,
-                                  itemBuilder: (context, index) {
-                                    final expense = expensesForDay[index];
-                                    return ListTile(
-                                      title: Text(expense.description),
-                                      subtitle: Text(
-                                        'Próximo vencimiento: '
-                                        '${DateFormat.yMMMd('es_ES').format(expense.nextDueDate)}',
-                                      ),
-                                      trailing: Text('${expense.amount.toStringAsFixed(2)} €'),
-                                    );
-                                  },
-                                );
-                              },
+                              builder: (context) => ExpenseDayDetailsDialog(
+                                expenses: expensesForDay,
+                                selectedDay: selectedDay,
+                              ),
                             );
                           }
                         },

@@ -16,6 +16,14 @@ class FixedExpensesService {
     return List<Map<String, dynamic>>.from(response);
   }
 
+  Future<Map<String, dynamic>> getExpenseDetails(String expenseId) async {
+    final response = await _supabase.rpc(
+      'get_fixed_expense_details',
+      params: {'p_expense_id': expenseId},
+    );
+    return response as Map<String, dynamic>;
+  }
+
   Future<Map<String, dynamic>> getRelatedData() async {
     final accountsResponse = await _supabase.from('accounts').select('id, name').eq('is_archived', false);
     final categoriesResponse = await _supabase.from('categories').select('id, name').eq('type', 'gasto').eq('is_archived', false);
