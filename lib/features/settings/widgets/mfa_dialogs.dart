@@ -1,6 +1,7 @@
 // lib/features/settings/widgets/mfa_dialogs.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:finai_flutter/features/settings/services/settings_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -17,6 +18,7 @@ Future<bool> showMfaEnrollDialog(BuildContext context) async {
     return false;
   }
   final qrCodeSvg = factor.totp!.qrCode;
+  final secret = factor.totp!.secret;
   
   final code = await showDialog<String>(
     context: context,
@@ -35,6 +37,21 @@ Future<bool> showMfaEnrollDialog(BuildContext context) async {
                 width: 200,
                 height: 200,
                 child: SvgPicture.string(qrCodeSvg),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(child: SelectableText(secret)),
+                  IconButton(
+                    icon: const Icon(Icons.copy),
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: secret));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Clave copiada al portapapeles')),
+                      );
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               const Text('Luego, introduce el código de 6 dígitos que te genere la aplicación.'),
