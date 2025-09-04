@@ -42,4 +42,32 @@ class Profile {
       planType: map['plan_type'] ?? 'free',
     );
   }
+
+  Profile copyWith({
+    String? id,
+    String? fullName,
+    String? avatarUrl,
+    bool? dobleFactorEnabled,
+    String? theme,
+    String? language,
+    bool? notifyFixedExpense,
+    bool? notifyBudgetAlert,
+    bool? notifyGoalReached,
+    bool? enableBudgetRollover,
+    String? planType,
+  }) {
+    return Profile(
+      id: id ?? this.id,
+      fullName: fullName ?? this.fullName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      dobleFactorEnabled: dobleFactorEnabled ?? this.dobleFactorEnabled,
+      theme: theme ?? this.theme,
+      language: language ?? this.language,
+      notifyFixedExpense: notifyFixedExpense ?? this.notifyFixedExpense,
+      notifyBudgetAlert: notifyBudgetAlert ?? this.notifyBudgetAlert,
+      notifyGoalReached: notifyGoalReached ?? this.notifyGoalReached,
+      enableBudgetRollover: enableBudgetRollover ?? this.enableBudgetRollover,
+      planType: planType ?? this.planType,
+    );
+  }
 }

@@ -33,11 +33,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _updateSetting(String key, dynamic value) async {
+    final previousProfile = await _profileFuture;
+
+    Profile updatedProfile = previousProfile;
+    switch (key) {
+      case 'theme':
+        updatedProfile = previousProfile.copyWith(theme: value as String);
+        break;
+      case 'language':
+        updatedProfile = previousProfile.copyWith(language: value as String);
+        break;
+      case 'notify_budget_alert':
+        updatedProfile = previousProfile.copyWith(notifyBudgetAlert: value as bool);
+        break;
+      case 'notify_fixed_expense':
+        updatedProfile = previousProfile.copyWith(notifyFixedExpense: value as bool);
+        break;
+      case 'notify_goal_reached':
+        updatedProfile = previousProfile.copyWith(notifyGoalReached: value as bool);
+        break;
+    }
+
+    setState(() {
+      _profileFuture = Future.value(updatedProfile);
+    });
+
     try {
       await _service.updateProfileSetting(key, value);
       _loadProfile();
     } catch (e) {
-      // Manejar error si es necesario
+      setState(() {
+        _profileFuture = Future.value(previousProfile);
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al actualizar configuración: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
