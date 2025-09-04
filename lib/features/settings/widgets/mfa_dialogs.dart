@@ -25,55 +25,71 @@ Future<bool> showMfaEnrollDialog(BuildContext context) async {
     barrierDismissible: false,
     builder: (context) {
       final codeController = TextEditingController();
-      return AlertDialog(
-        title: const Text('Activar 2FA - Paso 1 de 2'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Escanea este código QR con tu aplicación de autenticación (Google Authenticator, Authy, etc.).'),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: SvgPicture.string(qrCodeSvg),
-              ),
-              const SizedBox(height: 16),
-              Row(
+      bool isValid = false;
+      String? errorText;
+      final regExp = RegExp(r'^[0-9]{6}$');
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Activar 2FA - Paso 1 de 2'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(child: SelectableText(secret)),
-                  IconButton(
-                    icon: const Icon(Icons.copy),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: secret));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Clave copiada al portapapeles')),
-                      );
+                  const Text('Escanea este código QR con tu aplicación de autenticación (Google Authenticator, Authy, etc.).'),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: 200,
+                    height: 200,
+                    child: SvgPicture.string(qrCodeSvg),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(child: SelectableText(secret)),
+                      IconButton(
+                        icon: const Icon(Icons.copy),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: secret));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Clave copiada al portapapeles')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Luego, introduce el código de 6 dígitos que te genere la aplicación.'),
+                  TextField(
+                    controller: codeController,
+                    maxLength: 6,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Código de 6 dígitos',
+                      errorText: errorText,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        isValid = regExp.hasMatch(value);
+                        errorText = isValid ? null : 'Ingrese un código válido de 6 dígitos';
+                      });
                     },
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              const Text('Luego, introduce el código de 6 dígitos que te genere la aplicación.'),
-              TextField(
-                controller: codeController,
-                maxLength: 6,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Código de 6 dígitos'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                onPressed: isValid ? () => Navigator.of(context).pop(codeController.text) : null,
+                child: const Text('Verificar'),
               ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(codeController.text),
-            child: const Text('Verificar'),
-          ),
-        ],
+          );
+        },
       );
     },
   );
