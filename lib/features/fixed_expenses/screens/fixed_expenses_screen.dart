@@ -24,6 +24,8 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
   DateTime? _selectedDay;
   Map<DateTime, List<FixedExpense>> _events = {};
 
+  DateTime _getDayKey(DateTime day) => DateTime.utc(day.year, day.month, day.day);
+
   @override
   void initState() {
     super.initState();
@@ -43,7 +45,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
   Map<DateTime, List<FixedExpense>> _groupExpensesByDate(List<FixedExpense> expenses) {
     Map<DateTime, List<FixedExpense>> data = {};
     for (var expense in expenses) {
-      final date = DateTime.utc(expense.nextDueDate.year, expense.nextDueDate.month, expense.nextDueDate.day);
+      final date = _getDayKey(expense.nextDueDate);
       data[date] = data[date] ?? [];
       data[date]!.add(expense);
     }
@@ -137,13 +139,37 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                         firstDay: DateTime.utc(2020, 1, 1),
                         lastDay: DateTime.utc(2030, 12, 31),
                         focusedDay: _focusedDay,
-                        eventLoader: (day) => _events[day] ?? [],
+                        eventLoader: (day) => _events[_getDayKey(day)] ?? [],
                         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                         onDaySelected: (selectedDay, focusedDay) {
                           setState(() {
                             _selectedDay = selectedDay;
                             _focusedDay = focusedDay;
                           });
+
+                          final expensesForDay = _events[_getDayKey(selectedDay)] ?? [];
+                          if (expensesForDay.isNotEmpty) {
+                            showModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                return ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: expensesForDay.length,
+                                  itemBuilder: (context, index) {
+                                    final expense = expensesForDay[index];
+                                    return ListTile(
+                                      title: Text(expense.description),
+                                      subtitle: Text(
+                                        'Próximo vencimiento: '
+                                        '${DateFormat.yMMMd('es_ES').format(expense.nextDueDate)}',
+                                      ),
+                                      trailing: Text('${expense.amount.toStringAsFixed(2)} €'),
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          }
                         },
                         calendarStyle: CalendarStyle(
                           markerDecoration: BoxDecoration(
