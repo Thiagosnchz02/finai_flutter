@@ -127,7 +127,50 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       );
                     },
                   ),
-                  SettingsNavigationRow(label: 'Idioma', icon: Icons.language, onTap: () {}),
+                  SettingsNavigationRow(
+                    label: 'Idioma',
+                    icon: Icons.language,
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return SimpleDialog(
+                            title: const Text('Seleccionar Idioma'),
+                            children: [
+                              SimpleDialogOption(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _updateSetting('language', 'es');
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Español'),
+                                    if (profile.language == 'es')
+                                      const Icon(Icons.check),
+                                  ],
+                                ),
+                              ),
+                              SimpleDialogOption(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  _updateSetting('language', 'en');
+                                },
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Inglés'),
+                                    if (profile.language == 'en')
+                                      const Icon(Icons.check),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ],
               ),
               SettingsCard(
