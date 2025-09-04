@@ -36,13 +36,16 @@ class BudgetDistributionChartState extends State<BudgetDistributionChart> {
                     pieTouchData: PieTouchData(
                       touchCallback: (FlTouchEvent event, pieTouchResponse) {
                         setState(() {
-                          if (!event.isInterestedForInteractions ||
-                              pieTouchResponse == null ||
-                              pieTouchResponse.touchedSection == null) {
+                          final touchedSection = pieTouchResponse?.touchedSection;
+                          if (touchedSection == null) {
                             touchedIndex = -1;
                             return;
                           }
-                          touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+
+                          if (event is FlTapUpEvent) {
+                            touchedIndex =
+                                touchedSection.touchedSectionIndex;
+                          }
                         });
                       },
                     ),
