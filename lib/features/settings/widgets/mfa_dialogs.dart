@@ -81,7 +81,27 @@ Future<bool> showMfaEnrollDialog(BuildContext context) async {
             ),
             actions: [
               TextButton(
-                onPressed: isVerifying ? null : () => Navigator.of(context).pop(false),
+                onPressed: isVerifying
+                    ? null
+                    : () async {
+                        setState(() => isVerifying = true);
+                        try {
+                          await settingsService.unenrollMfa(factor.id);
+                          if (context.mounted) {
+                            Navigator.of(context).pop(false);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            setState(() => isVerifying = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error al cancelar 2FA: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
                 child: const Text('Cancelar'),
               ),
               ElevatedButton(
