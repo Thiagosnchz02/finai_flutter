@@ -24,6 +24,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   Map<DateTime, List<FixedExpense>> _events = {};
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   DateTime _getDayKey(DateTime day) => DateTime.utc(day.year, day.month, day.day);
 
@@ -140,6 +141,19 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                         firstDay: DateTime.utc(2020, 1, 1),
                         lastDay: DateTime.utc(2030, 12, 31),
                         focusedDay: _focusedDay,
+                        calendarFormat: _calendarFormat,
+                        onFormatChanged: (format) {
+                          if (_calendarFormat != format) {
+                            setState(() {
+                              _calendarFormat = format;
+                            });
+                          }
+                        },
+                        availableCalendarFormats: const {
+                          CalendarFormat.month: 'Mes',
+                          CalendarFormat.twoWeeks: '2 semanas',
+                          CalendarFormat.week: 'Semana',
+                        },
                         eventLoader: (day) => _events[_getDayKey(day)] ?? [],
                         selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                         onDaySelected: (selectedDay, focusedDay) {
