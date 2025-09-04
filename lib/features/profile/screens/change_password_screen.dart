@@ -59,8 +59,10 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
           content: Text('¡Contraseña actualizada con éxito!'),
           backgroundColor: Colors.green,
         ));
-        // Si todo va bien, cerramos la pantalla
-        Navigator.of(context).pop();
+        // Limpiamos los controladores y redirigimos a la configuración
+        _newPasswordController.clear();
+        _confirmPasswordController.clear();
+        Navigator.pushReplacementNamed(context, '/settings');
       }
 
     } on AuthException catch (e) {
