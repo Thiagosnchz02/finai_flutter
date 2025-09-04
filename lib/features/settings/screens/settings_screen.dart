@@ -17,6 +17,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _service = SettingsService();
   late Future<Profile> _profileFuture;
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -46,9 +47,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } else {
       success = await showMfaUnenrollDialog(context);
     }
-    
+
     if (success) {
       _loadProfile();
+    }
+  }
+
+  Future<void> _exportData() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      await _service.exportData();
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Datos exportados con éxito.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al exportar datos: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
     }
   }
 
@@ -208,7 +243,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               SettingsCard(
                 title: 'Datos de la Cuenta',
                 children: [
-                  SettingsActionRow(label: 'Exportar mis Datos', icon: Icons.download_outlined, onTap: () {}),
+                  SettingsActionRow(
+                    label: 'Exportar mis Datos',
+                    icon: Icons.download_outlined,
+                    onTap: _exportData,
+                  ),
                   SettingsActionRow(
                     label: 'Eliminar mi Cuenta',
                     icon: Icons.delete_forever_outlined,
