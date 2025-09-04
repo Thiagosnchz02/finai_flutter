@@ -25,6 +25,20 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   
   /// Función para manejar la actualización de la contraseña
   Future<void> _updatePassword() async {
+    // Verificamos que exista una sesión activa
+    if (Supabase.instance.client.auth.currentSession == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Sesión expirada. Inicia sesión nuevamente.'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+        );
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+      return;
+    }
+
     // Primero, validamos el formulario
     if (!_formKey.currentState!.validate()) {
       return;
