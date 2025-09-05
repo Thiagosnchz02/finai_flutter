@@ -214,6 +214,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             'type': _transactionType,
             'category_id': _selectedCategoryId,
             'account_id': _selectedAccountId,
+            'related_scheduled_expense_id': _selectedFixedExpenseId,
           };
 
           if (isEditing) {
