@@ -61,19 +61,22 @@ class _FixedExpenseRowState extends State<FixedExpenseRow> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    String status;
+    final status = widget.expense.getStatus(now);
+    String statusLabel;
     Color statusColor;
-    if (widget.expense.lastPaymentProcessedOn != null &&
-        widget.expense.lastPaymentProcessedOn!.year == now.year &&
-        widget.expense.lastPaymentProcessedOn!.month == now.month) {
-      status = 'Pagado';
-      statusColor = Colors.green;
-    } else if (widget.expense.nextDueDate.isBefore(now)) {
-      status = 'Vencido';
-      statusColor = Colors.red;
-    } else {
-      status = 'Pendiente';
-      statusColor = Colors.orange;
+    switch (status) {
+      case PaymentStatus.pagado:
+        statusLabel = 'Pagado';
+        statusColor = Colors.green;
+        break;
+      case PaymentStatus.pendiente:
+        statusLabel = 'Pendiente';
+        statusColor = Colors.orange;
+        break;
+      case PaymentStatus.vencido:
+        statusLabel = 'Vencido';
+        statusColor = Colors.red;
+        break;
     }
 
     return ListTile(
@@ -82,7 +85,7 @@ class _FixedExpenseRowState extends State<FixedExpenseRow> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Vence: ${DateFormat.yMMMd('es_ES').format(widget.expense.nextDueDate)}'),
-          Text(status, style: TextStyle(color: statusColor)),
+          Text(statusLabel, style: TextStyle(color: statusColor)),
         ],
       ),
       trailing: Column(
