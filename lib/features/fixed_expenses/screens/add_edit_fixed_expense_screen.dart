@@ -1,12 +1,14 @@
 // Archivo a reemplazar: lib/features/fixed_expenses/screens/add_edit_fixed_expense_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:finai_flutter/features/fixed_expenses/models/fixed_expense_model.dart';
 import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
 class AddEditFixedExpenseScreen extends StatefulWidget {
-  const AddEditFixedExpenseScreen({super.key});
+  final FixedExpense? expense;
+  const AddEditFixedExpenseScreen({super.key, this.expense});
 
   @override
   State<AddEditFixedExpenseScreen> createState() => _AddEditFixedExpenseScreenState();
@@ -31,7 +33,29 @@ class _AddEditFixedExpenseScreenState extends State<AddEditFixedExpenseScreen> {
   @override
   void initState() {
     super.initState();
-    _relatedDataFuture = _service.getRelatedData();
+    if (widget.expense != null) {
+      _descriptionController.text = widget.expense!.description;
+      _amountController.text = widget.expense!.amount.toStringAsFixed(2);
+      _frequency = widget.expense!.frequency;
+      _nextDueDate = widget.expense!.nextDueDate;
+      _isActive = widget.expense!.isActive;
+      _notificationEnabled = widget.expense!.notificationEnabled;
+    }
+    _relatedDataFuture = _service.getRelatedData().then((data) {
+      if (widget.expense != null) {
+        final accounts = List<Map<String, dynamic>>.from(data['accounts']);
+        final categories = List<Map<String, dynamic>>.from(data['categories']);
+        try {
+          _selectedAccountId = accounts
+              .firstWhere((acc) => acc['name'] == widget.expense!.accountName)['id'];
+        } catch (_) {}
+        try {
+          _selectedCategoryId = categories
+              .firstWhere((cat) => cat['name'] == widget.expense!.categoryName)['id'];
+        } catch (_) {}
+      }
+      return data;
+    });
   }
 
   @override
@@ -70,8 +94,9 @@ class _AddEditFixedExpenseScreenState extends State<AddEditFixedExpenseScreen> {
           'next_due_date': _nextDueDate.toIso8601String(),
           'is_active': _isActive,
           'notification_enabled': _notificationEnabled,
+          if (widget.expense != null) 'id': widget.expense!.id,
         };
-        await _service.saveFixedExpense(data, false); // Asumimos que es nuevo por simplicidad
+        await _service.saveFixedExpense(data, widget.expense != null);
         if (mounted) Navigator.of(context).pop(true);
       } catch (e) {
         if (mounted) {
@@ -85,12 +110,46 @@ class _AddEditFixedExpenseScreenState extends State<AddEditFixedExpenseScreen> {
     }
   }
 
+  Future<void> _delete() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar Gasto'),
+        content: const Text('¿Seguro que deseas eliminar este gasto?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Eliminar')),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        await _service.deleteFixedExpense(widget.expense!.id, widget.expense!.description);
+        if (mounted) Navigator.of(context).pop(true);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al eliminar: $e'), backgroundColor: Colors.red),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nuevo Gasto Fijo'),
+        title: Text(widget.expense == null ? 'Nuevo Gasto Fijo' : 'Editar Gasto Fijo'),
         actions: [
+          if (widget.expense != null)
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: _isLoading ? null : _delete,
+            ),
           IconButton(
             icon: const Icon(Icons.save),
             onPressed: _isLoading ? null : _save,
