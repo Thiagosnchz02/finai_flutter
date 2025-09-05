@@ -40,9 +40,6 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = _fetchCategories(_transactionType);
-    _accountsFuture = _fetchAccounts();
-    _fixedExpensesFuture = _fetchFixedExpenses();
 
     if (widget.transaction != null) {
       final tx = widget.transaction!;
@@ -55,6 +52,10 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _selectedAccountId = tx.accountId;
       _selectedFixedExpenseId = tx.relatedScheduledExpenseId;
     }
+
+    _categoriesFuture = _fetchCategories(_transactionType);
+    _accountsFuture = _fetchAccounts();
+    _fixedExpensesFuture = _fetchFixedExpenses();
   }
 
   @override
@@ -99,7 +100,22 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           .select('id, description')
           .eq('user_id', userId)
           .eq('is_active', true);
-      return List<Map<String, dynamic>>.from(data);
+
+      final expenses = List<Map<String, dynamic>>.from(data);
+
+      if (_selectedFixedExpenseId != null &&
+          !expenses.any((e) => e['id'] == _selectedFixedExpenseId)) {
+        final inactive = await Supabase.instance.client
+            .from('scheduled_fixed_expenses')
+            .select('id, description')
+            .eq('id', _selectedFixedExpenseId)
+            .maybeSingle();
+        if (inactive != null) {
+          expenses.add(Map<String, dynamic>.from(inactive));
+        }
+      }
+
+      return expenses;
     } catch (e) {
       print('ERROR en _fetchFixedExpenses: $e');
       return [];
@@ -349,6 +365,14 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     return const SizedBox.shrink();
                   }
                   final expenses = snapshot.data!;
+                  if (_selectedFixedExpenseId != null &&
+                      !expenses.any((e) => e['id'] == _selectedFixedExpenseId)) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) {
+                        setState(() => _selectedFixedExpenseId = null);
+                      }
+                    });
+                  }
                   return DropdownButtonFormField<String>(
                     value: _selectedFixedExpenseId,
                     decoration: const InputDecoration(
