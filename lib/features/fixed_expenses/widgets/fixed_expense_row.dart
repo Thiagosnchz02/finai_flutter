@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:finai_flutter/features/fixed_expenses/models/fixed_expense_model.dart';
 import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
 import '../screens/add_edit_fixed_expense_screen.dart';
+import 'fixed_expense_history_modal.dart';
 
 class FixedExpenseRow extends StatefulWidget {
   final FixedExpense expense;
@@ -47,6 +48,16 @@ class _FixedExpenseRowState extends State<FixedExpenseRow> {
     }
   }
 
+  void _showHistory() {
+    showDialog(
+      context: context,
+      builder: (context) => FixedExpenseHistoryModal(
+        expenseId: widget.expense.id,
+        expenseName: widget.expense.description,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
@@ -78,6 +89,10 @@ class _FixedExpenseRowState extends State<FixedExpenseRow> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('${widget.expense.amount.toStringAsFixed(2)} €'),
+          TextButton(
+            onPressed: _showHistory,
+            child: const Text('Historial'),
+          ),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
