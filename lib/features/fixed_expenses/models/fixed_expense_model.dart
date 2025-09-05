@@ -1,5 +1,7 @@
 // lib/features/fixed_expenses/models/fixed_expense_model.dart
 
+enum PaymentStatus { pagado, pendiente, vencido }
+
 class FixedExpense {
   final String id;
   final String description;
@@ -43,5 +45,17 @@ class FixedExpense {
           ? DateTime.parse(map['last_payment_processed_on'])
           : null,
     );
+  }
+
+  PaymentStatus getStatus(DateTime now) {
+    if (lastPaymentProcessedOn != null &&
+        lastPaymentProcessedOn!.year == now.year &&
+        lastPaymentProcessedOn!.month == now.month) {
+      return PaymentStatus.pagado;
+    } else if (nextDueDate.isBefore(now)) {
+      return PaymentStatus.vencido;
+    } else {
+      return PaymentStatus.pendiente;
+    }
   }
 }

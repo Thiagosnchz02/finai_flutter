@@ -125,6 +125,18 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: const [
+                    _StatusLegend(color: Colors.green, label: 'Pagado'),
+                    SizedBox(width: 8),
+                    _StatusLegend(color: Colors.orange, label: 'Pendiente'),
+                    SizedBox(width: 8),
+                    _StatusLegend(color: Colors.red, label: 'Vencido'),
+                  ],
+                ),
+              ),
               Expanded(
                 child: _isListView
                     ? ListView.builder(
@@ -182,6 +194,27 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class _StatusLegend extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _StatusLegend({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(label),
+      ],
     );
   }
 }
