@@ -42,13 +42,23 @@ class TransactionTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(transaction.category?.name ?? 'Sin Categoría'),
-        trailing: Text(
-          amountString,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: amountColor,
-            fontSize: 16,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (transaction.relatedScheduledExpenseId != null)
+              const Padding(
+                padding: EdgeInsets.only(right: 4.0),
+                child: Icon(Icons.repeat, size: 16),
+              ),
+            Text(
+              amountString,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: amountColor,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );

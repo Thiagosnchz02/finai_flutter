@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:finai_flutter/core/events/app_events.dart';
 import 'package:finai_flutter/core/services/event_logger_service.dart';
 import '../models/transaction_model.dart';
+import '../services/transactions_service.dart';
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
@@ -26,18 +27,22 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
   String? _selectedAccountId;
+  String? _selectedFixedExpenseId;
 
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
   late Future<List<Map<String, dynamic>>> _accountsFuture;
+  late Future<List<Map<String, dynamic>>> _fixedExpensesFuture;
   bool _isLoading = false;
 
   final _eventLogger = EventLoggerService();
+  final _transactionsService = TransactionsService();
 
   @override
   void initState() {
     super.initState();
     _categoriesFuture = _fetchCategories(_transactionType);
     _accountsFuture = _fetchAccounts();
+    _fixedExpensesFuture = _fetchFixedExpenses();
 
     if (widget.transaction != null) {
       final tx = widget.transaction!;
@@ -48,6 +53,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _selectedDate = tx.date;
       _selectedCategoryId = tx.category?.id;
       _selectedAccountId = tx.accountId;
+      _selectedFixedExpenseId = tx.relatedScheduledExpenseId;
     }
   }
 
@@ -85,6 +91,21 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       }
   }
 
+  Future<List<Map<String, dynamic>>> _fetchFixedExpenses() async {
+    try {
+      final userId = Supabase.instance.client.auth.currentUser!.id;
+      final data = await Supabase.instance.client
+          .from('scheduled_fixed_expenses')
+          .select('id, description')
+          .eq('user_id', userId)
+          .eq('is_active', true);
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      print('ERROR en _fetchFixedExpenses: $e');
+      return [];
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -107,49 +128,129 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         final userId = Supabase.instance.client.auth.currentUser!.id;
         final bool isEditing = widget.transaction != null;
 
-        final rawAmount = double.parse(_amountController.text.replaceAll(',', '.'));
-        // --- LÓGICA CORREGIDA AQUÍ ---
-        // Si es un gasto, nos aseguramos de que sea negativo. Si es un ingreso, positivo.
-        final finalAmount = _transactionType == 'gasto' ? -rawAmount.abs() : rawAmount.abs();
+        final rawAmount =
+            double.parse(_amountController.text.replaceAll(',', '.'));
 
-        final dataToUpsert = {
-          'user_id': userId,
-          'description': _descriptionController.text.trim(),
-          'amount': finalAmount, // Usamos el importe corregido con el signo correcto
-          'transaction_date': _selectedDate.toIso8601String(),
-          'type': _transactionType,
-          'category_id': _selectedCategoryId,
-          'account_id': _selectedAccountId,
-        };
-
-        if (isEditing) {
-          dataToUpsert['id'] = widget.transaction!.id;
-        }
-
-        final savedTransaction = await Supabase.instance.client.from('transactions').upsert(dataToUpsert).select().single();
-        final savedTransactionId = savedTransaction['id'];
-
-        if (isEditing) {
-          _eventLogger.log(
-            AppEvent.transaction_edited,
-            details: {'transaction_id': savedTransactionId},
+        // Si se seleccionó un gasto fijo y se está creando una nueva transacción,
+        // utilizamos la RPC para registrar el pago y evitar duplicados.
+        if (_selectedFixedExpenseId != null && !isEditing) {
+          final result = await _transactionsService.registerFixedExpensePayment(
+            expenseId: _selectedFixedExpenseId!,
+            amount: rawAmount.abs(),
+            transactionDate: _selectedDate,
+            accountId: _selectedAccountId!,
           );
+
+          if (result == 'SUCCESS') {
+            _eventLogger.log(
+              AppEvent.transaction_created,
+              details: {
+                'type': _transactionType,
+                'amount': -rawAmount.abs(),
+              },
+            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Pago de gasto fijo registrado con éxito'),
+                    backgroundColor: Colors.green),
+              );
+              Navigator.of(context).pop(true);
+            }
+          } else if (result == 'DUPLICATE') {
+            final action = await showDialog<String>(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Pago duplicado'),
+                content: const Text(
+                    'Ya existe un pago para este gasto fijo en este mes.'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, 'replace'),
+                      child: const Text('Reemplazar')),
+                  TextButton(
+                      onPressed: () =>
+                          Navigator.pop(context, 'additional'),
+                      child: const Text('Cargo adicional')),
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, 'cancel'),
+                      child: const Text('Cancelar')),
+                ],
+              ),
+            );
+
+            if (action == 'additional') {
+              final retry =
+                  await _transactionsService.registerFixedExpensePayment(
+                expenseId: _selectedFixedExpenseId!,
+                amount: rawAmount.abs(),
+                transactionDate: _selectedDate,
+                accountId: _selectedAccountId!,
+                ignoreDuplicate: true,
+              );
+              if (retry == 'SUCCESS') {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Pago registrado'),
+                        backgroundColor: Colors.green),
+                  );
+                  Navigator.of(context).pop(true);
+                }
+              }
+            }
+          }
         } else {
-          _eventLogger.log(
-            AppEvent.transaction_created,
-            details: {
-              'transaction_id': savedTransactionId,
-              'type': _transactionType,
-              'amount': finalAmount, // Registramos el importe con su signo
-            },
-          );
-        }
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Transacción guardada con éxito'), backgroundColor: Colors.green),
-          );
-          Navigator.of(context).pop(true);
+          // --- LÓGICA CORREGIDA AQUÍ ---
+          // Si es un gasto, nos aseguramos de que sea negativo. Si es un ingreso, positivo.
+          final finalAmount =
+              _transactionType == 'gasto' ? -rawAmount.abs() : rawAmount.abs();
+
+          final dataToUpsert = {
+            'user_id': userId,
+            'description': _descriptionController.text.trim(),
+            'amount': finalAmount, // Usamos el importe corregido con el signo correcto
+            'transaction_date': _selectedDate.toIso8601String(),
+            'type': _transactionType,
+            'category_id': _selectedCategoryId,
+            'account_id': _selectedAccountId,
+          };
+
+          if (isEditing) {
+            dataToUpsert['id'] = widget.transaction!.id;
+          }
+
+          final savedTransaction = await Supabase.instance.client
+              .from('transactions')
+              .upsert(dataToUpsert)
+              .select()
+              .single();
+          final savedTransactionId = savedTransaction['id'];
+
+          if (isEditing) {
+            _eventLogger.log(
+              AppEvent.transaction_edited,
+              details: {'transaction_id': savedTransactionId},
+            );
+          } else {
+            _eventLogger.log(
+              AppEvent.transaction_created,
+              details: {
+                'transaction_id': savedTransactionId,
+                'type': _transactionType,
+                'amount': finalAmount, // Registramos el importe con su signo
+              },
+            );
+          }
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('Transacción guardada con éxito'),
+                  backgroundColor: Colors.green),
+            );
+            Navigator.of(context).pop(true);
+          }
         }
 
       } catch (e) {
@@ -232,6 +333,34 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     }).toList(),
                     onChanged: (value) => setState(() => _selectedAccountId = value),
                     validator: (value) => value == null ? 'Selecciona una cuenta' : null,
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: _fixedExpensesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError || !snapshot.hasData ||
+                      snapshot.data!.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  final expenses = snapshot.data!;
+                  return DropdownButtonFormField<String>(
+                    value: _selectedFixedExpenseId,
+                    decoration: const InputDecoration(
+                        labelText: 'Gasto fijo (opcional)',
+                        border: OutlineInputBorder()),
+                    items: expenses.map((exp) {
+                      return DropdownMenuItem<String>(
+                        value: exp['id'] as String,
+                        child: Text(exp['description'] as String),
+                      );
+                    }).toList(),
+                    onChanged: (value) =>
+                        setState(() => _selectedFixedExpenseId = value),
                   );
                 },
               ),

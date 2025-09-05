@@ -20,7 +20,8 @@ class TransactionsService {
             type,
             transaction_date,
             notes,
-            account_id, 
+            account_id,
+            related_scheduled_expense_id,
             categories (id, name, type)
           ''') // <-- CAMBIO AQUÍ: Añadido 'account_id'
           .eq('user_id', userId)
@@ -46,7 +47,8 @@ class TransactionsService {
             type,
             transaction_date,
             notes,
-            account_id, 
+            account_id,
+            related_scheduled_expense_id,
             categories (id, name, type)
           ''')
           .eq('user_id', userId)
@@ -74,5 +76,37 @@ class TransactionsService {
       print('Error en deleteTransaction: $e');
       rethrow;
     }
+  }
+
+  /// Registers a payment for a fixed expense using the Supabase RPC
+  /// `register_fixed_expense_payment`.
+  ///
+  /// Returns the string result from the RPC, typically 'SUCCESS' or
+  /// 'DUPLICATE'.
+  Future<String> registerFixedExpensePayment({
+    required String expenseId,
+    required double amount,
+    required DateTime transactionDate,
+    required String accountId,
+    String? notes,
+    bool ignoreDuplicate = false,
+  }) async {
+    final params = {
+      'p_expense_id': expenseId,
+      'p_amount': amount,
+      'p_transaction_date': transactionDate.toIso8601String(),
+      'p_account_id': accountId,
+      'p_notes': notes,
+    };
+
+    if (ignoreDuplicate) {
+      // El parámetro puede ser ignorado por la función RPC si no está
+      // implementado aún en el backend.
+      params['ignore_duplicate'] = true;
+    }
+
+    final response =
+        await _supabase.rpc('register_fixed_expense_payment', params: params);
+    return response as String;
   }
 }
