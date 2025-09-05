@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:finai_flutter/features/fixed_expenses/models/fixed_expense_model.dart';
 import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
+import '../screens/add_edit_fixed_expense_screen.dart';
 
 class FixedExpenseRow extends StatefulWidget {
   final FixedExpense expense;
-  const FixedExpenseRow({super.key, required this.expense});
+  final VoidCallback? onUpdated;
+  const FixedExpenseRow({super.key, required this.expense, this.onUpdated});
 
   @override
   State<FixedExpenseRow> createState() => _FixedExpenseRowState();
@@ -32,6 +34,17 @@ class _FixedExpenseRowState extends State<FixedExpenseRow> {
       }
     });
     await _service.updateToggle(widget.expense.id, field, value);
+  }
+
+  Future<void> _edit() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => AddEditFixedExpenseScreen(expense: widget.expense),
+      ),
+    );
+    if (result == true) {
+      widget.onUpdated?.call();
+    }
   }
 
   @override
@@ -68,6 +81,10 @@ class _FixedExpenseRowState extends State<FixedExpenseRow> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: _edit,
+              ),
               Switch(
                 value: _isActive,
                 onChanged: (value) => _toggle('is_active', value),

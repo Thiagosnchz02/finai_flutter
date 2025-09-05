@@ -131,7 +131,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                         itemCount: expenses.length,
                         itemBuilder: (context, index) {
                           final expense = expenses[index];
-                          return FixedExpenseRow(expense: expense);
+                          return FixedExpenseRow(expense: expense, onUpdated: _loadData);
                         },
                       )
                     : TableCalendar<FixedExpense>(
