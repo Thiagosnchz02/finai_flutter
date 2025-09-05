@@ -103,12 +103,15 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
       final expenses = List<Map<String, dynamic>>.from(data);
 
-      if (_selectedFixedExpenseId != null &&
-          !expenses.any((e) => e['id'] == _selectedFixedExpenseId)) {
+      // Guardamos el id en una variable local para permitir la promoción
+      // de nulabilidad y evitar errores de tipo.
+      final fixedExpenseId = _selectedFixedExpenseId;
+      if (fixedExpenseId != null &&
+          !expenses.any((e) => e['id'] == fixedExpenseId)) {
         final inactive = await Supabase.instance.client
             .from('scheduled_fixed_expenses')
             .select('id, description')
-            .eq('id', _selectedFixedExpenseId)
+            .eq('id', fixedExpenseId)
             .maybeSingle();
         if (inactive != null) {
           expenses.add(Map<String, dynamic>.from(inactive));
