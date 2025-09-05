@@ -9,6 +9,8 @@ import 'package:finai_flutter/features/transactions/models/transaction_model.dar
 import 'package:finai_flutter/features/transactions/services/transactions_service.dart';
 import 'package:finai_flutter/features/transactions/screens/add_edit_transaction_screen.dart';
 import 'package:finai_flutter/features/transactions/widgets/transaction_tile.dart';
+import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
+import 'package:finai_flutter/features/fixed_expenses/widgets/fixed_expense_history_modal.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -19,12 +21,26 @@ class TransactionsScreen extends StatefulWidget {
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
   final _service = TransactionsService();
+  final _fixedExpenseService = FixedExpensesService();
   late Future<List<Transaction>> _transactionsFuture;
 
   @override
   void initState() {
     super.initState();
     _loadTransactions();
+  }
+
+  void _openFixedExpenseHistory(String expenseId) async {
+    final details = await _fixedExpenseService.getExpenseDetails(expenseId);
+    if (!mounted) return;
+    final name = details['description'] as String? ?? 'Gasto fijo';
+    showDialog(
+      context: context,
+      builder: (_) => FixedExpenseHistoryModal(
+        expenseId: expenseId,
+        expenseName: name,
+      ),
+    );
   }
 
   void _loadTransactions() {
@@ -164,6 +180,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ...transactions.map((tx) => TransactionTile(
           transaction: tx,
           onTap: () => _navigateAndRefresh(transaction: tx),
+          onRelatedExpenseTap: tx.relatedScheduledExpenseId != null
+              ? () => _openFixedExpenseHistory(tx.relatedScheduledExpenseId!)
+              : null,
         )).toList(),
       ],
     );

@@ -20,9 +20,10 @@ class TransactionsService {
             type,
             transaction_date,
             notes,
-            account_id, 
+            account_id,
+            related_scheduled_expense_id,
             categories (id, name, type)
-          ''') // <-- CAMBIO AQUÍ: Añadido 'account_id'
+          ''') // <-- CAMBIO AQUÍ: Añadido 'account_id' y 'related_scheduled_expense_id'
           .eq('user_id', userId)
           .order('transaction_date', ascending: false);
           
@@ -46,7 +47,8 @@ class TransactionsService {
             type,
             transaction_date,
             notes,
-            account_id, 
+            account_id,
+            related_scheduled_expense_id,
             categories (id, name, type)
           ''')
           .eq('user_id', userId)
