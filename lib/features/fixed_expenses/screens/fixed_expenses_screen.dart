@@ -1,7 +1,6 @@
 // Archivo a reemplazar: lib/features/fixed_expenses/screens/fixed_expenses_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:finai_flutter/features/fixed_expenses/models/fixed_expense_model.dart';
 import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
