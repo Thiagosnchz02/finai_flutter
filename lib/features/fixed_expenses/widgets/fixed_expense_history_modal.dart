@@ -39,12 +39,25 @@ class _FixedExpenseHistoryModalState extends State<FixedExpenseHistoryModal> {
       accountId: null,
       notes: null,
       category: null,
+      relatedScheduledExpenseId: widget.expenseId,
     );
 
     Navigator.of(context).pop();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => AddEditTransactionScreen(transaction: tx),
+      ),
+    );
+  }
+
+  void _createTransaction() {
+    Navigator.of(context).pop();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddEditTransactionScreen(
+          preselectedFixedExpenseId: widget.expenseId,
+          prefilledDescription: widget.expenseName,
+        ),
       ),
     );
   }
@@ -90,6 +103,10 @@ class _FixedExpenseHistoryModalState extends State<FixedExpenseHistoryModal> {
         ),
       ),
       actions: [
+        TextButton(
+          onPressed: _createTransaction,
+          child: const Text('Añadir transacción'),
+        ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cerrar'),

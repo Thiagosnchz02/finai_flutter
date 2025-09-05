@@ -6,12 +6,15 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:finai_flutter/core/events/app_events.dart';
 import 'package:finai_flutter/core/services/event_logger_service.dart';
+import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
 import '../models/transaction_model.dart';
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
+  final String? preselectedFixedExpenseId;
+  final String? prefilledDescription;
 
-  const AddEditTransactionScreen({super.key, this.transaction});
+  const AddEditTransactionScreen({super.key, this.transaction, this.preselectedFixedExpenseId, this.prefilledDescription});
 
   @override
   State<AddEditTransactionScreen> createState() => _AddEditTransactionScreenState();
@@ -26,18 +29,24 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
   String? _selectedAccountId;
+  String? _selectedFixedExpenseId;
 
   late Future<List<Map<String, dynamic>>> _categoriesFuture;
   late Future<List<Map<String, dynamic>>> _accountsFuture;
+  late Future<List<Map<String, dynamic>>> _fixedExpensesFuture;
   bool _isLoading = false;
 
   final _eventLogger = EventLoggerService();
+  final _fixedExpenseService = FixedExpensesService();
 
   @override
   void initState() {
     super.initState();
     _categoriesFuture = _fetchCategories(_transactionType);
     _accountsFuture = _fetchAccounts();
+    _fixedExpensesFuture = _transactionType == 'gasto'
+        ? _fetchFixedExpenses()
+        : Future.value([]);
 
     if (widget.transaction != null) {
       final tx = widget.transaction!;
@@ -48,6 +57,18 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _selectedDate = tx.date;
       _selectedCategoryId = tx.category?.id;
       _selectedAccountId = tx.accountId;
+      _selectedFixedExpenseId = tx.relatedScheduledExpenseId;
+      _fixedExpensesFuture = _transactionType == 'gasto'
+          ? _fetchFixedExpenses()
+          : Future.value([]);
+    } else {
+      if (widget.prefilledDescription != null) {
+        _descriptionController.text = widget.prefilledDescription!;
+      }
+      _selectedFixedExpenseId = widget.preselectedFixedExpenseId;
+      _fixedExpensesFuture = _transactionType == 'gasto'
+          ? _fetchFixedExpenses()
+          : Future.value([]);
     }
   }
 
@@ -85,6 +106,16 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       }
   }
 
+  Future<List<Map<String, dynamic>>> _fetchFixedExpenses() async {
+    try {
+      final data = await _fixedExpenseService.getFixedExpenses();
+      return data.where((item) => item['is_active'] == true).toList();
+    } catch (e) {
+      print('ERROR en _fetchFixedExpenses: $e');
+      return [];
+    }
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -120,6 +151,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           'type': _transactionType,
           'category_id': _selectedCategoryId,
           'account_id': _selectedAccountId,
+          'related_scheduled_expense_id': _selectedFixedExpenseId,
         };
 
         if (isEditing) {
@@ -190,6 +222,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     _transactionType = newSelection.first;
                     _categoriesFuture = _fetchCategories(_transactionType);
                     _selectedCategoryId = null;
+                    if (_transactionType == 'gasto') {
+                      _fixedExpensesFuture = _fetchFixedExpenses();
+                    } else {
+                      _selectedFixedExpenseId = null;
+                      _fixedExpensesFuture = Future.value([]);
+                    }
                   });
                 },
               ),
@@ -264,6 +302,33 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                 },
               ),
               const SizedBox(height: 20),
+              if (_transactionType == 'gasto')
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _fixedExpensesFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return const Text('Error al cargar gastos fijos');
+                    }
+                    final expenses = snapshot.data ?? [];
+                    if (expenses.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return DropdownButtonFormField<String>(
+                      value: _selectedFixedExpenseId,
+                      decoration: const InputDecoration(labelText: 'Gasto fijo relacionado (opcional)', border: OutlineInputBorder()),
+                      items: expenses.map((expense) {
+                        return DropdownMenuItem<String>(
+                          value: expense['id'] as String,
+                          child: Text(expense['description'] as String),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _selectedFixedExpenseId = value),
+                    );
+                  },
+                ),
               ListTile(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4), side: BorderSide(color: Colors.grey.shade400)),
                 title: Text('Fecha: ${DateFormat.yMMMd('es_ES').format(_selectedDate)}'),

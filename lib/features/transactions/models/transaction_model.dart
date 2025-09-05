@@ -27,6 +27,7 @@ class Transaction {
   final String? accountId;
   final String? notes;
   final Category? category; // La categoría puede ser nula
+  final String? relatedScheduledExpenseId;
 
   Transaction({
     required this.id,
@@ -37,6 +38,7 @@ class Transaction {
      this.accountId,
     this.notes,
     this.category,
+    this.relatedScheduledExpenseId,
   });
 
   factory Transaction.fromMap(Map<String, dynamic> map) {
@@ -48,6 +50,7 @@ class Transaction {
       date: DateTime.parse(map['transaction_date'] as String),
       accountId: map['account_id'] as String?,
       notes: map['notes'] as String?,
+      relatedScheduledExpenseId: map['related_scheduled_expense_id'] as String?,
       category: map['categories'] != null
           ? Category.fromMap(map['categories'] as Map<String, dynamic>)
           : null,

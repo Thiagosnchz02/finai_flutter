@@ -7,11 +7,13 @@ import 'package:finai_flutter/features/transactions/models/transaction_model.dar
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback onTap;
+  final VoidCallback? onRelatedExpenseTap;
 
   const TransactionTile({
     super.key,
     required this.transaction,
     required this.onTap,
+    this.onRelatedExpenseTap,
   });
 
   @override
@@ -42,13 +44,25 @@ class TransactionTile extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(transaction.category?.name ?? 'Sin Categoría'),
-        trailing: Text(
-          amountString,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: amountColor,
-            fontSize: 16,
-          ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (transaction.relatedScheduledExpenseId != null &&
+                onRelatedExpenseTap != null)
+              IconButton(
+                icon: const Icon(Icons.repeat),
+                tooltip: 'Ver historial',
+                onPressed: onRelatedExpenseTap,
+              ),
+            Text(
+              amountString,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: amountColor,
+                fontSize: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );
