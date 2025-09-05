@@ -7,6 +7,7 @@ import 'package:finai_flutter/features/fixed_expenses/models/fixed_expense_model
 import 'package:finai_flutter/features/fixed_expenses/services/fixed_expenses_service.dart';
 import 'add_edit_fixed_expense_screen.dart';
 import '../widgets/expense_day_details_dialog.dart';
+import '../widgets/fixed_expense_row.dart';
 
 class FixedExpensesScreen extends StatefulWidget {
   const FixedExpensesScreen({super.key});
@@ -130,11 +131,7 @@ class _FixedExpensesScreenState extends State<FixedExpensesScreen> {
                         itemCount: expenses.length,
                         itemBuilder: (context, index) {
                           final expense = expenses[index];
-                          return ListTile(
-                            title: Text(expense.description),
-                            subtitle: Text('Vence: ${DateFormat.yMMMd('es_ES').format(expense.nextDueDate)}'),
-                            trailing: Text('${expense.amount.toStringAsFixed(2)} €'),
-                          );
+                          return FixedExpenseRow(expense: expense);
                         },
                       )
                     : TableCalendar<FixedExpense>(
