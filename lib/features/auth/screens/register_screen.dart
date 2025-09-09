@@ -4,6 +4,7 @@ import 'dart:async'; // Para el Timer
 
 // Importamos nuestro nuevo widget reutilizable
 import '../../../presentation/widgets/glass_card.dart';
+import '../../../presentation/widgets/finai_aurora_background.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -92,34 +93,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     // Reutilizamos el fondo y la tarjeta de la pantalla de login
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          image: const DecorationImage(
-            image: AssetImage('assets/images/Fondo_app.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: GlassCard( // <-- Usamos el nuevo widget público
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0, vertical: 40.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'Crear Cuenta',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+      body: Stack(
+        alignment: Alignment.center,
+        children: [
+          const Positioned.fill(child: FinAiAuroraBackground()),
+          Center(
+            child: SingleChildScrollView(
+              child: GlassCard(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 40.0,
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'Crear Cuenta',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      TextFormField(
+                        const SizedBox(height: 24),
+                        TextFormField(
                         controller: _nameController,
                         style: const TextStyle(color: Colors.white),
                         decoration:
