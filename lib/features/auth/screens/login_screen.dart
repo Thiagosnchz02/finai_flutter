@@ -224,13 +224,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            Positioned(
-              top: 50,
-              child: Image.asset(
-                'assets/images/fini_mascot.png',
-                height: 150,
-              ),
-            ),
             if (_isBiometricAvailable)
               Positioned(
                 bottom: 20,
