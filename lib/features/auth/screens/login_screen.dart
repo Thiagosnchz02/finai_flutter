@@ -189,6 +189,9 @@ Widget build(BuildContext context) {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                const SizedBox(height: 40),
+                Image.asset('assets/images/Isotipo.png', height: 100),
+                const SizedBox(height: 40),
                 GlassCard(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -200,8 +203,6 @@ Widget build(BuildContext context) {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          _buildHeader(),
-                          const SizedBox(height: 24),
                           _buildEmailField(),
                           const SizedBox(height: 16),
                           _buildPasswordField(),
@@ -213,13 +214,13 @@ Widget build(BuildContext context) {
                           _buildDivider(),
                           const SizedBox(height: 24),
                           _buildSocialButtons(),
-                          const SizedBox(height: 32),
-                          _buildSignUpButton(),
                         ],
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 40),
+                _buildSignUpButton(),
               ],
             ),
           ),
@@ -238,19 +239,6 @@ Widget build(BuildContext context) {
     ),
   );
 }
-
-  Widget _buildHeader() {
-    return const Text(
-      'FinAi',
-      style: TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
-        letterSpacing: 1.5,
-      ),
-    );
-  }
-
   Widget _buildEmailField() {
     return TextFormField(
       controller: _emailController,
