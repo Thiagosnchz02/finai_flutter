@@ -328,7 +328,7 @@ Widget build(BuildContext context) {
         Expanded(child: Divider(color: Colors.white30)),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.0),
-          child: Icon(Icons.circle, color: Colors.white30, size: 8),
+          child: Text('O', style: TextStyle(color: Colors.white30)),
         ),
         Expanded(child: Divider(color: Colors.white30)),
       ],
