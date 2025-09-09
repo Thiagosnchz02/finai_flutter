@@ -182,7 +182,7 @@ class _UpdatePasswordScreenState extends State<UpdatePasswordScreen> {
               ),
             ),
           ),
-        ),
+        )],
       ),
     );
   }
