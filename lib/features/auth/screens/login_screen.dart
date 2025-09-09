@@ -210,15 +210,15 @@ Widget build(BuildContext context) {
                           _buildSignInButton(),
                           const SizedBox(height: 16),
                           _buildForgotPasswordButton(),
-                          const SizedBox(height: 24),
-                          _buildDivider(),
-                          const SizedBox(height: 24),
-                          _buildSocialButtons(),
                         ],
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(height: 24),
+                _buildDivider(),
+                const SizedBox(height: 24),
+                _buildSocialButtons(),
                 const SizedBox(height: 40),
                 _buildSignUpButton(),
               ],
@@ -311,7 +311,7 @@ Widget build(BuildContext context) {
                     ),
                   )
                 : const Text(
-                    'Iniciar Sesión',
+                    'Entrar',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
