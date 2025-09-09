@@ -336,29 +336,17 @@ Widget build(BuildContext context) {
   }
 
   Widget _buildSocialButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.google, size: 18),
-            label: const Text('Google'),
-            onPressed: _isLoading ? null : _signInWithGoogle,
-            style: _buildOutlinedButtonStyle(),
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+      child: SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          icon: const FaIcon(FontAwesomeIcons.google, size: 18),
+          label: const Text('Continuar con Google'),
+          onPressed: _isLoading ? null : _signInWithGoogle,
+          style: _buildOutlinedButtonStyle(),
         ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: OutlinedButton.icon(
-            icon: const FaIcon(FontAwesomeIcons.phone, size: 18),
-            label: const Text('Teléfono'),
-            onPressed: () {
-              // TODO: Implementar Phone Sign-In
-            },
-            style: _buildOutlinedButtonStyle(),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
