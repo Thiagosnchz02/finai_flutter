@@ -175,11 +175,10 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF1a237e), Color(0xFF0d1137)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+        decoration: BoxDecoration(
+          image: const DecorationImage(
+            image: AssetImage('assets/images/Fondo_app.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: Stack(
