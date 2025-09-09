@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart';
+
+
 
 // Importamos nuestro nuevo widget reutilizable desde la carpeta de widgets compartidos
 import '../../../presentation/widgets/glass_card.dart';
@@ -25,6 +28,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
   bool _isBiometricAvailable = false;
+
 
   @override
   void initState() {
@@ -169,75 +173,71 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          image: const DecorationImage(
-            image: AssetImage('assets/images/Fondo_app.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 100.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GlassCard( // <-- Usamos el nuevo widget público
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: _horizontalPadding, vertical: 40.0),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _buildHeader(),
-                              const SizedBox(height: 24),
-                              _buildEmailField(),
-                              const SizedBox(height: 16),
-                              _buildPasswordField(),
-                              const SizedBox(height: 24),
-                              _buildSignInButton(),
-                              const SizedBox(height: 16),
-                              _buildForgotPasswordButton(),
-                              const SizedBox(height: 24),
-                              _buildDivider(),
-                              const SizedBox(height: 24),
-                              _buildSocialButtons(),
-                              const SizedBox(height: 32),
-                              _buildSignUpButton(),
-                            ],
-                          ),
-                        ),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Stack(
+      alignment: Alignment.center,
+      children: [
+        // 1) Fondo 100% código (nítido, sin banding)
+        const Positioned.fill(child: FinAiAuroraBackground()),
+
+        // 2) Contenido
+        Positioned.fill(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(top: 100.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                GlassCard(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: _horizontalPadding,
+                      vertical: 40.0,
+                    ),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 24),
+                          _buildEmailField(),
+                          const SizedBox(height: 16),
+                          _buildPasswordField(),
+                          const SizedBox(height: 24),
+                          _buildSignInButton(),
+                          const SizedBox(height: 16),
+                          _buildForgotPasswordButton(),
+                          const SizedBox(height: 24),
+                          _buildDivider(),
+                          const SizedBox(height: 24),
+                          _buildSocialButtons(),
+                          const SizedBox(height: 32),
+                          _buildSignUpButton(),
+                        ],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-            if (_isBiometricAvailable)
-              Positioned(
-                bottom: 20,
-                child: IconButton(
-                  icon: const Icon(Icons.fingerprint,
-                      color: Colors.white70, size: 48),
-                  onPressed: _authenticateWithBiometrics,
-                  tooltip: 'Iniciar sesión con huella',
-                ),
-              ),
-          ],
+          ),
         ),
-      ),
-    );
-  }
+
+        if (_isBiometricAvailable)
+          Positioned(
+            bottom: 20,
+            child: IconButton(
+              icon: const Icon(Icons.fingerprint, color: Colors.white70, size: 48),
+              onPressed: _authenticateWithBiometrics,
+              tooltip: 'Iniciar sesión con huella',
+            ),
+          ),
+      ],
+    ),
+  );
+}
 
   Widget _buildHeader() {
     return const Text(
