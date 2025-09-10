@@ -213,25 +213,20 @@ Widget build(BuildContext context) {
                 _buildSocialButtons(),
                 const SizedBox(height: 40),
                 _buildSignUpButton(),
-              ],
+              ]),
             ),
           ),
         ),
-        
-        _isBiometricAvailable
-            ? Positioned(
-                bottom: 20,
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.fingerprint,
-                    color: Colors.white70,
-                    size: 48,
-                  ),
-                  onPressed: _authenticateWithBiometrics,
-                  tooltip: 'Iniciar sesión con huella',
-                ),
-              )
-            : const SizedBox.shrink(),
+
+        if (_isBiometricAvailable)
+          Positioned(
+            bottom: 20,
+            child: IconButton(
+              icon: const Icon(Icons.fingerprint, color: Colors.white70, size: 48),
+              onPressed: _authenticateWithBiometrics,
+              tooltip: 'Iniciar sesión con huella',
+            ),
+          ),
       ],
     ),
   );
