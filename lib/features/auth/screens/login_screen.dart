@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart';
+import 'package:flutter/gestures.dart';
 
 
 
@@ -189,7 +189,7 @@ Widget build(BuildContext context) {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
-                Image.asset('assets/images/Isotipo.png', height: 100),
+                _buildHeader(),
                 const SizedBox(height: 40),
                 Form(
                   key: _formKey,
@@ -198,11 +198,11 @@ Widget build(BuildContext context) {
                     children: [
                       _buildEmailField(),
                       const SizedBox(height: 16),
+                      _buildPasswordHeader(),
+                      const SizedBox(height: 8),
                       _buildPasswordField(),
                       const SizedBox(height: 24),
                       _buildSignInButton(),
-                      const SizedBox(height: 16),
-                      _buildForgotPasswordButton(),
                     ],
                   ),
                 ),
@@ -230,22 +230,70 @@ Widget build(BuildContext context) {
     ),
   );
 }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Image.asset('assets/images/Isotipo.png', height: 80),
+        const SizedBox(height: 24),
+        const Text(
+          'Log in to FinAi',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPasswordHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text(
+          'Contraseña',
+          style: TextStyle(color: Colors.white),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pushNamed('/forgot-password');
+          },
+          child: const Text(
+            'Olvidaste tu contraseña?',
+            style: TextStyle(color: Colors.white70),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
-      autocorrect: false,
-      style: const TextStyle(color: Colors.white),
-      decoration: _buildInputDecoration(
-        'Email',
-        FontAwesomeIcons.envelope,
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty || !value.contains('@')) {
-          return 'Por favor, introduce un email válido.';
-        }
-        return null;
-      },
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8.0),
+          child: Text(
+            'Email',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        TextFormField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          style: const TextStyle(color: Colors.white),
+          decoration: _buildInputDecoration('example@gmail.com'),
+          validator: (value) {
+            if (value == null || value.isEmpty || !value.contains('@')) {
+              return 'Por favor, introduce un email válido.';
+            }
+            return null;
+          },
+        ),
+      ],
     );
   }
 
@@ -254,10 +302,7 @@ Widget build(BuildContext context) {
       controller: _passwordController,
       obscureText: true,
       style: const TextStyle(color: Colors.white),
-      decoration: _buildInputDecoration(
-        'Contraseña',
-        FontAwesomeIcons.lock,
-      ),
+      decoration: _buildInputDecoration('********'),
       validator: (value) {
         if (value == null || value.isEmpty || value.length < 6) {
           return 'La contraseña debe tener al menos 6 caracteres.';
@@ -273,10 +318,10 @@ Widget build(BuildContext context) {
       child: ElevatedButton(
         onPressed: _isLoading ? null : _signIn,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF007AFF),
+          backgroundColor: const Color(0xFFC736E8),
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
         child: _isLoading
@@ -289,7 +334,7 @@ Widget build(BuildContext context) {
                 ),
               )
             : const Text(
-                'Entrar',
+                'Log In',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -300,26 +345,14 @@ Widget build(BuildContext context) {
     );
   }
 
-  Widget _buildForgotPasswordButton() {
-    return TextButton(
-      onPressed: () {
-        // Navega a la nueva pantalla de recuperar contraseña
-        Navigator.of(context).pushNamed('/forgot-password');
-      },
-      child: const Text(
-        '¿Has olvidado tu contraseña?',
-        style: TextStyle(color: Colors.white70),
-      ),
-    );
-  }
-
   Widget _buildDivider() {
     return const Row(
       children: [
         Expanded(child: Divider(color: Colors.white30)),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text('Otras opciones de log in', style: TextStyle(color: Colors.white30)),
+          child: Text('— Otras opciones de log in —',
+              style: TextStyle(color: Colors.white70)),
         ),
         Expanded(child: Divider(color: Colors.white30)),
       ],
@@ -327,55 +360,45 @@ Widget build(BuildContext context) {
   }
 
   Widget _buildSocialButtons() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
-      child: SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          icon: const FaIcon(FontAwesomeIcons.google, size: 18),
-          label: const Text('Continuar con Google'),
-          onPressed: _isLoading ? null : _signInWithGoogle,
-          style: _buildOutlinedButtonStyle(),
-        ),
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: _isLoading ? null : _signInWithGoogle,
+        style: _buildOutlinedButtonStyle(),
+        child: const Text('Google'),
       ),
     );
   }
 
   Widget _buildSignUpButton() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Text('¿Aún no tienes cuenta?',
-            style: TextStyle(color: Colors.white70)),
-        TextButton(
-          onPressed: () {
-            // Navega a la nueva pantalla de registro
-            Navigator.of(context).pushNamed('/register');
-          },
-          child: const Text(
-            'Regístrate aquí',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              decoration: TextDecoration.underline,
-            ),
+    return RichText(
+      text: TextSpan(
+        text: 'No tienes una cuenta? ',
+        style: const TextStyle(color: Colors.white70),
+        children: [
+          TextSpan(
+            text: 'Registrate',
+            style:
+                const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            recognizer: TapGestureRecognizer()
+              ..onTap = () {
+                Navigator.of(context).pushNamed('/register');
+              },
           ),
-        )
-      ],
+        ],
+      ),
     );
   }
 
-  InputDecoration _buildInputDecoration(String label, IconData icon) {
+  InputDecoration _buildInputDecoration(String hint) {
     return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white70),
-      prefixIcon: Icon(icon, color: Colors.white70, size: 18),
-      filled: true,
-      fillColor: Colors.white.withOpacity(0.1),
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.white38),
+      filled: false,
       contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -383,7 +406,7 @@ Widget build(BuildContext context) {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -402,7 +425,7 @@ Widget build(BuildContext context) {
     return OutlinedButton.styleFrom(
       foregroundColor: Colors.white,
       padding: const EdgeInsets.symmetric(vertical: 12),
-      side: BorderSide(color: Colors.white.withOpacity(0.5)),
+      side: BorderSide(color: Colors.white.withOpacity(0.4)),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
