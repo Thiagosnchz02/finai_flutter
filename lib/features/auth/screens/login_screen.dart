@@ -328,7 +328,7 @@ Widget build(BuildContext context) {
         Expanded(child: Divider(color: Colors.white30)),
         Padding(
           padding: EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text('O', style: TextStyle(color: Colors.white30)),
+          child: Text('Otras opciones de log in', style: TextStyle(color: Colors.white30)),
         ),
         Expanded(child: Divider(color: Colors.white30)),
       ],
