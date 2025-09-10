@@ -183,37 +183,38 @@ Widget build(BuildContext context) {
 
         // 2) Contenido
         Positioned.fill(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                const SizedBox(height: 40),
-                _buildHeader(),
-                const SizedBox(height: 40),
-                Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildEmailField(),
-                      const SizedBox(height: 16),
-                      _buildPasswordHeader(),
-                      const SizedBox(height: 8),
-                      _buildPasswordField(),
-                      const SizedBox(height: 24),
-                      _buildSignInButton(),
-                    ],
+                  const SizedBox(height: 40),
+                  _buildHeader(),
+                  const SizedBox(height: 40),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildEmailField(),
+                        const SizedBox(height: 16),
+                        _buildPasswordHeader(),
+                        const SizedBox(height: 8),
+                        _buildPasswordField(),
+                        const SizedBox(height: 24),
+                        _buildSignInButton(),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                _buildDivider(),
-                const SizedBox(height: 24),
-                _buildSocialButtons(),
-                const SizedBox(height: 40),
-                _buildSignUpButton(),
-              ]),
+                  const SizedBox(height: 24),
+                  _buildDivider(),
+                  const SizedBox(height: 24),
+                  _buildSocialButtons(),
+                  const SizedBox(height: 40),
+                  _buildSignUpButton(),
+                ],
+              ),
             ),
           ),
         ),
