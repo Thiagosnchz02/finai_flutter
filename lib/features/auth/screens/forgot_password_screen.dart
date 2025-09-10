@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
+import 'dart:ui';
 
-// Importamos nuestro nuevo widget reutilizable
-import '../../../presentation/widgets/glass_card.dart';
 import '../../../presentation/widgets/finai_aurora_background.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
@@ -86,30 +85,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
-        alignment: Alignment.center,
         children: [
           const Positioned.fill(child: FinAiAuroraBackground()),
-          Center(
+          Positioned.fill(
             child: SingleChildScrollView(
-              child: GlassCard(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 40.0,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height,
                   ),
                   child: Form(
                     key: _formKey,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Recuperar Contraseña',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
+                        _buildHeader(),
                         const SizedBox(height: 16),
                         const Text(
                           'Introduce tu email y te enviaremos un enlace de recuperación.',
@@ -117,80 +108,120 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           style: TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 24),
-                        TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: _buildInputDecoration('Email', Icons.email),
-                        validator: (value) {
-                          if (value == null ||
-                              value.isEmpty ||
-                              !value.contains('@')) {
-                            return 'Por favor, introduce un email válido.';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _sendRecoveryEmail,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.all(0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6A1B9A), Color(0xFF3F51B5)],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8.0),
+                              child: Text(
+                                'Email',
+                                style: TextStyle(color: Colors.white),
                               ),
-                              borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Container(
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
-                              alignment: Alignment.center,
-                              child: _isLoading
-                                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                  : const Text('Enviar Enlace', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: _buildInputDecoration('ejemplo@gmail.com'),
+                              validator: (value) {
+                                if (value == null || value.isEmpty || !value.contains('@')) {
+                                  return 'Por favor, introduce un email válido.';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16.0),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                              child: InkWell(
+                                onTap: _isLoading ? null : _sendRecoveryEmail,
+                                borderRadius: BorderRadius.circular(16.0),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16.0),
+                                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                                  ),
+                                  child: _isLoading
+                                      ? const SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.white,
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Enviar Enlace',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Volver a Iniciar Sesión',
-                            style: TextStyle(color: Colors.white70)),
-                      ),
-                    ],
+                        const SizedBox(height: 24),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'Volver a Iniciar Sesión',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        )],
+        ],
       ),
     );
   }
 
-  // Copiamos el mismo helper para mantener la consistencia visual
-  InputDecoration _buildInputDecoration(String label, IconData icon) {
-     return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.white70),
-      prefixIcon: Icon(icon, color: Colors.white70, size: 18),
-      filled: true,
-      fillColor: Colors.white.withOpacity(0.1),
-      contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Image.asset('assets/images/Isotipo.png', height: 130),
+        const SizedBox(height: 24),
+        const Text(
+          'Recuperar Contraseña',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String hintText) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: const TextStyle(color: Colors.white38),
+      filled: false,
+      contentPadding:
+          const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -198,7 +229,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.4)),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error, width: 1.5),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.error, width: 2.0),
       ),
     );
   }
