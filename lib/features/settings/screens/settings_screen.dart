@@ -217,8 +217,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text('Español'),
-                                    if (profile.language == 'es')
-                                      const Icon(Icons.check),
+                                    profile.language == 'es'
+                                        ? const Icon(Icons.check)
+                                        : const SizedBox(),
                                   ],
                                 ),
                               ),
@@ -231,8 +232,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     const Text('Inglés'),
-                                    if (profile.language == 'en')
-                                      const Icon(Icons.check),
+                                    profile.language == 'en'
+                                        ? const Icon(Icons.check)
+                                        : const SizedBox(),
                                   ],
                                 ),
                               ),
