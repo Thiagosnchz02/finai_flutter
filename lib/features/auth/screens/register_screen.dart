@@ -177,7 +177,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     ),
                                   )
                                 : const Text(
-                                    'Regístrate',
+                                    'Sing Up',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -207,7 +207,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         RichText(
           textAlign: TextAlign.center,
           text: const TextSpan(
-            text: 'Log in to Fin',
+            text: 'Sing up to Fin',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w300,
