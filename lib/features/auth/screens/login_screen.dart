@@ -184,10 +184,11 @@ Widget build(BuildContext context) {
         // 2) Contenido
         Positioned.fill(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
                 const SizedBox(height: 40),
                 _buildHeader(),
                 const SizedBox(height: 40),
