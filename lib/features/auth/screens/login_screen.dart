@@ -3,7 +3,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart';
 import 'package:flutter/gestures.dart';
-
+import 'dart:ui';
 
 
 // Importamos nuestro nuevo widget reutilizable desde la carpeta de widgets compartidos
@@ -185,11 +185,15 @@ Widget build(BuildContext context) {
         Positioned.fill(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
-            child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                // Forzamos a que el contenido tenga como mínimo la altura de la pantalla
+                minHeight: MediaQuery.of(context).size.height,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 40),
+                  // Hemos quitado el SizedBox de 40 de aquí para un centrado perfecto
                   _buildHeader(),
                   const SizedBox(height: 40),
                   Form(
@@ -213,6 +217,8 @@ Widget build(BuildContext context) {
                   _buildSocialButtons(),
                   const SizedBox(height: 40),
                   _buildSignUpButton(),
+                  // Añade un pequeño padding inferior para que no quede pegado al borde
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -234,21 +240,37 @@ Widget build(BuildContext context) {
 }
 
   Widget _buildHeader() {
-    return Column(
-      children: [
-        Image.asset('assets/images/Isotipo.png', height: 80),
-        const SizedBox(height: 24),
-        const Text(
-          'Log in to FinAi',
+  return Column(
+    children: [
+      Image.asset('assets/images/Isotipo.png', height: 130),
+      const SizedBox(height: 24),
+      RichText(
+        textAlign: TextAlign.center, // Asegura que el texto esté centrado
+        text: TextSpan(
+          text: 'Log in to Fin',
           style: TextStyle(
             fontSize: 28,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w300, // Hace la fuente más fina (Light/Thin)
             color: Colors.white,
+            fontFamily: 'inter', // Puedes cambiar 'Roboto' por tu fuente elegante si la tienes
           ),
+          children: <TextSpan>[
+            TextSpan(
+              text: 'Ai',
+              style: TextStyle(
+                fontFamily: 'inter',
+                fontSize: 28,
+                fontWeight: FontWeight.w500,
+                color: Color.fromARGB(255, 255, 38, 172), // Un fucsia vibrante
+                // Si tienes una fuente específica para el brillo, aplícala aquí también
+              ),
+            ),
+          ],
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildPasswordHeader() {
     return Row(
@@ -315,37 +337,52 @@ Widget build(BuildContext context) {
   }
 
   Widget _buildSignInButton() {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _isLoading ? null : _signIn,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFC736E8),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+  return SizedBox(
+    width: double.infinity,
+    // Usamos ClipRRect para que el efecto de desenfoque respete los bordes redondeados.
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(16.0),
+      child: BackdropFilter(
+        // Este es el filtro que crea el efecto "frosty" o de cristal esmerilado.
+        filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+        child: InkWell(
+          // Usamos InkWell para la respuesta táctil (onTap) y el efecto ripple.
+          onTap: _isLoading ? null : _signIn,
+          borderRadius: BorderRadius.circular(16.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              // Un color de fondo muy sutil y un borde para definir la forma.
+              color: const Color.fromARGB(255, 255, 0, 234).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16.0),
+              border: Border.all(
+                color: Color.fromARGB(255, 255, 0, 234),
+              ),
+            ),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    'Log In',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
           ),
         ),
-        child: _isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                ),
-              )
-            : const Text(
-                'Log In',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildDivider() {
     return const Row(
