@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async'; // Para el Timer
+import 'dart:ui';
 
 import '../../../presentation/widgets/finai_aurora_background.dart';
 
@@ -162,37 +163,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         const SizedBox(height: 24),
                         _buildSocialButtons(),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _signUp,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF3F51B5),
-                              padding:
-                                  const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text(
-                                    'Sing Up',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                          ),
-                        ),
+                        _buildSignUpButton(),
                         const SizedBox(height: 16),
                         _buildLoginLink(),
                         const SizedBox(height: 20),
@@ -396,6 +367,49 @@ class _RegisterScreenState extends State<RegisterScreen> {
         onPressed: _isLoading ? null : _signUpWithGoogle,
         style: _buildOutlinedButtonStyle(),
         child: const Text('Google'),
+      ),
+    );
+  }
+
+  Widget _buildSignUpButton() {
+    const Color buttonColor = Color(0xFF3F51B5);
+    return SizedBox(
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.0),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          child: InkWell(
+            onTap: _isLoading ? null : _signUp,
+            borderRadius: BorderRadius.circular(16.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: buttonColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(color: buttonColor),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      'Sing Up',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ),
+        ),
       ),
     );
   }
