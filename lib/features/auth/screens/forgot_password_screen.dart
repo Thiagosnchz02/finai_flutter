@@ -196,19 +196,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   Widget _buildHeader() {
-    return Column(
-      children: [
-        Image.asset('assets/images/Isotipo.png', height: 130),
-        const SizedBox(height: 24),
-        const Text(
-          'Recuperar Contraseña',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ],
+    return const Text(
+      'Recuperar Contraseña',
+      style: TextStyle(
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
     );
   }
 
