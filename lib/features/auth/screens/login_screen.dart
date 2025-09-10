@@ -217,7 +217,7 @@ Widget build(BuildContext context) {
             ),
           ),
         ),
-
+        
         if (_isBiometricAvailable)
           Positioned(
             bottom: 20,
