@@ -204,8 +204,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Image.asset('assets/images/Isotipo.png', height: 130),
-        const SizedBox(height: 24),
         RichText(
           textAlign: TextAlign.center,
           text: const TextSpan(
