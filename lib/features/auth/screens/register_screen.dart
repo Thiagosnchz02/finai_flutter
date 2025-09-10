@@ -245,7 +245,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const Padding(
           padding: EdgeInsets.only(bottom: 8.0),
           child: Text(
-            'Nombre de usuario',
+            'Nombre completo',
             style: TextStyle(color: Colors.white),
           ),
         ),
