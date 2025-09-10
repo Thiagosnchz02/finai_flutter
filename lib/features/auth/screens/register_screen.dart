@@ -372,7 +372,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildSignUpButton() {
-    const Color buttonColor = Color(0xFF3F51B5);
+    const Color buttonColor = Color.fromARGB(255, 0, 38, 255);
     return SizedBox(
       width: double.infinity,
       child: ClipRRect(
@@ -386,9 +386,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: buttonColor.withOpacity(0.1),
+                color: buttonColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16.0),
-                border: Border.all(color: buttonColor),
+                border: Border.all(color: const Color.fromARGB(255, 12, 42, 212)),
               ),
               child: _isLoading
                   ? const SizedBox(
