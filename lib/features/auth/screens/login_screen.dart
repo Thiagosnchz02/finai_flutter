@@ -7,7 +7,6 @@ import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart'
 
 
 // Importamos nuestro nuevo widget reutilizable desde la carpeta de widgets compartidos
-import '../../../presentation/widgets/glass_card.dart';
 
 // Es una buena práctica definir las constantes de la UI.
 const double _horizontalPadding = 24.0;
@@ -185,34 +184,26 @@ Widget build(BuildContext context) {
         // 2) Contenido
         Positioned.fill(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 100.0),
+            padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 40),
                 Image.asset('assets/images/Isotipo.png', height: 100),
                 const SizedBox(height: 40),
-                GlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: _horizontalPadding,
-                      vertical: 40.0,
-                    ),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _buildEmailField(),
-                          const SizedBox(height: 16),
-                          _buildPasswordField(),
-                          const SizedBox(height: 24),
-                          _buildSignInButton(),
-                          const SizedBox(height: 16),
-                          _buildForgotPasswordButton(),
-                        ],
-                      ),
-                    ),
+                Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildEmailField(),
+                      const SizedBox(height: 16),
+                      _buildPasswordField(),
+                      const SizedBox(height: 24),
+                      _buildSignInButton(),
+                      const SizedBox(height: 16),
+                      _buildForgotPasswordButton(),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
