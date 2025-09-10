@@ -16,6 +16,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -27,6 +28,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -46,7 +48,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await _supabase.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
-        data: {'full_name': _nameController.text.trim()},
+        data: {
+          'full_name': _nameController.text.trim(),
+          'username': _usernameController.text.trim(),
+        },
         emailRedirectTo: 'io.supabase.finai://login-callback', // para Deep Linking
       );
 
@@ -144,6 +149,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         _buildHeader(),
                         const SizedBox(height: 40),
                         _buildNameField(),
+                        const SizedBox(height: 16),
+                        _buildUsernameField(),
                         const SizedBox(height: 16),
                         _buildEmailField(),
                         const SizedBox(height: 16),
@@ -249,6 +256,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'Por favor, introduce tu nombre.';
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUsernameField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8.0),
+          child: Text(
+            'Apodo / Username',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+        TextFormField(
+          controller: _usernameController,
+          style: const TextStyle(color: Colors.white),
+          decoration: _buildInputDecoration('Tu apodo'),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Por favor, introduce tu apodo o username.';
             }
             return null;
           },
