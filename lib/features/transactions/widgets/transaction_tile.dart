@@ -7,11 +7,13 @@ import 'package:finai_flutter/features/transactions/models/transaction_model.dar
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   const TransactionTile({
     super.key,
     required this.transaction,
     required this.onTap,
+    this.onDelete,
   });
 
   @override
@@ -58,6 +60,11 @@ class TransactionTile extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
+            if (onDelete != null)
+              IconButton(
+                icon: const Icon(Icons.delete, size: 20),
+                onPressed: onDelete,
+              ),
           ],
         ),
       ),
