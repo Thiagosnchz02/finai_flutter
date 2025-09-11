@@ -8,10 +8,18 @@ class TransactionsService {
   final _supabase = Supabase.instance.client;
   final _eventLogger = EventLoggerService();
 
-  Future<List<Map<String, dynamic>>> fetchTransactions() async {
+  Future<List<Map<String, dynamic>>> fetchTransactions({
+    String? type,
+    double? minAmount,
+    double? maxAmount,
+    String? categoryId,
+    DateTime? startDate,
+    DateTime? endDate,
+    String? concept,
+  }) async {
     try {
       final userId = _supabase.auth.currentUser!.id;
-      final response = await _supabase
+      var query = _supabase
           .from('transactions')
           .select('''
             id,
@@ -23,12 +31,35 @@ class TransactionsService {
             account_id,
             related_scheduled_expense_id,
             categories (id, name, type)
-          ''') // <-- CAMBIO AQUÍ: Añadido 'account_id'
-          .eq('user_id', userId)
-          .order('transaction_date', ascending: false);
-          
-      return List<Map<String, dynamic>>.from(response);
+          ''')
+          .eq('user_id', userId);
 
+      if (type != null && type != 'todos') {
+        query = query.eq('type', type);
+      }
+      if (minAmount != null) {
+        query = query.gte('amount', minAmount);
+      }
+      if (maxAmount != null) {
+        query = query.lte('amount', maxAmount);
+      }
+      if (categoryId != null) {
+        query = query.eq('category_id', categoryId);
+      }
+      if (startDate != null) {
+        query = query.gte('transaction_date', startDate.toIso8601String());
+      }
+      if (endDate != null) {
+        query = query.lte('transaction_date', endDate.toIso8601String());
+      }
+      if (concept != null && concept.isNotEmpty) {
+        query = query.ilike('description', '%$concept%');
+      }
+
+      final response =
+          await query.order('transaction_date', ascending: false);
+
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       print('Error en fetchTransactions: $e');
       rethrow;

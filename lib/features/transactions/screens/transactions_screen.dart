@@ -6,9 +6,10 @@ import 'package:collection/collection.dart'; // Necesario para groupBy
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:finai_flutter/features/transactions/models/transaction_model.dart';
-import 'package:finai_flutter/features/transactions/services/transactions_service.dart';
 import 'package:finai_flutter/features/transactions/screens/add_edit_transaction_screen.dart';
+import 'package:finai_flutter/features/transactions/services/transactions_service.dart';
 import 'package:finai_flutter/features/transactions/widgets/transaction_tile.dart';
+import 'package:finai_flutter/features/transactions/widgets/transactions_filter_sheet.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -21,6 +22,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   final _service = TransactionsService();
   late Future<List<Transaction>> _transactionsFuture;
 
+  String _filterType = 'todos';
+  double? _minAmount;
+  double? _maxAmount;
+  String? _categoryId;
+  DateTime? _startDate;
+  DateTime? _endDate;
+  String? _concept;
+
   @override
   void initState() {
     super.initState();
@@ -28,10 +37,30 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   void _loadTransactions() {
+    final filters = {
+      'type': _filterType,
+      'minAmount': _minAmount,
+      'maxAmount': _maxAmount,
+      'categoryId': _categoryId,
+      'startDate': _startDate,
+      'endDate': _endDate,
+      'concept': _concept,
+    };
+
     setState(() {
       // Usamos el nuevo servicio para obtener las transacciones y las convertimos al modelo correcto.
-      _transactionsFuture = _service.fetchTransactions()
-          .then((maps) => maps.map((map) => Transaction.fromMap(map)).toList());
+      _transactionsFuture = _service
+          .fetchTransactions(
+            type: filters['type'],
+            minAmount: filters['minAmount'],
+            maxAmount: filters['maxAmount'],
+            categoryId: filters['categoryId'],
+            startDate: filters['startDate'],
+            endDate: filters['endDate'],
+            concept: filters['concept'],
+          )
+          .then((maps) =>
+              maps.map((map) => Transaction.fromMap(map)).toList());
     });
   }
 
@@ -162,7 +191,34 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             children: [
               IconButton(
                 icon: const Icon(FontAwesomeIcons.filter),
-                onPressed: () { /* TODO: Lógica de filtros */ },
+                onPressed: () async {
+                  final result =
+                      await showModalBottomSheet<Map<String, dynamic>>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (context) => TransactionsFilterSheet(
+                      type: _filterType,
+                      minAmount: _minAmount,
+                      maxAmount: _maxAmount,
+                      categoryId: _categoryId,
+                      startDate: _startDate,
+                      endDate: _endDate,
+                      concept: _concept,
+                    ),
+                  );
+                  if (result != null) {
+                    setState(() {
+                      _filterType = result['type'] ?? 'todos';
+                      _minAmount = result['minAmount'];
+                      _maxAmount = result['maxAmount'];
+                      _categoryId = result['categoryId'];
+                      _startDate = result['startDate'];
+                      _endDate = result['endDate'];
+                      _concept = result['concept'];
+                    });
+                    _loadTransactions();
+                  }
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.list),
