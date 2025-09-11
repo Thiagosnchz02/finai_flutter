@@ -53,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'full_name': _nameController.text.trim(),
           'username': _usernameController.text.trim(),
         },
-        emailRedirectTo: 'io.supabase.finai://login-callback', // para Deep Linking
+        emailRedirectTo: 'io.supabase.finai://login-callback/', // para Deep Linking
       );
 
       if (mounted) {

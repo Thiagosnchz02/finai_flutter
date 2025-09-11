@@ -27,3 +27,7 @@ cp .env.example .env
 Variables requeridas:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
+
+## Configuración de Supabase Auth
+
+Asegúrate de incluir `io.supabase.finai://login-callback/` en **Redirect URLs** dentro de los ajustes de autenticación de Supabase para habilitar el deep linking en la aplicación.
