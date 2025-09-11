@@ -47,6 +47,39 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
+  // Elimina una transacción después de confirmar con el usuario.
+  Future<void> _deleteTransaction(Transaction transaction) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar transacción'),
+        content: const Text('¿Seguro que deseas eliminar esta transacción?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await _service.deleteTransaction(transaction.id);
+      if (!mounted) return;
+      final message = transaction.type == 'transferencia'
+          ? 'Transacción eliminada. Recuerda borrar la contraparte de la transferencia manualmente.'
+          : 'Transacción eliminada.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      _loadTransactions();
+    }
+  }
+
   // Agrupa las transacciones por fecha.
   Map<DateTime, List<Transaction>> _groupTransactionsByDate(List<Transaction> transactions) {
     return groupBy(transactions, (Transaction t) => DateTime(t.date.year, t.date.month, t.date.day));
@@ -164,6 +197,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ...transactions.map((tx) => TransactionTile(
           transaction: tx,
           onTap: () => _navigateAndRefresh(transaction: tx),
+          onDelete: () => _deleteTransaction(tx),
         )).toList(),
       ],
     );
