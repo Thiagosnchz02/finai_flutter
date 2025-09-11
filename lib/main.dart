@@ -23,7 +23,7 @@ import 'features/goals/screens/goals_screen.dart';
 import 'features/budgets/screens/budget_screen.dart';
 import 'features/reports/screens/reports_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
-import 'features/investments/screens/investments_screen.dart';
+import 'features/categories/screens/category_management_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -152,7 +152,7 @@ class _MyAppState extends State<MyApp> {
         '/budgets': (context) => const BudgetScreen(),
         '/reports': (context) => const ReportsScreen(),
         '/settings': (context) => const SettingsScreen(),
-        '/investments': (context) => const InvestmentsScreen(),
+        '/categories': (context) => const CategoryManagementScreen(),
       },
     );
   }
