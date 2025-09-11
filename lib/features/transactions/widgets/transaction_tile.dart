@@ -6,21 +6,26 @@ import 'package:finai_flutter/features/transactions/models/transaction_model.dar
 
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const TransactionTile({
     super.key,
     required this.transaction,
-    required this.onTap,
+    this.onTap,
+    this.onEdit,
     this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
     final bool isIncome = transaction.type == 'ingreso';
-    final amountColor = isIncome ? Colors.green.shade400 : Theme.of(context).colorScheme.onSurface;
-    final amountString = '${isIncome ? '+' : '-'}${NumberFormat.currency(locale: 'es_ES', symbol: '€').format(transaction.amount)}';
+    final amountColor =
+        isIncome ? Colors.green.shade400 : Theme.of(context).colorScheme.onSurface;
+    final amountString =
+        '${isIncome ? '+' : '-'}${NumberFormat.currency(locale: 'es_ES', symbol: '€').format(transaction.amount)}';
+    final bool isTransfer = transaction.type == 'transferencia';
 
     return Card(
       elevation: 0,
@@ -60,11 +65,14 @@ class TransactionTile extends StatelessWidget {
                 fontSize: 16,
               ),
             ),
-            if (onDelete != null)
-              IconButton(
-                icon: const Icon(Icons.delete, size: 20),
-                onPressed: onDelete,
-              ),
+            IconButton(
+              icon: const Icon(Icons.edit, size: 20),
+              onPressed: isTransfer ? null : onEdit,
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, size: 20),
+              onPressed: onDelete,
+            ),
           ],
         ),
       ),
