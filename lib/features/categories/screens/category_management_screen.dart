@@ -6,6 +6,8 @@ import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart'
 import '../services/category_service.dart';
 import '../widgets/category_card.dart';
 import '../widgets/custom_tab_bar.dart';
+import 'subcategory_screen.dart';
+import 'add_edit_category_screen.dart';
 
 class CategoryManagementScreen extends StatefulWidget {
   const CategoryManagementScreen({super.key});
@@ -122,10 +124,16 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Navegar a la pantalla de creación de categorías
-          print("Navegar a la pantalla de Añadir Categoría");
-        },
+        onPressed: () async {
+      // Navega y espera un resultado para saber si debe recargar
+      final result = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (context) => const AddEditCategoryScreen()),
+      );
+      if (result == true) {
+        _loadData(); // Recarga los datos si la pantalla anterior guardó algo
+      }
+    },
         backgroundColor: const Color(0xFF5A67D8),
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -186,12 +194,27 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen>
         return CategoryCard(
           category: category,
           onTap: () {
-            // TODO: Navegar a la pantalla de subcategorías
-            print('Navegando a las subcategorías de ${category.name}');
+            // <-- LÓGICA DE NAVEGACIÓN ACTUALIZADA
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SubcategoryScreen(
+                  parentCategoryId: category.id,
+                  parentCategoryName: category.name,
+                ),
+              ),
+            );
           },
-          onEdit: () {
-            // TODO: Navegar a la pantalla de edición de categoría
-            print('Editando ${category.name}');
+          onEdit: () async {
+            final result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddEditCategoryScreen(category: category),
+              ),
+            );
+            if (result == true) {
+              _loadData();
+            }
           },
           onArchive: () {
             _categoryService.archiveCategory(category.id).then((_) {
