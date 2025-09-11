@@ -37,7 +37,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   void _loadTransactions() {
-    final filters = {
+    // Tipamos el mapa para evitar que el valor devuelto sea `Object?`.
+    final Map<String, dynamic> filters = {
       'type': _filterType,
       'minAmount': _minAmount,
       'maxAmount': _maxAmount,
@@ -51,13 +52,13 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       // Usamos el nuevo servicio para obtener las transacciones y las convertimos al modelo correcto.
       _transactionsFuture = _service
           .fetchTransactions(
-            type: filters['type'],
-            minAmount: filters['minAmount'],
-            maxAmount: filters['maxAmount'],
-            categoryId: filters['categoryId'],
-            startDate: filters['startDate'],
-            endDate: filters['endDate'],
-            concept: filters['concept'],
+            type: filters['type'] as String?,
+            minAmount: filters['minAmount'] as double?,
+            maxAmount: filters['maxAmount'] as double?,
+            categoryId: filters['categoryId'] as String?,
+            startDate: filters['startDate'] as DateTime?,
+            endDate: filters['endDate'] as DateTime?,
+            concept: filters['concept'] as String?,
           )
           .then((maps) =>
               maps.map((map) => Transaction.fromMap(map)).toList());
