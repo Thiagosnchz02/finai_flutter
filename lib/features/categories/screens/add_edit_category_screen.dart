@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart';
 import 'package:finai_flutter/presentation/widgets/glass_card.dart';
 import '../services/category_service.dart';
+import '../widgets/icon_color_picker_modal.dart';
 import 'category_management_screen.dart'; // Para el flujo de selección
 
 class AddEditCategoryScreen extends StatefulWidget {
@@ -54,6 +55,23 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     if (selected != null) {
       setState(() {
         _parentCategory = selected;
+      });
+    }
+  }
+
+  Future<void> _openIconColorPicker() async {
+    final result = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      builder: (context) => IconColorPickerModal(
+        initialIcon: _selectedIcon,
+        initialColor: _selectedColor,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _selectedIcon = result['icon']!;
+        _selectedColor = result['color']!;
       });
     }
   }
@@ -149,15 +167,12 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
                   // --- Tarjeta para Icono y Color (Placeholder) ---
                   GlassCard(
                     child: ListTile(
-                      onTap: () {
-                        // TODO: Abrir modal de selección de icono y color
-                        print("Abrir selector de icono y color");
-                      },
-                      leading: Icon(Icons.palette_outlined, color: Colors.white70),
+                      onTap: _openIconColorPicker, // <-- Llama al nuevo método
+                      leading: const Icon(Icons.palette_outlined, color: Colors.white70),
                       title: const Text('Icono y Color', style: TextStyle(color: Colors.white)),
                       trailing: CircleAvatar(
-                        backgroundColor: Color(int.parse('0x$_selectedColor')),
-                        child: Icon(Icons.category, color: Colors.white),
+                        backgroundColor: Color(int.parse('0xFF$_selectedColor')),
+                        child: Icon(kCategoryIcons[_selectedIcon], color: Colors.white),
                       ),
                     ),
                   ),
