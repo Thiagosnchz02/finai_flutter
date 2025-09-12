@@ -3,10 +3,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart';
-import '../services/category_service.dart';
-import '../widgets/category_card.dart';
-import '../widgets/custom_tab_bar.dart';
-import 'subcategory_screen.dart';
+import '../widgets/category_grid_view.dart';
 import 'add_edit_category_screen.dart';
 
 class CategoryManagementScreen extends StatefulWidget {
@@ -16,127 +13,100 @@ class CategoryManagementScreen extends StatefulWidget {
   State<CategoryManagementScreen> createState() => _CategoryManagementScreenState();
 }
 
-class _CategoryManagementScreenState extends State<CategoryManagementScreen>
-    with SingleTickerProviderStateMixin {
-  final CategoryService _categoryService = CategoryService();
-  late TabController _tabController;
-
-  late Future<List<Category>> _standardCategoriesFuture;
-  late Future<List<Category>> _customCategoriesFuture;
-
-  List<Category> _standardCategories = [];
-  List<Category> _customCategories = [];
-  List<Category> _filteredStandard = [];
-  List<Category> _filteredCustom = [];
-
+class _CategoryManagementScreenState extends State<CategoryManagementScreen> {
   final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _loadData();
-    _searchController.addListener(_filterCategories);
-  }
-
-  void _loadData() {
-    _standardCategoriesFuture = _categoryService.getStandardCategories();
-    _customCategoriesFuture = _categoryService.getCustomCategories();
-
-    _standardCategoriesFuture.then((value) {
+    _searchController.addListener(() {
       if (mounted) {
         setState(() {
-          _standardCategories = value;
-          _filteredStandard = value;
+          _searchQuery = _searchController.text;
         });
       }
-    });
-    _customCategoriesFuture.then((value) {
-      if (mounted) {
-        setState(() {
-          _customCategories = value;
-          _filteredCustom = value;
-        });
-      }
-    });
-  }
-  
-  void _filterCategories() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredStandard = _standardCategories
-          .where((cat) => cat.name.toLowerCase().contains(query))
-          .toList();
-      _filteredCustom = _customCategories
-          .where((cat) => cat.name.toLowerCase().contains(query))
-          .toList();
     });
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Categorías', style: TextStyle(fontWeight: FontWeight.bold)),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(100.0),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
+    // La estructura ahora es un Stack que contiene el fondo y luego el Scaffold.
+    // El Scaffold se hace transparente para dejar ver el fondo.
+    return Stack(
+      children: [
+        const Positioned.fill(child: FinAiAuroraBackground()),
+        DefaultTabController(
+          length: 2,
+          child: Scaffold(
+            backgroundColor: Colors.transparent, // Hacemos el Scaffold transparente
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: const Text('Categorías', style: TextStyle(fontWeight: FontWeight.bold)),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(110.0),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    children: [
+                      _buildSearchBar(),
+                      const SizedBox(height: 16),
+                      const TabBar(
+                        indicator: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(16.0)),
+                          color: Color(0xFF5A67D8),
+                        ),
+                        labelColor: Colors.white,
+                        unselectedLabelColor: Colors.white70,
+                        tabs: [
+                          Tab(text: 'Estándar'),
+                          Tab(text: 'Personalizadas'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // El body ahora es directamente el TabBarView.
+            // El Scaffold se encarga de colocarlo debajo del AppBar sin solapamientos.
+            body: TabBarView(
               children: [
-                _buildSearchBar(),
-                const SizedBox(height: 16),
-                CustomTabBar(
-                  tabController: _tabController,
-                  tabs: const ['Estándar', 'Personalizadas'],
+                CategoryGridView(
+                  key: const Key('standard_grid'),
+                  isCustom: false,
+                  searchQuery: _searchQuery,
+                ),
+                CategoryGridView(
+                  key: const Key('custom_grid'),
+                  isCustom: true,
+                  searchQuery: _searchQuery,
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: FinAiAuroraBackground()),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 150), // Espacio para dejar visible el AppBar
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildCategoryGrid(_filteredStandard),
-                  _buildCategoryGrid(_filteredCustom, isCustom: true),
-                ],
-              ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () async {
+                final result = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddEditCategoryScreen()),
+                );
+                if (result == true && mounted) {
+                  setState(() {}); // Forzamos reconstrucción para recargar datos
+                }
+              },
+              backgroundColor: const Color(0xFF5A67D8),
+              child: const Icon(Icons.add, color: Colors.white),
             ),
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-      // Navega y espera un resultado para saber si debe recargar
-      final result = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(builder: (context) => const AddEditCategoryScreen()),
-      );
-      if (result == true) {
-        _loadData(); // Recarga los datos si la pantalla anterior guardó algo
-      }
-    },
-        backgroundColor: const Color(0xFF5A67D8),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+        ),
+      ],
     );
   }
 
@@ -161,71 +131,6 @@ class _CategoryManagementScreenState extends State<CategoryManagementScreen>
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildCategoryGrid(List<Category> categories, {bool isCustom = false}) {
-    if (categories.isEmpty && _searchController.text.isNotEmpty) {
-      return const Center(child: Text("No se encontraron categorías.", style: TextStyle(color: Colors.white70)));
-    }
-  
-    if (categories.isEmpty) {
-        return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Text(
-                  isCustom ? "Aún no has creado categorías personalizadas. ¡Toca el botón '+' para empezar!" : "No hay categorías estándar disponibles.",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white70, fontSize: 16)),
-            ));
-    }
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(16.0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.1,
-      ),
-      itemCount: categories.length,
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return CategoryCard(
-          category: category,
-          onTap: () {
-            // <-- LÓGICA DE NAVEGACIÓN ACTUALIZADA
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => SubcategoryScreen(
-                  parentCategoryId: category.id,
-                  parentCategoryName: category.name,
-                ),
-              ),
-            );
-          },
-          onEdit: () async {
-            final result = await Navigator.push<bool>(
-              context,
-              MaterialPageRoute(
-                builder: (context) => AddEditCategoryScreen(category: category),
-              ),
-            );
-            if (result == true) {
-              _loadData();
-            }
-          },
-          onArchive: () {
-            _categoryService.archiveCategory(category.id).then((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('"${category.name}" ha sido archivada.')),
-              );
-              _loadData(); // Recarga los datos para refrescar la UI
-            });
-          },
-        );
-      },
     );
   }
 }
