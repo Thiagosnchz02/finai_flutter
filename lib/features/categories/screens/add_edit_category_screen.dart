@@ -36,8 +36,8 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
       _selectedIcon = widget.category!.iconData ?? 'category';
       _selectedColor = widget.category!.color ?? 'FF5A67D8';
       // En modo edición, cargamos el padre para mostrar su nombre
-      if (widget.category!.parentId != null) {
-        _categoryService.getCategoryById(widget.category!.parentId!).then((parent) {
+      if (widget.category!.parentCategoryId != null) {
+        _categoryService.getCategoryById(widget.category!.parentCategoryId!).then((parent) {
           if (mounted) setState(() => _parentCategory = parent);
         });
       }
@@ -76,7 +76,7 @@ class _AddEditCategoryScreenState extends State<AddEditCategoryScreen> {
     try {
       await _categoryService.saveCategory(
         name: _nameController.text.trim(),
-        parentId: _parentCategory?.id,
+        parentCategoryId: _parentCategory?.id,
         icon: _selectedIcon,
         color: _selectedColor,
         existingCategory: widget.category,

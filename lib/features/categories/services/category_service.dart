@@ -8,7 +8,7 @@ class Category {
   final String name;
   final String? userId;
   final int hierarchyLevel;
-  final String? parentId;
+  final String? parentCategoryId;
   final bool isArchived;
   // Placeholder para el icono, asumiendo que se guarda como un String, ej: 'home'
   final String? iconData;
@@ -21,7 +21,7 @@ class Category {
     required this.name,
     this.userId,
     required this.hierarchyLevel,
-    this.parentId,
+    this.parentCategoryId,
     required this.isArchived,
     this.iconData,
     this.color,
@@ -34,7 +34,7 @@ class Category {
       name: map['name'],
       userId: map['user_id'],
       hierarchyLevel: map['hierarchy_level'] ?? 1,
-      parentId: map['parent_id'],
+      parentCategoryId: map['parent_category_id'],
       isArchived: map['is_archived'] ?? false,
       iconData: map['icon'],
       color: map['color'],
@@ -91,7 +91,7 @@ class CategoryService {
     final response = await _supabase
         .from('categories')
         .select()
-        .eq('parent_id', parentId)
+        .eq('parent_category_id', parentId)
         .eq('is_archived', false)
         .order('name', ascending: true);
     
@@ -103,7 +103,7 @@ class CategoryService {
     final response = await _supabase
         .from('categories')
         .select('id')
-        .eq('parent_id', categoryId)
+        .eq('parent_category_id', categoryId)
         .eq('is_archived', false)
         .limit(1);
 
@@ -113,7 +113,7 @@ class CategoryService {
   /// **NUEVO:** Guarda (crea o actualiza) una categoría.
   Future<void> saveCategory({
     required String name,
-    required String? parentId,
+    required String? parentCategoryId,
     required String? icon,
     required String? color,
     Category? existingCategory, // Si se provee, estamos en modo edición
@@ -132,12 +132,12 @@ class CategoryService {
       }).eq('id', existingCategory.id);
     } else {
       // --- LÓGICA DE CREACIÓN ---
-      if (parentId == null) {
+      if (parentCategoryId == null) {
         throw Exception('Se requiere una categoría padre para crear una nueva.');
       }
       
       // 1. Obtener datos del padre
-      final parentCategory = await getCategoryById(parentId);
+      final parentCategory = await getCategoryById(parentCategoryId);
       if (parentCategory == null) {
         throw Exception('La categoría padre no fue encontrada.');
       }
@@ -148,7 +148,7 @@ class CategoryService {
         'icon': icon,
         'color': color,
         'user_id': user.id,
-        'parent_id': parentId,
+        'parent_category_id': parentCategoryId,
         'hierarchy_level': parentCategory.hierarchyLevel + 1,
         'type': parentCategory.type, // Hereda el tipo (gasto/ingreso) del padre
         'is_default': false,
