@@ -32,9 +32,15 @@ class _AnalysisViewerScreenState extends State<AnalysisViewerScreen> {
   @override
   void initState() {
     super.initState();
+    // Para el análisis por categoría, necesitarás pasar el category_id como opción
+    // Esto es un ejemplo, tendrás que adaptar la UI para seleccionarlo.
+    final options = widget.templateName == 'tendencia_gasto_categoria'
+        ? {'category_id': 'ID_DE_CATEGORIA_DE_EJEMPLO'}
+        : <String, dynamic>{};
+
     _dataFuture = _reportService.getTemplateData(
       widget.templateName,
-      const {},
+      options,
     );
   }
 
@@ -85,7 +91,10 @@ class _AnalysisViewerScreenState extends State<AnalysisViewerScreen> {
 
           if (snapshot.hasError) {
             return Center(
-              child: Text('Ocurrió un error al cargar los datos: ${snapshot.error}'),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text('Ocurrió un error al cargar los datos: ${snapshot.error}'),
+              ),
             );
           }
 
@@ -95,22 +104,23 @@ class _AnalysisViewerScreenState extends State<AnalysisViewerScreen> {
           }
           _reportData = data;
 
+          // --- SWITCH CORREGIDO ---
           switch (widget.templateName) {
-            case 'category_distribution':
+            case 'distribucion_gastos':
               return CategoryDistributionChart(data: data);
-            case 'income_expense_comparison':
+            case 'comparativa_ingresos_vs_gastos':
               return IncomeExpenseBarChart(data: data);
-            case 'net_worth_trend':
+            case 'evolucion_patrimonio_neto':
               return NetWorthLineChart(data: data);
-            case 'category_trend':
+            case 'tendencia_gasto_categoria':
               return CategoryTrendLineChart(data: data);
-            case 'cash_flow_heatmap':
+            case 'analisis_flujo_caja':
               return CashFlowHeatmap(data: data);
-            case 'goal_projection':
+            case 'proyeccion_metas':
               return GoalProjectionView(data: data);
-            case 'weekday_spending':
+            case 'analisis_frecuencia_gastos':
               return WeekdaySpendingBarChart(data: data);
-            case 'savings_gauge':
+            case 'comparativa_ahorro_vs_objetivo':
               return SavingsGaugeChart(data: data);
             default:
               return _UnknownTemplateView(templateName: widget.templateName);
