@@ -1,8 +1,9 @@
-// lib/features/reports/screens/reports_screen.dart
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:finai_flutter/features/reports/services/reports_service.dart';
+
+import '../services/report_service.dart';
+import '../widgets/date_filter_dialog.dart';
+import '../widgets/template_list_item.dart';
+import 'analysis_viewer_screen.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -11,186 +12,231 @@ class ReportsScreen extends StatefulWidget {
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> {
-  final _service = ReportsService();
-  bool _isLoading = false;
+class _ReportsScreenState extends State<ReportsScreen>
+    with SingleTickerProviderStateMixin {
+  final ReportService _reportService = ReportService();
 
-  // Estado de los filtros
-  DateTime? _dateFrom;
-  DateTime? _dateTo;
-  String _transactionType = 'all';
-  String _selectedAccountId = 'all';
-  String _selectedCategoryId = 'all';
-  String _selectedGoalId = 'all';
+  final List<_TemplateDefinition> _reportTemplates = const [
+    _TemplateDefinition(
+      templateName: 'monthly_summary',
+      title: 'Resumen mensual',
+      subtitle: 'Recibe un PDF con el resumen de tus finanzas del mes.',
+      icon: Icons.description_outlined,
+    ),
+    _TemplateDefinition(
+      templateName: 'cash_flow_statement',
+      title: 'Flujo de caja',
+      subtitle: 'Visualiza ingresos y egresos detallados.',
+      icon: Icons.account_balance_wallet_outlined,
+    ),
+    _TemplateDefinition(
+      templateName: 'expense_breakdown',
+      title: 'Desglose de gastos',
+      subtitle: 'Analiza tus gastos por categoría.',
+      icon: Icons.pie_chart_outline,
+    ),
+    _TemplateDefinition(
+      templateName: 'income_report',
+      title: 'Informe de ingresos',
+      subtitle: 'Evalúa tus fuentes de ingresos.',
+      icon: Icons.attach_money,
+    ),
+    _TemplateDefinition(
+      templateName: 'budget_vs_actual',
+      title: 'Presupuesto vs Real',
+      subtitle: 'Compara lo planificado con la realidad.',
+      icon: Icons.compare_arrows,
+    ),
+    _TemplateDefinition(
+      templateName: 'savings_progress',
+      title: 'Progreso de ahorro',
+      subtitle: 'Revisa el avance de tus metas de ahorro.',
+      icon: Icons.savings_outlined,
+    ),
+    _TemplateDefinition(
+      templateName: 'debt_overview',
+      title: 'Resumen de deudas',
+      subtitle: 'Mantén control sobre tus obligaciones.',
+      icon: Icons.receipt_long_outlined,
+    ),
+    _TemplateDefinition(
+      templateName: 'investment_snapshot',
+      title: 'Instantánea de inversiones',
+      subtitle: 'Consulta el estado de tus inversiones.',
+      icon: Icons.trending_up,
+    ),
+  ];
 
-  late Future<Map<String, List<Map<String, dynamic>>>> _filtersDataFuture;
+  final List<_TemplateDefinition> _analysisTemplates = const [
+    _TemplateDefinition(
+      templateName: 'category_distribution',
+      title: 'Distribución por categoría',
+      subtitle: 'Observa cómo se reparten tus gastos.',
+      icon: Icons.donut_large_outlined,
+    ),
+    _TemplateDefinition(
+      templateName: 'income_expense_comparison',
+      title: 'Ingresos vs Egresos',
+      subtitle: 'Compara tu flujo mensual.',
+      icon: Icons.bar_chart,
+    ),
+    _TemplateDefinition(
+      templateName: 'net_worth_trend',
+      title: 'Evolución del patrimonio',
+      subtitle: 'Sigue tu patrimonio neto a lo largo del tiempo.',
+      icon: Icons.show_chart,
+    ),
+    _TemplateDefinition(
+      templateName: 'category_trend',
+      title: 'Tendencia por categoría',
+      subtitle: 'Analiza las variaciones por categoría.',
+      icon: Icons.timeline,
+    ),
+    _TemplateDefinition(
+      templateName: 'cash_flow_heatmap',
+      title: 'Heatmap de flujo de caja',
+      subtitle: 'Identifica meses con más actividad.',
+      icon: Icons.grid_view,
+    ),
+    _TemplateDefinition(
+      templateName: 'goal_projection',
+      title: 'Proyección de metas',
+      subtitle: 'Visualiza el avance estimado de tus metas.',
+      icon: Icons.flag_outlined,
+    ),
+    _TemplateDefinition(
+      templateName: 'weekday_spending',
+      title: 'Gastos por día de la semana',
+      subtitle: 'Descubre en qué días gastas más.',
+      icon: Icons.calendar_today_outlined,
+    ),
+    _TemplateDefinition(
+      templateName: 'savings_gauge',
+      title: 'Indicador de ahorro',
+      subtitle: 'Mide tu nivel de ahorro actual.',
+      icon: Icons.speed,
+    ),
+  ];
 
-  @override
-  void initState() {
-    super.initState();
-    _filtersDataFuture = _loadFiltersData();
-  }
+  Future<void> _handleReportTap(_TemplateDefinition template) async {
+    final filters = await DateFilterDialog.show(context);
+    if (!mounted || filters == null) return;
 
-  Future<Map<String, List<Map<String, dynamic>>>> _loadFiltersData() async {
-    final accounts = await _service.getAccounts();
-    final categories = await _service.getCategories();
-    final goals = await _service.getGoals();
-    return {'accounts': accounts, 'categories': categories, 'goals': goals};
-  }
+    _showLoadingDialog();
 
-  Future<void> _generateReport() async {
-    setState(() => _isLoading = true);
     try {
-      final filters = {
-        'dateFrom': _dateFrom?.toIso8601String(),
-        'dateTo': _dateTo?.toIso8601String(),
-        'type': _transactionType,
-        'accountId': _selectedAccountId,
-        'categoryId': _selectedCategoryId,
-        'goalId': _selectedGoalId,
-      };
-      
-      // Eliminamos filtros nulos o 'all'
-      filters.removeWhere((key, value) => value == null || value == 'all');
-      
-      await _service.generateReport(filters);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Informe descargado y abierto.'), backgroundColor: Colors.green),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}'), backgroundColor: Colors.red),
-        );
-      }
+      final data = await _reportService.getTemplateData(
+        template.templateName,
+        filters,
+      );
+      await _reportService.downloadPdfFromMicroservice(
+        template.templateName,
+        data,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reporte exportado correctamente.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ocurrió un error: $error')),
+      );
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
     }
   }
-  
-  // Helper para mostrar DatePicker
-  Future<DateTime?> _selectDate(BuildContext context, DateTime initialDate) async {
-    return await showDatePicker(
+
+  void _showLoadingDialog() {
+    showDialog<void>(
       context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  void _handleAnalysisTap(_TemplateDefinition template) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => AnalysisViewerScreen(
+          templateName: template.templateName,
+          title: template.title,
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Generar Informe'),
-      ),
-      body: FutureBuilder<Map<String, List<Map<String, dynamic>>>>(
-        future: _filtersDataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error al cargar filtros: ${snapshot.error}'));
-          }
-
-          final accounts = snapshot.data?['accounts'] ?? [];
-          final categories = snapshot.data?['categories'] ?? [];
-          final goals = snapshot.data?['goals'] ?? [];
-
-          return ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: [
-              Text('Filtrar Transacciones', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 24),
-
-              // Filtros de Fecha
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      title: Text('Desde: ${_dateFrom == null ? 'Inicio' : DateFormat.yMd('es_ES').format(_dateFrom!)}'),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final date = await _selectDate(context, _dateFrom ?? DateTime.now());
-                        if (date != null) setState(() => _dateFrom = date);
-                      },
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      title: Text('Hasta: ${_dateTo == null ? 'Ahora' : DateFormat.yMd('es_ES').format(_dateTo!)}'),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final date = await _selectDate(context, _dateTo ?? DateTime.now());
-                        if (date != null) setState(() => _dateTo = date);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              
-              // Dropdowns de filtros
-              DropdownButtonFormField<String>(
-                value: _transactionType,
-                decoration: const InputDecoration(labelText: 'Tipo de Transacción'),
-                items: const [
-                  DropdownMenuItem(value: 'all', child: Text('Todos')),
-                  DropdownMenuItem(value: 'gasto', child: Text('Gastos')),
-                  DropdownMenuItem(value: 'ingreso', child: Text('Ingresos')),
-                ],
-                onChanged: (value) => setState(() => _transactionType = value!),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedAccountId,
-                decoration: const InputDecoration(labelText: 'Cuenta'),
-                items: [
-                  const DropdownMenuItem(value: 'all', child: Text('Todas')),
-                  ...accounts.map((acc) => DropdownMenuItem(value: acc['id'], child: Text(acc['name']))),
-                ],
-                onChanged: (value) => setState(() => _selectedAccountId = value!),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedCategoryId,
-                decoration: const InputDecoration(labelText: 'Categoría'),
-                items: [
-                  const DropdownMenuItem(value: 'all', child: Text('Todas')),
-                  ...categories.map((cat) => DropdownMenuItem(value: cat['id'], child: Text(cat['name']))),
-                ],
-                onChanged: (value) => setState(() => _selectedCategoryId = value!),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedGoalId,
-                decoration: const InputDecoration(labelText: 'Hucha (Meta)'),
-                items: [
-                  const DropdownMenuItem(value: 'all', child: Text('Ninguna')),
-                  ...goals.map((goal) => DropdownMenuItem(value: goal['id'], child: Text(goal['name']))),
-                ],
-                onChanged: (value) => setState(() => _selectedGoalId = value!),
-              ),
-
-              const SizedBox(height: 32),
-              ElevatedButton.icon(
-                onPressed: _isLoading ? null : _generateReport,
-                icon: _isLoading ? const SizedBox.shrink() : const Icon(Icons.download),
-                label: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Generar y Descargar CSV'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                ),
-              ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Reportes'),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Informes'),
+              Tab(text: 'Análisis'),
             ],
-          );
-        },
+          ),
+        ),
+        body: TabBarView(
+          children: [
+            _TemplateListView(
+              templates: _reportTemplates,
+              onItemTap: _handleReportTap,
+            ),
+            _TemplateListView(
+              templates: _analysisTemplates,
+              onItemTap: _handleAnalysisTap,
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+class _TemplateListView extends StatelessWidget {
+  const _TemplateListView({
+    required this.templates,
+    required this.onItemTap,
+  });
+
+  final List<_TemplateDefinition> templates;
+  final void Function(_TemplateDefinition template) onItemTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: templates.length,
+      itemBuilder: (context, index) {
+        final template = templates[index];
+        return TemplateListItem(
+          title: template.title,
+          subtitle: template.subtitle,
+          icon: template.icon,
+          onTap: () => onItemTap(template),
+        );
+      },
+    );
+  }
+}
+
+class _TemplateDefinition {
+  const _TemplateDefinition({
+    required this.templateName,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  final String templateName;
+  final String title;
+  final String subtitle;
+  final IconData icon;
 }
