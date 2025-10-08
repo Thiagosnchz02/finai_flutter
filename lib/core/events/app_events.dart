@@ -2,57 +2,57 @@
 
 enum AppEvent {
   // Eventos de Autenticación
-  user_signed_in,
-  user_signed_up,
-  user_signed_out,
-  password_recovered,
+  userSignedIn,
+  userSignedUp,
+  userSignedOut,
+  passwordRecovered,
   
   // Eventos del Módulo de Cuentas
-  account_created,
-  account_edited,
-  account_archived,
-  savings_account_designated,
-  internal_transfer_executed,
+  accountCreated,
+  accountEdited,
+  accountArchived,
+  savingsAccountDesignated,
+  internalTransferExecuted,
 
   // Eventos del Módulo de Transacciones
-  transaction_created,
-  transaction_edited,
-  transaction_deleted,
+  transactionCreated,
+  transactionEdited,
+  transactionDeleted,
 
   // Eventos del Módulo de Gastos Fijos
-  fixed_expense_created,
-  fixed_expense_updated,
-  fixed_expense_deleted,
-  fixed_expense_toggled,
+  fixedExpenseCreated,
+  fixedExpenseUpdated,
+  fixedExpenseDeleted,
+  fixedExpenseToggled,
 
   // Eventos del Módulo de Metas (Huchas)
-  goal_created,
-  goal_updated,
-  goal_archived,
-  goal_contribution_added,
-  goal_achieved,
-  trip_expense_created_from_goal,
+  goalCreated,
+  goalUpdated,
+  goalArchived,
+  goalContributionAdded,
+  goalAchieved,
+  tripExpenseCreatedFromGoal,
 
   // Eventos del Módulo de Presupuestos
-  budget_created,
-  budget_updated,
-  budget_deleted,
-  budget_rollover_toggled,
+  budgetCreated,
+  budgetUpdated,
+  budgetDeleted,
+  budgetRolloverToggled,
 
   // Evento del Módulo de Informes
-  report_generated,
+  reportGenerated,
 
   // Eventos del Módulo de Configuración
-  settings_theme_changed,
-  settings_2fa_toggled,
-  settings_notification_toggled,
-  user_data_exported,
-  user_account_deleted,
+  settingsThemeChanged,
+  settings2faToggled,
+  settingsNotificationToggled,
+  userDataExported,
+  userAccountDeleted,
 
   // --- NUEVOS EVENTOS ---
   // Eventos del Módulo de Inversiones
-  investment_created,
-  investment_updated,
-  investment_deleted,
+  investmentCreated,
+  investmentUpdated,
+  investmentDeleted,
   // --- FIN NUEVOS EVENTOS ---
 }

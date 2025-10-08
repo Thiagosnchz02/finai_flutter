@@ -1,0 +1,18 @@
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "testsprite-key",
+      "description": "TestSprite API Key",
+      "password": true
+    }
+  ],
+  "servers": {
+    "testsprite": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@testsprite/testsprite-mcp@latest"],
+      "envFile": "${workspaceFolder}/.env"
+      }
+    }
+}

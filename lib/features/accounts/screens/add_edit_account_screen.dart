@@ -75,10 +75,10 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
       
       if (isEditing) {
         // Si estamos editando, registramos el evento de edición.
-        _eventLogger.log(AppEvent.account_edited, details: {'account_id': savedAccountId});
+        _eventLogger.log(AppEvent.accountEdited, details: {'account_id': savedAccountId});
       } else {
         // Si es una cuenta nueva, registramos el evento de creación.
-        _eventLogger.log(AppEvent.account_created, details: {'account_id': savedAccountId});
+        _eventLogger.log(AppEvent.accountCreated, details: {'account_id': savedAccountId});
       }
 
       // Si se designó como AHORRO, registramos este evento tan importante.
@@ -89,7 +89,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
         });
         
         // Registrar que esta cuenta ha sido designada como la principal de ahorro.
-        _eventLogger.log(AppEvent.savings_account_designated, details: {'account_id': savedAccountId});
+        _eventLogger.log(AppEvent.savingsAccountDesignated, details: {'account_id': savedAccountId});
       }
       
       // --- FIN DE LA LÓGICA DE REGISTRO DE EVENTOS ---

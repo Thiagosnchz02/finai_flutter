@@ -39,12 +39,12 @@ class FixedExpensesService {
 
     if (isEditing) {
       await _eventLogger.log(
-        AppEvent.fixed_expense_updated,
+        AppEvent.fixedExpenseUpdated,
         details: {'expense_id': expenseId, 'changes': 'updated'}, // Payload simplificado
       );
     } else {
       await _eventLogger.log(
-        AppEvent.fixed_expense_created,
+        AppEvent.fixedExpenseCreated,
         details: {
           'expense_id': expenseId,
           'amount': data['amount'],
@@ -58,7 +58,7 @@ class FixedExpensesService {
   Future<void> deleteFixedExpense(String id, String description) async {
     await _supabase.from('scheduled_fixed_expenses').delete().eq('id', id);
     await _eventLogger.log(
-      AppEvent.fixed_expense_deleted,
+      AppEvent.fixedExpenseDeleted,
       details: {'expense_id': id, 'description': description},
     );
   }
@@ -66,7 +66,7 @@ class FixedExpensesService {
   Future<void> updateToggle(String id, String field, bool value) async {
     await _supabase.from('scheduled_fixed_expenses').update({field: value}).eq('id', id);
     await _eventLogger.log(
-      AppEvent.fixed_expense_toggled,
+      AppEvent.fixedExpenseToggled,
       details: {'expense_id': id, 'field': field, 'new_value': value},
     );
   }

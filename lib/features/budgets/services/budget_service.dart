@@ -42,7 +42,6 @@ class BudgetService {
           }
         }
       } catch (e) {
-        print('Could not fetch fixed expenses, likely due to RLS. User might not be PRO. Error: $e');
         committedFixed = 0;
       }
     }
@@ -246,16 +245,16 @@ class BudgetService {
     final response = await _supabase.from('budgets').upsert(data).select().single();
     final budgetId = response['id'];
     if (isEditing) {
-      await _eventLogger.log(AppEvent.budget_updated, details: {'budget_id': budgetId, 'changes': 'updated'});
+      await _eventLogger.log(AppEvent.budgetUpdated, details: {'budget_id': budgetId, 'changes': 'updated'});
     } else {
-      await _eventLogger.log(AppEvent.budget_created, details: {'budget_id': budgetId, 'category_id': data['category_id'], 'amount': data['amount']});
+      await _eventLogger.log(AppEvent.budgetCreated, details: {'budget_id': budgetId, 'category_id': data['category_id'], 'amount': data['amount']});
     }
   }
 
   Future<void> deleteBudget(String id) async {
     await _supabase.from('budgets').delete().eq('id', id);
     await _eventLogger
-        .log(AppEvent.budget_deleted, details: {'budget_id': id});
+        .log(AppEvent.budgetDeleted, details: {'budget_id': id});
   }
 
   Future<bool> hasConflictingBudgetsFromLastMonth() async {
@@ -369,6 +368,6 @@ class BudgetService {
   Future<void> updateBudgetRollover(bool isEnabled) async {
     final userId = _supabase.auth.currentUser!.id;
     await _supabase.from('profiles').update({'enable_budget_rollover': isEnabled}).eq('id', userId);
-    await _eventLogger.log(AppEvent.budget_rollover_toggled, details: {'enabled': isEnabled});
+    await _eventLogger.log(AppEvent.budgetRolloverToggled, details: {'enabled': isEnabled});
   }
 }

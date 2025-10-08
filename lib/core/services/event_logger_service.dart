@@ -29,7 +29,6 @@ class EventLoggerService {
       // de una forma más robusta (ej: registrarlo en un servicio de logging de errores),
       // pero por ahora, simplemente lo imprimimos en la consola para no interrumpir
       // el flujo del usuario si el registro de eventos falla.
-      print('Error al registrar evento en EventLoggerService: $e');
     }
   }
 }

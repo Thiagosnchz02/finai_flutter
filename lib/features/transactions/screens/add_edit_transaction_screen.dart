@@ -162,7 +162,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
           if (result == 'SUCCESS') {
             _eventLogger.log(
-              AppEvent.transaction_created,
+              AppEvent.transactionCreated,
               details: {
                 'type': _transactionType,
                 'amount': -rawAmount.abs(),
@@ -249,12 +249,12 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
           if (isEditing) {
             _eventLogger.log(
-              AppEvent.transaction_edited,
+              AppEvent.transactionEdited,
               details: {'transaction_id': savedTransactionId},
             );
           } else {
             _eventLogger.log(
-              AppEvent.transaction_created,
+              AppEvent.transactionCreated,
               details: {
                 'transaction_id': savedTransactionId,
                 'type': _transactionType,

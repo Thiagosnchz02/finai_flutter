@@ -90,12 +90,12 @@ class GoalsService {
 
     if (isEditing) {
       await _eventLogger.log(
-        AppEvent.goal_updated,
+        AppEvent.goalUpdated,
         details: {'goal_id': goalId, 'changes': 'updated'},
       );
     } else {
       await _eventLogger.log(
-        AppEvent.goal_created,
+        AppEvent.goalCreated,
         details: {
           'goal_id': goalId,
           'goal_name': data['name'],
@@ -107,7 +107,7 @@ class GoalsService {
 
   Future<void> addContribution(String goalId, double amount, String? notes) async {
     await _supabase.rpc('add_contribution_to_goal', params: {'p_goal_id': goalId, 'p_amount': amount, 'p_notes': notes});
-    await _eventLogger.log(AppEvent.goal_contribution_added, details: {'goal_id': goalId, 'amount_added': amount});
+    await _eventLogger.log(AppEvent.goalContributionAdded, details: {'goal_id': goalId, 'amount_added': amount});
   }
 
   // --- INICIO DEL NUEVO CÓDIGO ---
@@ -144,7 +144,7 @@ class GoalsService {
     final savedTransaction = await _supabase.from('transactions').insert(transactionData).select().single();
 
     await _eventLogger.log(
-      AppEvent.trip_expense_created_from_goal,
+      AppEvent.tripExpenseCreatedFromGoal,
       details: {
         'goal_id': goalId,
         'transaction_id': savedTransaction['id'],
@@ -158,7 +158,7 @@ class GoalsService {
     
     // Registramos el evento
     await _eventLogger.log(
-      AppEvent.goal_archived,
+      AppEvent.goalArchived,
       details: {'goal_id': goalId, 'goal_name': goalName},
     );
   }

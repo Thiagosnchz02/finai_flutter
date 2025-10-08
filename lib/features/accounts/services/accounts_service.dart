@@ -50,7 +50,6 @@ class AccountsService {
         totalSavingsBalance: totalSavings,
       );
     } catch (e) {
-      print('Error en AccountsService: $e');
       rethrow;
     }
   }

@@ -40,11 +40,6 @@ class AvatarService {
     body.removeWhere((key, value) => value == null || (value is String && value.isEmpty));
     final jsonBody = json.encode(body);
 
-    print('--- Enviando a Python Avatar Service ---');
-    print('URL: $url');
-    print('Body: $jsonBody');
-    print('----------------------------------------');
-
     try {
       final response = await http.post(
         url,
@@ -53,11 +48,6 @@ class AvatarService {
         },
         body: jsonBody,
       );
-
-      print('--- Respuesta del servicio ---');
-      print('Status Code: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-      print('-----------------------------');
 
       if (response.statusCode == 200) {
         if (response.body.isEmpty) {
@@ -75,7 +65,7 @@ class AvatarService {
             throw Exception('Falta SUPABASE_PROJECT_ID en el archivo .env');
           }
 
-          final publicUrl = 'https://$projectId.supabase.co/storage/v1/object/public/$key?t=${DateTime.now().millisecondsSinceEpoch}';;
+          final publicUrl = 'https://$projectId.supabase.co/storage/v1/object/public/$key?t=${DateTime.now().millisecondsSinceEpoch}';
           return [publicUrl];
         } else {
           throw Exception('La respuesta no contiene la Key esperada: $responseData');

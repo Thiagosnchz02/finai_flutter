@@ -99,7 +99,7 @@ class TransactionsService {
       await _supabase.from('transactions').delete().eq('id', transactionId);
       
       _eventLogger.log(
-        AppEvent.transaction_deleted,
+        AppEvent.transactionDeleted,
         details: {'transaction_id': transactionId},
       );
 

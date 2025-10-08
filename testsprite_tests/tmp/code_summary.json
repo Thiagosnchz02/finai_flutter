@@ -1,0 +1,99 @@
+{
+  "tech_stack": ["Dart", "Flutter"],
+  "features": [
+    {
+      "name": "auth",
+      "description": "Handles user authentication, including login and registration.",
+      "files": [
+        "lib/features/auth/screens/login_screen.dart",
+        "lib/features/auth/screens/register_screen.dart"
+      ]
+    },
+    {
+      "name": "accounts",
+      "description": "Manages user's bank accounts.",
+      "files": [
+        "lib/features/accounts/screens/account_list_screen.dart",
+        "lib/features/accounts/screens/add_account_screen.dart"
+      ]
+    },
+    {
+      "name": "budgets",
+      "description": "Allows users to create and manage budgets.",
+      "files": [
+        "lib/features/budgets/screens/budget_screen.dart"
+      ]
+    },
+    {
+      "name": "categories",
+      "description": "Manages transaction categories.",
+      "files": [
+        "lib/features/categories/screens/category_list_screen.dart"
+      ]
+    },
+    {
+      "name": "dashboard",
+      "description": "The main dashboard of the application.",
+      "files": [
+        "lib/features/dashboard/screens/dashboard_screen.dart"
+      ]
+    },
+    {
+      "name": "fixed_expenses",
+      "description": "Manages fixed or recurring expenses.",
+      "files": [
+        "lib/features/fixed_expenses/screens/fixed_expenses_screen.dart"
+      ]
+    },
+    {
+      "name": "goals",
+      "description": "Allows users to set and track financial goals.",
+      "files": [
+        "lib/features/goals/screens/goals_screen.dart"
+      ]
+    },
+    {
+      "name": "investments",
+      "description": "Tracks user's investments.",
+      "files": [
+        "lib/features/investments/screens/investments_screen.dart"
+      ]
+    },
+    {
+      "name": "profile",
+      "description": "Manages user profile information.",
+      "files": [
+        "lib/features/profile/screens/profile_screen.dart"
+      ]
+    },
+    {
+      "name": "reports",
+      "description": "Generates financial reports.",
+      "files": [
+        "lib/features/reports/screens/reports_screen.dart"
+      ]
+    },
+    {
+      "name": "settings",
+      "description": "Contains application settings.",
+      "files": [
+        "lib/features/settings/screens/settings_screen.dart"
+      ]
+    },
+    {
+      "name": "tools",
+      "description": "Provides various financial tools.",
+      "files": [
+        "lib/features/tools/screens/tools_screen.dart"
+      ]
+    },
+    {
+      "name": "transactions",
+      "description": "Manages user transactions.",
+      "files": [
+        "lib/features/transactions/screens/transaction_list_screen.dart",
+        "lib/features/transactions/screens/add_transaction_screen.dart"
+      ]
+    }
+  ]
+}

@@ -28,7 +28,7 @@ class InvestmentsService {
 
     if (isEditing) {
       await _eventLogger.log(
-        AppEvent.investment_updated,
+        AppEvent.investmentUpdated,
         details: {
           'investment_id': investmentId,
           // El payload de 'changes' es complejo, por ahora enviamos un placeholder.
@@ -37,7 +37,7 @@ class InvestmentsService {
       );
     } else {
       await _eventLogger.log(
-        AppEvent.investment_created,
+        AppEvent.investmentCreated,
         details: {
           'investment_id': investmentId,
           'type': data['type'],
@@ -52,7 +52,7 @@ class InvestmentsService {
     await _supabase.from('investments').delete().eq('id', id);
 
     await _eventLogger.log(
-      AppEvent.investment_deleted,
+      AppEvent.investmentDeleted,
       details: {
         'investment_id': id,
         'type': type,

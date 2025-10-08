@@ -20,9 +20,9 @@ class SettingsService {
     await _supabase.from('profiles').update({key: value}).eq('id', userId);
 
     if (key == 'theme') {
-      await _eventLogger.log(AppEvent.settings_theme_changed, details: {'new_theme': value});
+      await _eventLogger.log(AppEvent.settingsThemeChanged, details: {'new_theme': value});
     } else if (key.startsWith('notify_')) {
-      await _eventLogger.log(AppEvent.settings_notification_toggled, details: {
+      await _eventLogger.log(AppEvent.settingsNotificationToggled, details: {
         'notification_type': key,
         'enabled': value,
       });
@@ -42,7 +42,7 @@ class SettingsService {
     await _supabase.auth.mfa.verify(factorId: factorId, challengeId: challenge.id, code: code);
     
     await updateProfileSetting('doble_factor_enabled', true);
-    await _eventLogger.log(AppEvent.settings_2fa_toggled, details: {'enabled': true});
+    await _eventLogger.log(AppEvent.settings2faToggled, details: {'enabled': true});
   }
   
   /// Desactiva un factor de 2FA.
@@ -52,16 +52,16 @@ class SettingsService {
     await _supabase.auth.mfa.unenroll(factorId);
     
     await updateProfileSetting('doble_factor_enabled', false);
-    await _eventLogger.log(AppEvent.settings_2fa_toggled, details: {'enabled': false});
+    await _eventLogger.log(AppEvent.settings2faToggled, details: {'enabled': false});
   }
 
   Future<void> exportData() async {
     await _supabase.functions.invoke('export_data');
-    await _eventLogger.log(AppEvent.user_data_exported);
+    await _eventLogger.log(AppEvent.userDataExported);
   }
 
   Future<void> deleteAccount(String password) async {
-    await _eventLogger.log(AppEvent.user_account_deleted);
+    await _eventLogger.log(AppEvent.userAccountDeleted);
     await _supabase.functions.invoke('delete_user_account', body: {'password': password});
   }
 }
