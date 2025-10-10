@@ -35,8 +35,8 @@ class Budget {
 }
 
 class BudgetSummary {
-  final double spendingBalance; // Saldo total en cuentas de 'nómina'
-  final double committedFixed; // Dinero comprometido en gastos fijos (solo para Pro)
+  final double monthlyIncome; // Ingresos totales del mes actual
+  final double committedFixed; // Gastos fijos programados para el mes
   final double availableToBudget; // Lo que realmente queda para presupuestar
   final String userPlan; // 'free' o 'pro'
   final bool enableBudgetRollover;
@@ -44,7 +44,7 @@ class BudgetSummary {
   final double totalAvailableBudget; // Suma con rollover aplicado
 
   BudgetSummary({
-    this.spendingBalance = 0.0,
+    this.monthlyIncome = 0.0,
     this.committedFixed = 0.0,
     this.availableToBudget = 0.0,
     required this.userPlan,

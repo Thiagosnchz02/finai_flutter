@@ -23,8 +23,11 @@ class BudgetSummaryHeader extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Saldo en Cuentas para Gastar:'),
-                Text(formatter.format(summary.spendingBalance), style: const TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Ingresos del mes:'),
+                Text(
+                  formatter.format(summary.monthlyIncome),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             if (isPro) ...[
@@ -32,8 +35,14 @@ class BudgetSummaryHeader extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Comprometido en Gastos Fijos:'),
-                  Text('- ${formatter.format(summary.committedFixed)}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
+                  const Text('Gastos fijos del mes:'),
+                  Text(
+                    '- ${formatter.format(summary.committedFixed)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade700,
+                    ),
+                  ),
                 ],
               ),
             ],

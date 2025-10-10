@@ -17,29 +17,37 @@ class BudgetService {
     final userPlan = profileResponse['plan_type'] as String;
     final enableRollover = profileResponse['enable_budget_rollover'] as bool? ?? true;
 
-    final spendingAccounts = await _supabase.from('accounts').select('id').eq('user_id', userId).eq('conceptual_type', 'nomina');
-    final spendingAccountIds = spendingAccounts.map((a) => a['id'] as String).toList();
-    
-    double totalSpendingBalance = 0;
-    if (spendingAccountIds.isNotEmpty) {
-      // CORRECCIÓN DEFINITIVA: Usamos el método .filter()
-      final spendingResponse = await _supabase
-          .from('transactions')
-          .select('amount')
-          .filter('account_id', 'in', spendingAccountIds);
-      totalSpendingBalance = spendingResponse.map((t) => (t['amount'] as num).toDouble()).fold(0.0, (prev, amount) => prev + amount);
-    }
-    
+    final now = DateTime.now();
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    final lastDayOfMonth = DateTime(now.year, now.month + 1, 0);
+
+    final incomeResponse = await _supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', userId)
+        .eq('type', 'ingreso')
+        .gte('transaction_date', firstDayOfMonth.toIso8601String())
+        .lte('transaction_date', lastDayOfMonth.toIso8601String());
+
+    final totalMonthlyIncome = incomeResponse.fold<double>(
+      0.0,
+      (previousValue, transaction) =>
+          previousValue + (transaction['amount'] as num).toDouble(),
+    );
+
     double committedFixed = 0;
     if (userPlan == 'pro') {
       try {
-        final fixedExpensesResponse = await _supabase.from('scheduled_fixed_expenses').select('amount, frequency, next_due_date').eq('user_id', userId).eq('is_active', true);
-        final now = DateTime.now();
+        final fixedExpensesResponse = await _supabase
+            .from('scheduled_fixed_expenses')
+            .select('amount, next_due_date')
+            .eq('user_id', userId)
+            .eq('is_active', true)
+            .gte('next_due_date', firstDayOfMonth.toIso8601String())
+            .lte('next_due_date', lastDayOfMonth.toIso8601String());
+
         for (var expense in fixedExpensesResponse) {
-          final nextDueDate = DateTime.parse(expense['next_due_date']);
-          if (expense['frequency'] == 'mensual' || (nextDueDate.year == now.year && nextDueDate.month == now.month)) {
-            committedFixed += (expense['amount'] as num).toDouble();
-          }
+          committedFixed += (expense['amount'] as num).toDouble();
         }
       } catch (e) {
         committedFixed = 0;
@@ -47,8 +55,6 @@ class BudgetService {
     }
 
     // Presupuestos del mes actual
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
     final currentBudgets = await _supabase
         .from('budgets')
         .select('category_id, amount')
@@ -112,9 +118,9 @@ class BudgetService {
     }
 
     return BudgetSummary(
-      spendingBalance: totalSpendingBalance,
+      monthlyIncome: totalMonthlyIncome,
       committedFixed: committedFixed,
-      availableToBudget: totalSpendingBalance - committedFixed,
+      availableToBudget: totalMonthlyIncome - committedFixed,
       userPlan: userPlan,
       // CORRECCIÓN: Pasamos el parámetro requerido
       enableBudgetRollover: enableRollover,
