@@ -46,21 +46,19 @@ class BudgetService {
     }
 
     double committedFixed = 0;
-    if (userPlan == 'pro') {
-      try {
-        final fixedExpensesResponse = await _supabase
-            .from('scheduled_fixed_expenses')
-            .select('amount, next_due_date')
-            .eq('user_id', userId)
-            .eq('is_active', true)
-            .gte('next_due_date', firstDayOfMonth.toIso8601String())
-            .lt('next_due_date', firstDayOfNextMonth.toIso8601String());
-        for (var expense in fixedExpensesResponse) {
-          committedFixed += (expense['amount'] as num).toDouble();
-        }
-      } catch (e) {
-        committedFixed = 0;
+    try {
+      final fixedExpensesResponse = await _supabase
+          .from('scheduled_fixed_expenses')
+          .select('amount, next_due_date')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .gte('next_due_date', firstDayOfMonth.toIso8601String())
+          .lt('next_due_date', firstDayOfNextMonth.toIso8601String());
+      for (var expense in fixedExpensesResponse) {
+        committedFixed += (expense['amount'] as num).toDouble();
       }
+    } catch (e) {
+      committedFixed = 0;
     }
 
     // Presupuestos del mes actual
