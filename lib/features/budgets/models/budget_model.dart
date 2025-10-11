@@ -36,7 +36,7 @@ class Budget {
 
 class BudgetSummary {
   final double spendingBalance; // Saldo total en cuentas de 'nómina'
-  final double committedFixed; // Dinero comprometido en gastos fijos (solo para Pro)
+  final double committedFixed; // Dinero comprometido en gastos fijos
   final double availableToBudget; // Lo que realmente queda para presupuestar
   final String userPlan; // 'free' o 'pro'
   final bool enableBudgetRollover;

@@ -12,8 +12,6 @@ class BudgetSummaryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
-    final isPro = summary.userPlan == 'pro';
-
     return Card(
       elevation: 4,
       child: Padding(
@@ -27,16 +25,15 @@ class BudgetSummaryHeader extends StatelessWidget {
                 Text(formatter.format(summary.spendingBalance), style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
-            if (isPro) ...[
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Comprometido en Gastos Fijos:'),
-                  Text('- ${formatter.format(summary.committedFixed)}', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
-                ],
-              ),
-            ],
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Comprometido en Gastos Fijos:'),
+                Text('- ${formatter.format(summary.committedFixed)}',
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
+              ],
+            ),
             const Divider(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
