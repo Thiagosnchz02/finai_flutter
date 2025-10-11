@@ -16,7 +16,7 @@ import 'package:finai_flutter/features/dashboard/widgets/goals_dashboard_widget.
 import 'package:finai_flutter/features/budgets/screens/budget_screen.dart';
 import 'package:finai_flutter/features/dashboard/widgets/budgets_dashboard_widget.dart';
 import 'package:finai_flutter/features/categories/screens/category_management_screen.dart';
-import 'package:finai_flutter/features/tools/screens/tools_screen.dart';
+import 'package:finai_flutter/features/fincount/screens/fincount_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     BudgetScreen(),
     GoalsScreen(),
     CategoryManagementScreen(),
-    ToolsScreen(),
+    FincountScreen(),
     ProfileScreen(), // Ahora usa la pantalla de Perfil real
   ];
 
@@ -84,8 +84,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             label: 'Categorías',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.build),
-            label: 'Herramientas',
+            icon: Icon(Icons.people_alt_outlined),
+            label: 'Fincount',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
