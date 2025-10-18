@@ -1,276 +1,210 @@
 // lib/features/budgets/services/budget_service.dart
 
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
+
 import 'package:finai_flutter/core/events/app_events.dart';
 import 'package:finai_flutter/core/services/event_logger_service.dart';
-import '../models/budget_model.dart';
+import 'package:finai_flutter/features/budgets/models/budget_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+class BudgetValidationException implements Exception {
+  final double pendingAmount;
+  final bool wouldBeNegative;
+
+  BudgetValidationException(this.pendingAmount, {this.wouldBeNegative = false});
+
+  @override
+  String toString() {
+    if (wouldBeNegative) {
+      return 'Esta asignación dejaría el dinero pendiente de asignar en ${pendingAmount.toStringAsFixed(2)}€. Ajusta el monto.';
+    }
+    return 'No hay suficiente dinero pendiente de asignar. Quedan ${pendingAmount.toStringAsFixed(2)}€ disponibles.';
+  }
+}
 
 class BudgetService {
-  final _supabase = Supabase.instance.client;
-  final _eventLogger = EventLoggerService();
+  final SupabaseClient _supabase = Supabase.instance.client;
+  final EventLoggerService _eventLogger = EventLoggerService();
 
-  Future<BudgetSummary> getBudgetSummary() async {
-    final userId = _supabase.auth.currentUser!.id;
-
-    // Obtenemos plan y preferencia de rollover en una sola consulta
-    final profileResponse = await _supabase.from('profiles').select('plan_type, enable_budget_rollover').eq('id', userId).single();
-    final userPlan = profileResponse['plan_type'] as String;
-    final enableRollover = profileResponse['enable_budget_rollover'] as bool? ?? true;
-
-    final spendingAccounts = await _supabase.from('accounts').select('id').eq('user_id', userId).eq('conceptual_type', 'nomina');
-    final spendingAccountIds = spendingAccounts.map((a) => a['id'] as String).toList();
-
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    final firstDayOfNextMonth = DateTime(now.year, now.month + 1, 1);
-
-    double totalSpendingBalance = 0;
-    if (spendingAccountIds.isNotEmpty) {
-      final spendingResponse = await _supabase
-          .from('transactions')
-          .select('amount')
-          .filter('account_id', 'in', spendingAccountIds);
-      totalSpendingBalance = spendingResponse.map((t) => (t['amount'] as num).toDouble()).fold(0.0, (prev, amount) => prev + amount);
-    }
-
-    double totalMonthlyIncome = 0;
-    final incomeResponse = await _supabase
-        .from('transactions')
-        .select('amount')
-        .eq('user_id', userId)
-        .eq('type', 'ingreso')
-        .gte('transaction_date', firstDayOfMonth.toIso8601String())
-        .lt('transaction_date', firstDayOfNextMonth.toIso8601String());
-    for (final income in incomeResponse) {
-      totalMonthlyIncome += (income['amount'] as num).toDouble();
-    }
-
-    double committedFixed = 0;
-    try {
-      final fixedExpensesResponse = await _supabase
-          .from('scheduled_fixed_expenses')
-          .select('amount, next_due_date')
-          .eq('user_id', userId)
-          .eq('is_active', true)
-          .gte('next_due_date', firstDayOfMonth.toIso8601String())
-          .lt('next_due_date', firstDayOfNextMonth.toIso8601String());
-      for (var expense in fixedExpensesResponse) {
-        committedFixed += (expense['amount'] as num).toDouble();
-      }
-    } catch (e) {
-      committedFixed = 0;
-    }
-
-    // Presupuestos del mes actual
-    final currentBudgets = await _supabase
-        .from('budgets')
-        .select('category_id, amount')
-        .eq('user_id', userId)
-        .gte('start_date', firstDayOfMonth.toIso8601String())
-        .lt('start_date', firstDayOfNextMonth.toIso8601String());
-
-    double totalBaseBudget = 0;
-    final Map<String, double> currentBudgetAmounts = {};
-    for (var b in currentBudgets) {
-      final amount = (b['amount'] as num).toDouble();
-      totalBaseBudget += amount;
-      currentBudgetAmounts[b['category_id'] as String] = amount;
-    }
-
-    // Datos del mes anterior para rollover
-    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
-    final firstDayOfCurrentMonth = firstDayOfMonth;
-
-    final lastBudgetsResponse = await _supabase
-        .from('budgets')
-        .select('category_id, amount')
-        .eq('user_id', userId)
-        .gte('start_date', firstDayLastMonth.toIso8601String())
-        .lt('start_date', firstDayOfCurrentMonth.toIso8601String());
-    final lastBudgetAmounts = <String, double>{};
-    for (var b in lastBudgetsResponse) {
-      lastBudgetAmounts[b['category_id'] as String] =
-          (b['amount'] as num).toDouble();
-    }
-
-    final lastSpendingResponse = await _supabase
-        .from('transactions')
-        .select('category_id, amount')
-        .eq('user_id', userId)
-        .eq('type', 'gasto')
-        .gte('transaction_date', firstDayLastMonth.toIso8601String())
-        .lt('transaction_date', firstDayOfCurrentMonth.toIso8601String());
-    final lastSpendingByCategory = <String, double>{};
-    for (var spent in lastSpendingResponse) {
-      if (spent['category_id'] == null) continue;
-      final categoryId = spent['category_id'] as String;
-      final amount = (spent['amount'] as num).abs().toDouble();
-      lastSpendingByCategory[categoryId] =
-          (lastSpendingByCategory[categoryId] ?? 0) + amount;
-    }
-
-    double totalRollover = 0;
-    currentBudgetAmounts.forEach((cat, amount) {
-      final rollover =
-          (lastBudgetAmounts[cat] ?? 0) - (lastSpendingByCategory[cat] ?? 0);
-      totalRollover += rollover;
-    });
-
-    // Ajuste según la preferencia de rollover
-    double totalAvailableBudget;
-    if (!enableRollover) {
-      totalRollover = 0;
-      totalAvailableBudget = totalBaseBudget;
-    } else {
-      totalAvailableBudget = totalBaseBudget + totalRollover;
-    }
+  Future<BudgetSummary> getBudgetSummary(DateTime periodStart) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final moneyToAssign = await calculateMoneyToAssign(normalizedStart);
+    final totalBudgeted = await _sumBudgetedAmount(normalizedStart);
 
     return BudgetSummary(
-      spendingBalance: totalSpendingBalance,
-      committedFixed: committedFixed,
-      availableToBudget: totalMonthlyIncome - committedFixed,
-      userPlan: userPlan,
-      // CORRECCIÓN: Pasamos el parámetro requerido
-      enableBudgetRollover: enableRollover,
-      totalBaseBudget: totalBaseBudget,
-      totalAvailableBudget: totalAvailableBudget,
+      periodStart: normalizedStart,
+      moneyToAssign: moneyToAssign,
+      totalBudgeted: totalBudgeted,
     );
   }
 
-  Future<List<Budget>> getBudgetsForCurrentMonth() async {
+  Future<List<Budget>> getBudgetsForPeriod(DateTime periodStart) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final nextPeriodStart = _nextPeriodStart(normalizedStart);
     final userId = _supabase.auth.currentUser!.id;
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    final firstDayOfNextMonth = DateTime(now.year, now.month + 1, 1);
-
-    // Preferencia de rollover del perfil
-    final profileResponse = await _supabase
-        .from('profiles')
-        .select('enable_budget_rollover')
-        .eq('id', userId)
-        .single();
-    final enableRollover =
-        profileResponse['enable_budget_rollover'] as bool? ?? true;
 
     final budgetsResponse = await _supabase
         .from('budgets')
-        .select('*, categories(name, icon)')
+        .select('id, category_id, amount, start_date, categories(name, icon)')
         .eq('user_id', userId)
-        .gte('start_date', firstDayOfMonth.toIso8601String())
-        .lt('start_date', firstDayOfNextMonth.toIso8601String());
-    if (budgetsResponse.isEmpty) return [];
+        .gte('start_date', normalizedStart.toIso8601String())
+        .lt('start_date', nextPeriodStart.toIso8601String());
 
-    // Gastos del mes actual
+    if (budgetsResponse.isEmpty) {
+      return [];
+    }
+
     final spendingResponse = await _supabase
         .from('transactions')
         .select('category_id, amount')
         .eq('user_id', userId)
         .eq('type', 'gasto')
-        .gte('transaction_date', firstDayOfMonth.toIso8601String())
-        .lt('transaction_date', firstDayOfNextMonth.toIso8601String());
-    final spendingByCategory = <String, double>{};
-    for (var spent in spendingResponse) {
-      if (spent['category_id'] == null) continue;
-      final categoryId = spent['category_id'] as String;
-      final amount = (spent['amount'] as num).abs().toDouble();
-      spendingByCategory[categoryId] =
-          (spendingByCategory[categoryId] ?? 0) + amount;
-    }
+        .gte('transaction_date', normalizedStart.toIso8601String())
+        .lt('transaction_date', nextPeriodStart.toIso8601String());
 
-    // Datos del mes anterior
-    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
-    final firstDayCurrentMonth = firstDayOfMonth;
-    final lastBudgetsResponse = await _supabase
-        .from('budgets')
-        .select('category_id, amount')
-        .eq('user_id', userId)
-        .gte('start_date', firstDayLastMonth.toIso8601String())
-        .lt('start_date', firstDayCurrentMonth.toIso8601String());
-    final lastBudgetAmounts = <String, double>{};
-    for (var b in lastBudgetsResponse) {
-      lastBudgetAmounts[b['category_id'] as String] =
-          (b['amount'] as num).toDouble();
-    }
-    final lastSpendingResponse = await _supabase
-        .from('transactions')
-        .select('category_id, amount')
-        .eq('user_id', userId)
-        .eq('type', 'gasto')
-        .gte('transaction_date', firstDayLastMonth.toIso8601String())
-        .lt('transaction_date', firstDayCurrentMonth.toIso8601String());
-    final lastSpendingByCategory = <String, double>{};
-    for (var spent in lastSpendingResponse) {
-      if (spent['category_id'] == null) continue;
-      final categoryId = spent['category_id'] as String;
-      final amount = (spent['amount'] as num).abs().toDouble();
-      lastSpendingByCategory[categoryId] =
-          (lastSpendingByCategory[categoryId] ?? 0) + amount;
+    final Map<String, double> spendingByCategory = {};
+    for (final row in spendingResponse) {
+      final categoryId = row['category_id'] as String?;
+      if (categoryId == null) continue;
+      final amount = (row['amount'] as num).toDouble().abs();
+      spendingByCategory.update(categoryId, (value) => value + amount,
+          ifAbsent: () => amount);
     }
 
     final List<Budget> budgets = [];
-    for (var budgetData in budgetsResponse) {
-      final categoryId = budgetData['category_id'] as String;
-      final spentAmount = spendingByCategory[categoryId] ?? 0.0;
-      final budgetAmount = (budgetData['amount'] as num).toDouble();
-      final lastAmount = lastBudgetAmounts[categoryId] ?? 0.0;
-      final lastSpent = lastSpendingByCategory[categoryId] ?? 0.0;
-      double rollover = lastAmount - lastSpent;
-      double availableAmount = budgetAmount + rollover;
-      if (!enableRollover) {
-        rollover = 0;
-        availableAmount = budgetAmount;
-      }
-      final progress = availableAmount > 0
-          ? (spentAmount / availableAmount).clamp(0.0, 1.0)
-          : 0.0;
-      final remaining = availableAmount - spentAmount;
+    for (final row in budgetsResponse) {
+      final categoryId = row['category_id'] as String;
+      final categoryName =
+          row['categories']?['name'] as String? ?? 'Categoría eliminada';
+      final categoryIcon = row['categories']?['icon'] as String?;
+      final amount = (row['amount'] as num).toDouble();
+      final spent = spendingByCategory[categoryId] ?? 0.0;
+      final remaining = amount - spent;
+      final progress = amount > 0 ? (spent / amount).clamp(0.0, 1.0) : 0.0;
 
       budgets.add(Budget(
-        id: budgetData['id'],
+        id: row['id'] as String,
         categoryId: categoryId,
-        categoryName:
-            budgetData['categories']?['name'] ?? 'Categoría eliminada',
-        categoryIcon: budgetData['categories']?['icon'],
-        amount: budgetAmount,
-        startDate: DateTime.parse(budgetData['start_date']),
-        spentAmount: spentAmount,
+        categoryName: categoryName,
+        categoryIcon: categoryIcon,
+        amount: amount,
+        startDate: DateTime.parse(row['start_date'] as String),
+        spentAmount: spent,
         progress: progress,
         remainingAmount: remaining,
-        lastMonthSpent: lastSpent,
-        lastMonthAmount: lastAmount,
-        rolloverAmount: rollover,
-        availableAmount: availableAmount,
+        lastMonthSpent: 0,
+        lastMonthAmount: 0,
+        rolloverAmount: 0,
+        availableAmount: amount,
       ));
     }
+
     return budgets;
   }
-  
-  Future<List<Map<String, dynamic>>> getAvailableCategoriesForBudget() async {
+
+  Future<List<Map<String, dynamic>>> getAvailableCategoriesForBudget(
+      DateTime periodStart) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final nextPeriodStart = _nextPeriodStart(normalizedStart);
     final userId = _supabase.auth.currentUser!.id;
-    final now = DateTime.now();
-    final firstDayOfMonth = DateTime(now.year, now.month, 1);
-    final firstDayOfNextMonth = DateTime(now.year, now.month + 1, 1);
+
     final budgetedCategoriesResponse = await _supabase
         .from('budgets')
         .select('category_id')
         .eq('user_id', userId)
-        .gte('start_date', firstDayOfMonth.toIso8601String())
-        .lt('start_date', firstDayOfNextMonth.toIso8601String());
-    final budgetedCategoryIds = budgetedCategoriesResponse.map((b) => b['category_id'] as String).toList();
-    var query = _supabase.from('categories').select('id, name').eq('type', 'gasto').eq('is_archived', false);
+        .gte('start_date', normalizedStart.toIso8601String())
+        .lt('start_date', nextPeriodStart.toIso8601String());
+
+    final budgetedCategoryIds = budgetedCategoriesResponse
+        .map((row) => row['category_id'] as String)
+        .toList();
+
+    var query = _supabase
+        .from('categories')
+        .select('id, name')
+        .eq('type', 'gasto')
+        .eq('is_archived', false);
+
     if (budgetedCategoryIds.isNotEmpty) {
       query = query.not('id', 'in', budgetedCategoryIds);
     }
+
     return List<Map<String, dynamic>>.from(await query);
   }
 
-  Future<void> saveBudget(Map<String, dynamic> data, bool isEditing) async {
+  Future<void> upsertBudget({
+    String? id,
+    required String categoryId,
+    required double amount,
+    required DateTime periodStart,
+  }) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final nextPeriodStart = _nextPeriodStart(normalizedStart);
+    final userId = _supabase.auth.currentUser!.id;
+
+    final budgetsResponse = await _supabase
+        .from('budgets')
+        .select('id, amount')
+        .eq('user_id', userId)
+        .gte('start_date', normalizedStart.toIso8601String())
+        .lt('start_date', nextPeriodStart.toIso8601String());
+
+    double totalBudgeted = 0;
+    double existingAmount = 0;
+    for (final budget in budgetsResponse) {
+      final budgetId = budget['id'] as String;
+      final budgetAmount = (budget['amount'] as num).toDouble();
+      totalBudgeted += budgetAmount;
+      if (id != null && budgetId == id) {
+        existingAmount = budgetAmount;
+      }
+    }
+
+    final moneyToAssign = await calculateMoneyToAssign(normalizedStart);
+    final available = moneyToAssign - (totalBudgeted - existingAmount);
+    const tolerance = 0.0001;
+
+    if (available >= 0 && amount > available + tolerance) {
+      throw BudgetValidationException(available);
+    }
+
+    final newTotalBudgeted = totalBudgeted - existingAmount + amount;
+    final newPending = moneyToAssign - newTotalBudgeted;
+    final currentPending = moneyToAssign - totalBudgeted;
+
+    if (newPending < -tolerance) {
+      if (currentPending >= -tolerance) {
+        throw BudgetValidationException(newPending, wouldBeNegative: true);
+      }
+      if (newPending < currentPending - tolerance) {
+        throw BudgetValidationException(newPending, wouldBeNegative: true);
+      }
+    }
+
+    final data = <String, dynamic>{
+      'user_id': userId,
+      'category_id': categoryId,
+      'amount': amount,
+      'start_date': normalizedStart.toIso8601String(),
+      'period': 'mensual',
+    };
+
+    if (id != null) {
+      data['id'] = id;
+    }
+
     final response = await _supabase.from('budgets').upsert(data).select().single();
     final budgetId = response['id'];
-    if (isEditing) {
-      await _eventLogger.log(AppEvent.budgetUpdated, details: {'budget_id': budgetId, 'changes': 'updated'});
+
+    if (id != null) {
+      await _eventLogger
+          .log(AppEvent.budgetUpdated, details: {'budget_id': budgetId});
     } else {
-      await _eventLogger.log(AppEvent.budgetCreated, details: {'budget_id': budgetId, 'category_id': data['category_id'], 'amount': data['amount']});
+      await _eventLogger.log(AppEvent.budgetCreated, details: {
+        'budget_id': budgetId,
+        'category_id': categoryId,
+        'amount': amount,
+      });
     }
   }
 
@@ -280,74 +214,84 @@ class BudgetService {
         .log(AppEvent.budgetDeleted, details: {'budget_id': id});
   }
 
-  Future<bool> hasConflictingBudgetsFromLastMonth() async {
+  Future<bool> hasConflictingBudgetsFromLastMonth(DateTime periodStart) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final previousPeriodStart = _previousPeriodStart(normalizedStart);
+    final nextPeriodStart = _nextPeriodStart(normalizedStart);
     final userId = _supabase.auth.currentUser!.id;
-    final now = DateTime.now();
-    final firstDayCurrentMonth = DateTime(now.year, now.month, 1);
-    final firstDayNextMonth = DateTime(now.year, now.month + 1, 1);
-    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
 
     final lastMonthBudgets = await _supabase
         .from('budgets')
         .select('category_id')
         .eq('user_id', userId)
-        .gte('start_date', firstDayLastMonth.toIso8601String())
-        .lt('start_date', firstDayCurrentMonth.toIso8601String());
-    if (lastMonthBudgets.isEmpty) return false;
+        .gte('start_date', previousPeriodStart.toIso8601String())
+        .lt('start_date', normalizedStart.toIso8601String());
+
+    if (lastMonthBudgets.isEmpty) {
+      return false;
+    }
 
     final currentBudgets = await _supabase
         .from('budgets')
         .select('category_id')
         .eq('user_id', userId)
-        .gte('start_date', firstDayCurrentMonth.toIso8601String())
-        .lt('start_date', firstDayNextMonth.toIso8601String());
+        .gte('start_date', normalizedStart.toIso8601String())
+        .lt('start_date', nextPeriodStart.toIso8601String());
 
-    final lastMonthCategoryIds =
-        lastMonthBudgets.map((b) => b['category_id'] as String).toSet();
-    final currentCategoryIds =
-        currentBudgets.map((b) => b['category_id'] as String).toSet();
+    final lastMonthCategories =
+        lastMonthBudgets.map((row) => row['category_id'] as String).toSet();
+    final currentCategories =
+        currentBudgets.map((row) => row['category_id'] as String).toSet();
 
-    return lastMonthCategoryIds.intersection(currentCategoryIds).isNotEmpty;
+    return lastMonthCategories.intersection(currentCategories).isNotEmpty;
   }
 
-  Future<void> copyBudgetsFromLastMonth({bool overwriteExisting = false}) async {
+  Future<void> copyBudgetsFromLastMonth({
+    required DateTime periodStart,
+    bool overwriteExisting = false,
+  }) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final previousPeriodStart = _previousPeriodStart(normalizedStart);
+    final nextPeriodStart = _nextPeriodStart(normalizedStart);
     final userId = _supabase.auth.currentUser!.id;
-    final now = DateTime.now();
-    final firstDayCurrentMonth = DateTime(now.year, now.month, 1);
-    final firstDayNextMonth = DateTime(now.year, now.month + 1, 1);
-    final firstDayLastMonth = DateTime(now.year, now.month - 1, 1);
 
     final lastMonthBudgets = await _supabase
         .from('budgets')
         .select('category_id, amount, period')
         .eq('user_id', userId)
-        .gte('start_date', firstDayLastMonth.toIso8601String())
-        .lt('start_date', firstDayCurrentMonth.toIso8601String());
+        .gte('start_date', previousPeriodStart.toIso8601String())
+        .lt('start_date', normalizedStart.toIso8601String());
+
     if (lastMonthBudgets.isEmpty) {
-      throw Exception('No se encontraron presupuestos en el mes anterior para copiar.');
+      throw Exception(
+          'No se encontraron presupuestos en el periodo anterior para copiar.');
     }
 
     final currentBudgets = await _supabase
         .from('budgets')
         .select('id, category_id')
         .eq('user_id', userId)
-        .gte('start_date', firstDayCurrentMonth.toIso8601String())
-        .lt('start_date', firstDayNextMonth.toIso8601String());
+        .gte('start_date', normalizedStart.toIso8601String())
+        .lt('start_date', nextPeriodStart.toIso8601String());
 
-    final currentMap = {for (var b in currentBudgets) b['category_id']: b['id']};
+    final Map<String, dynamic> currentMap = {
+      for (final budget in currentBudgets)
+        budget['category_id'] as String: budget['id']
+    };
 
     final List<Map<String, dynamic>> newBudgets = [];
     final List<Map<String, dynamic>> existingBudgets = [];
 
-    for (var budget in lastMonthBudgets) {
+    for (final budget in lastMonthBudgets) {
       final categoryId = budget['category_id'] as String;
       final data = {
         'user_id': userId,
         'category_id': categoryId,
         'amount': budget['amount'],
-        'start_date': firstDayCurrentMonth.toIso8601String(),
+        'start_date': normalizedStart.toIso8601String(),
         'period': budget['period'],
       };
+
       if (currentMap.containsKey(categoryId)) {
         data['id'] = currentMap[categoryId];
         existingBudgets.add(data);
@@ -363,36 +307,147 @@ class BudgetService {
       await _supabase.from('budgets').upsert(existingBudgets);
     }
   }
-  
-  // >>> Añadido desde la rama de Codex: sugerencia de gasto por categoría
-  Future<double?> getCategorySpendingSuggestion(String categoryId) async {
+
+  Future<double> calculateMoneyToAssign(DateTime periodStart) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
     final userId = _supabase.auth.currentUser!.id;
-    final response = await _supabase.rpc(
-      'get_category_spending_suggestion',
-      params: {
-        'p_user_id': userId,
-        'p_category_id': categoryId,
-      },
-    );
 
-    if (response == null) return null;
+    final accountsResponse = await _supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('conceptual_type', 'nomina')
+        .eq('is_archived', false);
 
-    // Si viene como número (int/double)
-    if (response is num) return response.toDouble();
-
-    // Si viene como objeto { suggested_amount: ... }
-    if (response is Map && response['suggested_amount'] != null) {
-      final v = response['suggested_amount'];
-      if (v is num) return v.toDouble();
-      if (v is String) return double.tryParse(v);
+    if (accountsResponse.isEmpty) {
+      return 0.0;
     }
 
-    return null;
+    final List<String> accountIds =
+        accountsResponse.map((row) => row['id'] as String).toList();
+
+    final balancesResponse = await _fetchAccountBalances(userId);
+    final Map<String, double> balancesMap = {
+      for (final item in balancesResponse)
+        item['account_id'] as String: (item['balance'] as num).toDouble()
+    };
+
+    final transactionsResponse = await _supabase
+        .from('transactions')
+        .select('account_id, amount')
+        .eq('user_id', userId)
+        .in_('account_id', accountIds)
+        .gte('transaction_date', normalizedStart.toIso8601String());
+
+    final Map<String, double> netChanges = {
+      for (final id in accountIds) id: 0.0,
+    };
+
+    for (final row in transactionsResponse) {
+      final accountId = row['account_id'] as String?;
+      if (accountId == null) continue;
+      final amount = (row['amount'] as num).toDouble();
+      netChanges.update(accountId, (value) => value + amount,
+          ifAbsent: () => amount);
+    }
+
+    double totalInitialBalance = 0;
+    for (final accountId in accountIds) {
+      final currentBalance = balancesMap[accountId] ?? 0.0;
+      final change = netChanges[accountId] ?? 0.0;
+      totalInitialBalance += currentBalance - change;
+    }
+
+    return totalInitialBalance;
   }
 
-  Future<void> updateBudgetRollover(bool isEnabled) async {
+  Stream<double> getPendingToAssign(
+      DateTime periodStart, double initialMoneyToAssign) {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final nextPeriodStart = _nextPeriodStart(normalizedStart);
     final userId = _supabase.auth.currentUser!.id;
-    await _supabase.from('profiles').update({'enable_budget_rollover': isEnabled}).eq('id', userId);
-    await _eventLogger.log(AppEvent.budgetRolloverToggled, details: {'enabled': isEnabled});
+
+    return _supabase
+        .from('budgets')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .gte('start_date', normalizedStart.toIso8601String())
+        .lt('start_date', nextPeriodStart.toIso8601String())
+        .map((rows) {
+      final totalBudgeted = rows.fold<double>(
+        0,
+        (previousValue, element) =>
+            previousValue + (element['amount'] as num).toDouble(),
+      );
+      return initialMoneyToAssign - totalBudgeted;
+    });
   }
+
+  Future<double> getAverageSpendingForCategory(
+      String categoryId, int monthsHistory) async {
+    if (monthsHistory <= 0) {
+      return 0;
+    }
+
+    final userId = _supabase.auth.currentUser!.id;
+    final now = DateTime.now();
+    final currentPeriodStart = DateTime(now.year, now.month, 1);
+    final historyStart = DateTime(
+        currentPeriodStart.year, currentPeriodStart.month - monthsHistory, 1);
+
+    final spendingResponse = await _supabase
+        .from('transactions')
+        .select('amount')
+        .eq('user_id', userId)
+        .eq('type', 'gasto')
+        .eq('category_id', categoryId)
+        .gte('transaction_date', historyStart.toIso8601String())
+        .lt('transaction_date', currentPeriodStart.toIso8601String());
+
+    double totalSpent = 0;
+    for (final row in spendingResponse) {
+      totalSpent += (row['amount'] as num).toDouble().abs();
+    }
+
+    return totalSpent / monthsHistory;
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchAccountBalances(String userId) async {
+    final response = await _supabase
+        .rpc('get_account_balances', params: {'user_id_param': userId});
+
+    if (response is List) {
+      return response
+          .whereType<Map<String, dynamic>>()
+          .toList(growable: false);
+    }
+
+    return const [];
+  }
+
+  Future<double> _sumBudgetedAmount(DateTime periodStart) async {
+    final normalizedStart = _normalizePeriodStart(periodStart);
+    final nextPeriodStart = _nextPeriodStart(normalizedStart);
+    final userId = _supabase.auth.currentUser!.id;
+
+    final response = await _supabase
+        .from('budgets')
+        .select('amount')
+        .eq('user_id', userId)
+        .gte('start_date', normalizedStart.toIso8601String())
+        .lt('start_date', nextPeriodStart.toIso8601String());
+
+    return response.fold<double>(
+      0,
+      (previousValue, element) =>
+          previousValue + (element['amount'] as num).toDouble(),
+    );
+  }
+
+  DateTime _normalizePeriodStart(DateTime date) => DateTime(date.year, date.month, 1);
+
+  DateTime _nextPeriodStart(DateTime date) => DateTime(date.year, date.month + 1, 1);
+
+  DateTime _previousPeriodStart(DateTime date) =>
+      DateTime(date.year, date.month - 1, 1);
 }

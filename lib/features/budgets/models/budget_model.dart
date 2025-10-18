@@ -35,21 +35,15 @@ class Budget {
 }
 
 class BudgetSummary {
-  final double spendingBalance; // Saldo total en cuentas de 'nómina'
-  final double committedFixed; // Dinero comprometido en gastos fijos
-  final double availableToBudget; // Lo que realmente queda para presupuestar
-  final String userPlan; // 'free' o 'pro'
-  final bool enableBudgetRollover;
-  final double totalBaseBudget; // Suma de presupuestos del mes
-  final double totalAvailableBudget; // Suma con rollover aplicado
+  final DateTime periodStart;
+  final double moneyToAssign; // Dinero inicial disponible para asignar
+  final double totalBudgeted; // Suma de presupuestos creados en el periodo
 
-  BudgetSummary({
-    this.spendingBalance = 0.0,
-    this.committedFixed = 0.0,
-    this.availableToBudget = 0.0,
-    required this.userPlan,
-    required this.enableBudgetRollover,
-    this.totalBaseBudget = 0.0,
-    this.totalAvailableBudget = 0.0,
+  const BudgetSummary({
+    required this.periodStart,
+    required this.moneyToAssign,
+    required this.totalBudgeted,
   });
+
+  double get initiallyPending => moneyToAssign - totalBudgeted;
 }
