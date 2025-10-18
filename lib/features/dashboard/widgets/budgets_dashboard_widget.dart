@@ -30,7 +30,9 @@ class _BudgetsDashboardWidgetState extends State<BudgetsDashboardWidget> {
   @override
   void initState() {
     super.initState();
-    _budgetsFuture = _service.getBudgetsForCurrentMonth();
+    final now = DateTime.now();
+    final periodStart = DateTime(now.year, now.month, 1);
+    _budgetsFuture = _service.getBudgetsForPeriod(periodStart);
   }
 
   @override
@@ -71,7 +73,7 @@ class _BudgetsDashboardWidgetState extends State<BudgetsDashboardWidget> {
                 
                 // Mostramos los 3 presupuestos con mayor progreso
                 budgets.sort((a, b) => b.progress.compareTo(a.progress));
-                 final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
+                final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
 
                 return Column(
                   children: budgets.take(3).map((budget) {
