@@ -35,21 +35,40 @@ class Budget {
 }
 
 class BudgetSummary {
-  final double spendingBalance; // Saldo total en cuentas de 'nómina'
-  final double committedFixed; // Dinero comprometido en gastos fijos
-  final double availableToBudget; // Lo que realmente queda para presupuestar
-  final String userPlan; // 'free' o 'pro'
-  final bool enableBudgetRollover;
-  final double totalBaseBudget; // Suma de presupuestos del mes
-  final double totalAvailableBudget; // Suma con rollover aplicado
+  /// Dinero disponible para presupuestar durante el mes actual.
+  /// Incluye el saldo inicial en cuentas de gasto más los ingresos recibidos
+  /// en el período.
+  final double moneyToAssign;
 
-  BudgetSummary({
-    this.spendingBalance = 0.0,
-    this.committedFixed = 0.0,
-    this.availableToBudget = 0.0,
-    required this.userPlan,
-    required this.enableBudgetRollover,
-    this.totalBaseBudget = 0.0,
-    this.totalAvailableBudget = 0.0,
+  /// Dinero pendiente de asignar a presupuestos. Es el indicador principal
+  /// que debe llevarse a cero.
+  final double pendingToAssign;
+
+  /// Suma de todos los presupuestos creados en el período actual.
+  final double totalBudgeted;
+
+  /// Suma del gasto registrado en las categorías presupuestadas durante el
+  /// período actual.
+  final double totalSpent;
+
+  /// Dinero restante dentro de los presupuestos creados
+  /// (`totalBudgeted - totalSpent`). Puede ser negativo si hay sobregasto.
+  final double totalRemaining;
+
+  const BudgetSummary({
+    this.moneyToAssign = 0.0,
+    this.pendingToAssign = 0.0,
+    this.totalBudgeted = 0.0,
+    this.totalSpent = 0.0,
+    this.totalRemaining = 0.0,
   });
+
+  bool get hasDeficit => pendingToAssign < 0;
+}
+
+class CategorySpendingHistory {
+  final DateTime month;
+  final double amount;
+
+  const CategorySpendingHistory({required this.month, required this.amount});
 }

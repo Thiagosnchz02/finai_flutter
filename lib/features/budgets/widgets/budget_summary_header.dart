@@ -12,39 +12,48 @@ class BudgetSummaryHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
+    final pendingColor = summary.pendingToAssign < 0
+        ? Colors.redAccent
+        : Theme.of(context).colorScheme.primary;
     return Card(
       elevation: 4,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'Dinero para asignar',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              formatter.format(summary.moneyToAssign),
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineSmall
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const Divider(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Saldo en Cuentas para Gastar:'),
-                Text(formatter.format(summary.spendingBalance), style: const TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Total presupuestado:'),
+                Text(formatter.format(summary.totalBudgeted),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Comprometido en Gastos Fijos:'),
-                Text('- ${formatter.format(summary.committedFixed)}',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange.shade700)),
-              ],
-            ),
-            const Divider(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Disponible para Presupuestar:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                const Text('Gasto en presupuestos:'),
                 Text(
-                  formatter.format(summary.availableToBudget),
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                  formatter.format(summary.totalSpent),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -52,19 +61,55 @@ class BudgetSummaryHeader extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Presupuesto base:'),
-                Text(formatter.format(summary.totalBaseBudget),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Restante en presupuestos:'),
+                Text(
+                  formatter.format(summary.totalRemaining),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: summary.totalRemaining < 0
+                        ? Colors.redAccent
+                        : Colors.green,
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Presupuesto disponible:'),
-                Text(formatter.format(summary.totalAvailableBudget),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ],
+            const Divider(height: 32),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: pendingColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Dinero pendiente de asignar',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formatter.format(summary.pendingToAssign),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(
+                            fontWeight: FontWeight.bold, color: pendingColor),
+                  ),
+                  if (summary.pendingToAssign < 0)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        'Has asignado más dinero del disponible. Ajusta tus presupuestos.',
+                        style: TextStyle(color: Colors.redAccent),
+                      ),
+                    ),
+                ],
+              ),
             ),
           ],
         ),
