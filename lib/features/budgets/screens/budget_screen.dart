@@ -1,5 +1,7 @@
 // lib/features/budgets/screens/budget_screen.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:finai_flutter/features/budgets/models/budget_model.dart';
 import 'package:finai_flutter/features/budgets/services/budget_service.dart';
@@ -20,28 +22,71 @@ class BudgetScreen extends StatefulWidget {
 class _BudgetScreenState extends State<BudgetScreen> {
   final _service = BudgetService();
   late Future<Map<String, dynamic>> _dataFuture;
+  StreamSubscription<List<Map<String, dynamic>>>? _transactionsSubscription;
+  StreamSubscription<List<Map<String, dynamic>>>? _budgetsSubscription;
+  StreamSubscription<List<Map<String, dynamic>>>? _profileSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _setupRealtimeSubscriptions();
   }
 
-  void _loadData() {
+  Future<void> _loadData() async {
+    final future = _fetchAllData();
+    if (!mounted) return;
     setState(() {
-      _dataFuture = _fetchAllData();
+      _dataFuture = future;
     });
+    await future;
   }
 
   Future<Map<String, dynamic>> _fetchAllData() async {
-    // CORRECCIÓN: Aplicamos la misma lógica null-safe aquí.
-    final profileResponse = await Supabase.instance.client.from('profiles').select('enable_budget_rollover').single();
-    final enableRollover = profileResponse['enable_budget_rollover'] as bool? ?? true;
-    
-    final summary = await _service.getBudgetSummary();
     final budgets = await _service.getBudgetsForCurrentMonth();
-    
+    final summary = await _service.getBudgetSummaryFromBudgets(budgets);
+    final enableRollover = await _service.isBudgetRolloverEnabled();
+
     return {'summary': summary, 'budgets': budgets, 'enableRollover': enableRollover};
+  }
+
+  void _setupRealtimeSubscriptions() {
+    final client = Supabase.instance.client;
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    final now = DateTime.now();
+    final firstDay = DateTime(now.year, now.month, 1);
+    final firstDayNext = DateTime(now.year, now.month + 1, 1);
+
+    _transactionsSubscription = client
+        .from('transactions')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .gte('transaction_date', firstDay.toIso8601String())
+        .lt('transaction_date', firstDayNext.toIso8601String())
+        .listen((_) {
+      _loadData();
+    });
+
+    _budgetsSubscription = client
+        .from('budgets')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .gte('start_date', firstDay.toIso8601String())
+        .lt('start_date', firstDayNext.toIso8601String())
+        .listen((_) {
+      _loadData();
+    });
+
+    _profileSubscription = client
+        .from('profiles')
+        .stream(primaryKey: ['id'])
+        .eq('id', userId)
+        .limit(1)
+        .listen((_) {
+      _loadData();
+    });
   }
 
   Future<void> _openBudgetDialog({Budget? budget}) async {
@@ -50,7 +95,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       builder: (context) => AddEditBudgetDialog(budget: budget),
     );
     if (result == true && mounted) {
-      _loadData();
+      await _loadData();
     }
   }
 
@@ -63,7 +108,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
             backgroundColor: Colors.redAccent),
       );
     }
-    _loadData();
+    await _loadData();
   }
 
   Future<void> _onCopyFromLastMonth() async {
@@ -98,7 +143,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
       }
 
       await _service.copyBudgetsFromLastMonth(overwriteExisting: overwrite);
-      _loadData();
+      await _loadData();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Presupuestos copiados con éxito'), backgroundColor: Colors.green),
@@ -116,10 +161,18 @@ class _BudgetScreenState extends State<BudgetScreen> {
   Future<void> _onRolloverChanged(bool value) async {
     try {
       await _service.updateBudgetRollover(value);
-      _loadData();
+      await _loadData();
     } catch (e) {
       // Manejar error si es necesario
     }
+  }
+
+  @override
+  void dispose() {
+    _transactionsSubscription?.cancel();
+    _budgetsSubscription?.cancel();
+    _profileSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -165,7 +218,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
           final enableRollover = snapshot.data!['enableRollover'] as bool;
 
           return RefreshIndicator(
-            onRefresh: () async => _loadData(),
+            onRefresh: _loadData,
             child: Column(
               children: [
                 Padding(

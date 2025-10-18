@@ -78,22 +78,30 @@ class BudgetCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  Text('Presupuestado: ${formatter.format(budget.amount)}'),
                   Text('Gastado: ${formatter.format(budget.spentAmount)}'),
-                  Text('Disponible: ${formatter.format(budget.availableAmount)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 4),
-              if (enableRollover)
-                Text(
-                  'Base: ${formatter.format(budget.amount)} | Rollover: ${formatter.format(budget.rolloverAmount)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                )
-              else
-                Text(
-                  'Rollover: 0',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Restante: ${formatter.format(budget.remainingAmount)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: budget.remainingAmount < 0
+                          ? Colors.redAccent
+                          : Colors.green,
+                    ),
+                  ),
+                  if (enableRollover)
+                    Text(
+                      'Rollover aplicado: ${formatter.format(budget.rolloverAmount)}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                ],
+              ),
               const SizedBox(height: 4),
               Text(
                 'Mes anterior: ${formatter.format(budget.lastMonthSpent)} de ${formatter.format(budget.lastMonthAmount)}',
