@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:finai_flutter/features/fincount/services/fincount_service.dart';
+import 'add_plan_screen.dart';
+import 'plan_details_screen.dart';
 
 class FincountScreen extends StatefulWidget {
   const FincountScreen({super.key});
@@ -26,6 +28,15 @@ class _FincountScreenState extends State<FincountScreen> {
     setState(() {
       _plansFuture = _service.getSplitPlans();
     });
+  }
+
+  Future<void> _navigateAndReload() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (context) => const AddPlanScreen()),
+    );
+    if (result == true && mounted) {
+      _loadPlans();
+    }
   }
 
   @override
@@ -67,14 +78,23 @@ class _FincountScreenState extends State<FincountScreen> {
               final double balance = (plan['user_balance'] as num? ?? 0.0).toDouble();
               final Color balanceColor = _getBalanceColor(balance);
               final String balanceText = _currencyFormatter.format(balance);
+              // --- INICIO DE LA CORRECCIÓN ---
+              // Extraer id y name del mapa 'plan'
+              final String planId = plan['id'] as String;
+              final String planName = plan['name'] as String;
+              // --- FIN DE LA CORRECCIÓN ---
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: GestureDetector(
                   onTap: () {
-                    // TODO: Navegar a la pantalla de detalles del plan
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Navegando a "${plan['name']}"')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => PlanDetailsScreen(
+                          planId: planId, // Ahora planId está definida
+                          planName: planName, // Ahora planName está definida
+                        ),
+                      ),
                     );
                   },
                   child: ClipRRect(
@@ -104,7 +124,7 @@ class _FincountScreenState extends State<FincountScreen> {
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
-                                _getIconForPlan(plan['name']),
+                                _getIconForPlan(planName), // Usar planName aquí
                                 color: Colors.white,
                                 size: 26,
                               ),
@@ -116,7 +136,7 @@ class _FincountScreenState extends State<FincountScreen> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    plan['name'] as String,
+                                    planName, // Usar planName aquí
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
@@ -167,12 +187,7 @@ class _FincountScreenState extends State<FincountScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Implementar la creación de un nuevo plan
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Crear nuevo plan')),
-          );
-        },
+        onPressed: _navigateAndReload,
         backgroundColor: const Color(0xFF39FF14),
         foregroundColor: Colors.black,
         child: const Icon(Icons.add),
@@ -193,7 +208,6 @@ class _FincountScreenState extends State<FincountScreen> {
   }
 
   IconData _getIconForPlan(String name) {
-    // Lógica simple para asignar un icono basado en el nombre
     if (name.toLowerCase().contains('viaje') || name.toLowerCase().contains('playa')) {
       return Icons.beach_access;
     }

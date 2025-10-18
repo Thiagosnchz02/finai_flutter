@@ -8,17 +8,14 @@ class FincountService {
 
   /// Obtiene todos los planes de Fincount para el usuario actual.
   Future<List<Map<String, dynamic>>> getSplitPlans() async {
-    // Esta función obtendrá los planes y un resumen de cada uno.
-    // Por ahora, simularemos la llamada y devolveremos datos más completos.
-    // En una implementación real, esto podría ser una RPC que calcule el balance.
+    // ... (código existente de getSplitPlans)
     final response = await _supabase.from('split_plans').select();
     
-    // Simulación de datos adicionales que vendrían de un cálculo más complejo
     final plans = response.map((plan) {
       return {
         ...plan,
-        'participants_count': 4, // Dato de ejemplo
-        'user_balance': -125.75, // Dato de ejemplo
+        'participants_count': 4,
+        'user_balance': -125.75,
       };
     }).toList();
 
@@ -27,6 +24,7 @@ class FincountService {
 
   /// Crea un nuevo plan.
   Future<SplitPlan> createPlan(String name) async {
+    // ... (código existente de createPlan)
     final response = await _supabase
         .from('split_plans')
         .insert({'name': name, 'user_id': _supabase.auth.currentUser!.id})
@@ -35,5 +33,26 @@ class FincountService {
     return SplitPlan.fromMap(response);
   }
   
-  // Aquí irían los métodos para llamar a las RPCs `add_split_expense` y `resolve_split_plan`
+  /// Obtiene los detalles y saldos de un plan específico.
+  Future<List<PlanParticipant>> getPlanDetails(String planId) async {
+    try {
+      // Llama a la RPC que calcula los saldos
+      final response = await _supabase.rpc(
+        'resolve_split_plan',
+        params: {'p_plan_id': planId},
+      );
+
+      // Convierte la respuesta (que es una lista de mapas) en una lista de modelos
+      final participants = (response as List)
+          .map((item) => PlanParticipant.fromMap(item as Map<String, dynamic>))
+          .toList();
+          
+      return participants;
+    } catch (e) {
+      // Manejar el error, por ejemplo, si la RPC falla
+      print('Error en getPlanDetails: $e');
+      rethrow;
+    }
+  }
+
 }
