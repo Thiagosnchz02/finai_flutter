@@ -42,7 +42,7 @@ class _FincountScreenState extends State<FincountScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1C1E22),
+      backgroundColor: const Color(0xFF0B1120),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -55,29 +55,60 @@ class _FincountScreenState extends State<FincountScreen> {
           ),
         ),
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _plansFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
-          }
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Crea tu primer plan de gastos compartidos.', style: TextStyle(color: Colors.white70)));
-          }
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF15243B),
+              Color(0xFF070D18),
+            ],
+          ),
+        ),
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: _plansFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    'Crea tu primer plan de gastos compartidos.',
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
 
-          final plans = snapshot.data!;
+            final plans = snapshot.data!;
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: plans.length,
-            itemBuilder: (context, index) {
-              final plan = plans[index];
-              final double balance = (plan['user_balance'] as num? ?? 0.0).toDouble();
-              final Color balanceColor = _getBalanceColor(balance);
-              final String balanceText = _currencyFormatter.format(balance);
+            return RefreshIndicator(
+              color: const Color(0xFF39FF14),
+              backgroundColor: const Color(0xFF0B1120),
+              onRefresh: _refreshPlans,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: plans.length,
+                itemBuilder: (context, index) {
+                  final plan = plans[index];
+                  final double balance = (plan['user_balance'] as num? ?? 0.0).toDouble();
+                  final Color balanceColor = _getBalanceColor(balance);
+                  final String balanceText = _currencyFormatter.format(balance);
               // --- INICIO DE LA CORRECCIÓN ---
               // Extraer id y name del mapa 'plan'
               final String planId = plan['id'] as String;
@@ -85,7 +116,7 @@ class _FincountScreenState extends State<FincountScreen> {
               // --- FIN DE LA CORRECCIÓN ---
 
               return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: GestureDetector(
                   onTap: () {
                     Navigator.of(context).push(
@@ -103,10 +134,10 @@ class _FincountScreenState extends State<FincountScreen> {
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withOpacity(0.18),
                             width: 1,
                           ),
                         ),
@@ -120,7 +151,7 @@ class _FincountScreenState extends State<FincountScreen> {
                               height: 48,
                               width: 48,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.08),
+                                color: Colors.white.withOpacity(0.16),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Icon(
@@ -147,7 +178,7 @@ class _FincountScreenState extends State<FincountScreen> {
                                   Text(
                                     '${plan['participants_count']} participantes',
                                     style: TextStyle(
-                                      color: Colors.grey.shade400,
+                                      color: Colors.white.withOpacity(0.72),
                                       fontSize: 14,
                                     ),
                                   ),
@@ -169,8 +200,8 @@ class _FincountScreenState extends State<FincountScreen> {
                                 Text(
                                   _getBalanceLabel(balance),
                                   style: TextStyle(
-                                    color: Colors.grey.shade500,
-                                    fontSize: 13,
+                                    color: Colors.white.withOpacity(0.65),
+                                    fontSize: 14,
                                   ),
                                 ),
                               ],
@@ -193,6 +224,11 @@ class _FincountScreenState extends State<FincountScreen> {
         child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _refreshPlans() async {
+    _loadPlans();
+    await _plansFuture;
   }
 
   Color _getBalanceColor(double balance) {
