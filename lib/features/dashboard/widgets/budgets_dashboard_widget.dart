@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:finai_flutter/features/budgets/models/budget_model.dart';
 import 'package:finai_flutter/features/budgets/services/budget_service.dart';
+import 'package:finai_flutter/core/utils/icon_utils.dart';
 import 'package:intl/intl.dart';
 
 class BudgetsDashboardWidget extends StatefulWidget {
@@ -15,17 +16,6 @@ class BudgetsDashboardWidget extends StatefulWidget {
 class _BudgetsDashboardWidgetState extends State<BudgetsDashboardWidget> {
   final _service = BudgetService();
   late Future<List<Budget>> _budgetsFuture;
-
-  IconData _parseIcon(String? iconStr) {
-    if (iconStr == null) return Icons.category;
-    try {
-      final cleaned = iconStr.startsWith('0x') ? iconStr.substring(2) : iconStr;
-      final codePoint = int.parse(cleaned, radix: 16);
-      return IconData(codePoint, fontFamily: 'MaterialIcons');
-    } catch (_) {
-      return Icons.category;
-    }
-  }
 
   @override
   void initState() {
@@ -79,7 +69,7 @@ class _BudgetsDashboardWidgetState extends State<BudgetsDashboardWidget> {
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: Icon(_parseIcon(budget.categoryIcon)),
+                        leading: Icon(parseIconFromHex(budget.categoryIcon)),
                         title: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
