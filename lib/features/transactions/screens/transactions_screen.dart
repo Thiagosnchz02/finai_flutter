@@ -5,11 +5,26 @@ import 'package:intl/intl.dart';
 import 'package:collection/collection.dart'; // Necesario para groupBy
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
+import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
 import 'package:finai_flutter/features/transactions/models/transaction_model.dart';
 import 'package:finai_flutter/features/transactions/screens/add_edit_transaction_screen.dart';
 import 'package:finai_flutter/features/transactions/services/transactions_service.dart';
 import 'package:finai_flutter/features/transactions/widgets/transaction_tile.dart';
 import 'package:finai_flutter/features/transactions/widgets/transactions_filter_sheet.dart';
+
+class TransactionsViewData {
+  TransactionsViewData({
+    required this.transactions,
+    required this.totalIncome,
+    required this.totalExpenses,
+    required this.currentBalance,
+  });
+
+  final List<Transaction> transactions;
+  final double totalIncome;
+  final double totalExpenses;
+  final double? currentBalance;
+}
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -20,7 +35,8 @@ class TransactionsScreen extends StatefulWidget {
 
 class _TransactionsScreenState extends State<TransactionsScreen> {
   final _service = TransactionsService();
-  late Future<List<Transaction>> _transactionsFuture;
+  final _accountsService = AccountsService();
+  late Future<TransactionsViewData> _transactionsFuture;
 
   String _filterType = 'todos';
   double? _minAmount;
@@ -37,31 +53,38 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   void _loadTransactions() {
-    // Tipamos el mapa para evitar que el valor devuelto sea `Object?`.
-    final Map<String, dynamic> filters = {
-      'type': _filterType,
-      'minAmount': _minAmount,
-      'maxAmount': _maxAmount,
-      'categoryId': _categoryId,
-      'startDate': _startDate,
-      'endDate': _endDate,
-      'concept': _concept,
-    };
-
     setState(() {
-      // Usamos el nuevo servicio para obtener las transacciones y las convertimos al modelo correcto.
-      _transactionsFuture = _service
-          .fetchTransactions(
-            type: filters['type'] as String?,
-            minAmount: filters['minAmount'] as double?,
-            maxAmount: filters['maxAmount'] as double?,
-            categoryId: filters['categoryId'] as String?,
-            startDate: filters['startDate'] as DateTime?,
-            endDate: filters['endDate'] as DateTime?,
-            concept: filters['concept'] as String?,
-          )
-          .then((maps) =>
-              maps.map((map) => Transaction.fromMap(map)).toList());
+      _transactionsFuture = () async {
+        final maps = await _service.fetchTransactions(
+          type: _filterType,
+          minAmount: _minAmount,
+          maxAmount: _maxAmount,
+          categoryId: _categoryId,
+          startDate: _startDate,
+          endDate: _endDate,
+          concept: _concept,
+        );
+
+        final transactions =
+            maps.map((map) => Transaction.fromMap(map)).toList();
+
+        final totalIncome = transactions
+            .where((tx) => tx.type == 'ingreso')
+            .fold<double>(0.0, (sum, tx) => sum + tx.amount);
+
+        final totalExpenses = transactions
+            .where((tx) => tx.type == 'gasto')
+            .fold<double>(0.0, (sum, tx) => sum + tx.amount);
+
+        final balance = await _accountsService.getParaGastarBalance();
+
+        return TransactionsViewData(
+          transactions: transactions,
+          totalIncome: totalIncome,
+          totalExpenses: totalExpenses,
+          currentBalance: balance,
+        );
+      }();
     });
   }
 
@@ -146,7 +169,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 _buildHeader(), // Mantenemos tu cabecera
                 const SizedBox(height: 20),
                 Expanded(
-                  child: FutureBuilder<List<Transaction>>(
+                  child: FutureBuilder<TransactionsViewData>(
                     future: _transactionsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -155,7 +178,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                       if (snapshot.hasError) {
                         return Center(child: Text('Error: ${snapshot.error}'));
                       }
-                      final transactions = snapshot.data ?? [];
+                      final viewData = snapshot.data;
+                      final transactions = viewData?.transactions ?? [];
                       if (transactions.isEmpty) {
                         return const Center(child: Text('No hay transacciones todavía.'));
                       }
