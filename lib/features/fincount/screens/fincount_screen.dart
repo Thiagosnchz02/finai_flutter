@@ -109,113 +109,112 @@ class _FincountScreenState extends State<FincountScreen> {
                   final double balance = (plan['user_balance'] as num? ?? 0.0).toDouble();
                   final Color balanceColor = _getBalanceColor(balance);
                   final String balanceText = _currencyFormatter.format(balance);
-              // --- INICIO DE LA CORRECCIÓN ---
-              // Extraer id y name del mapa 'plan'
-              final String planId = plan['id'] as String;
-              final String planName = plan['name'] as String;
-              // --- FIN DE LA CORRECCIÓN ---
+                  final String planId = plan['id'].toString();
+                  final String planName = plan['name'].toString();
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => PlanDetailsScreen(
-                          planId: planId, // Ahora planId está definida
-                          planName: planName, // Ahora planName está definida
-                        ),
-                      ),
-                    );
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.18),
-                            width: 1,
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PlanDetailsScreen(
+                              planId: planId,
+                              planName: planName,
+                            ),
                           ),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 48,
-                              width: 48,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.16),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Icon(
-                                _getIconForPlan(planName), // Usar planName aquí
-                                color: Colors.white,
-                                size: 26,
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.18),
+                                width: 1,
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    planName, // Usar planName aquí
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    '${plan['participants_count']} participantes',
-                                    style: TextStyle(
-                                      color: Colors.white.withOpacity(0.72),
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
                             ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            child: Row(
                               children: [
-                                Text(
-                                  balanceText,
-                                  style: TextStyle(
-                                    color: balanceColor,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                                Container(
+                                  height: 48,
+                                  width: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.16),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    _getIconForPlan(planName),
+                                    color: Colors.white,
+                                    size: 26,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _getBalanceLabel(balance),
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.65),
-                                    fontSize: 14,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        planName,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        '${plan['participants_count']} participantes',
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(0.72),
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
                                   ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      balanceText,
+                                      style: TextStyle(
+                                        color: balanceColor,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      _getBalanceLabel(balance),
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.65),
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            },
-          );
-        },
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _navigateAndReload,
