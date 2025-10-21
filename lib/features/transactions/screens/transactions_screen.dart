@@ -206,38 +206,25 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     child: Center(child: Text('No hay transacciones todavía.')),
                   );
                 } else {
-                  final theme = Theme.of(context);
                   final groupedTransactions = _groupTransactionsByDate(transactions);
                   final dateKeys =
                       groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
                   transactionsSliver = SliverList(
-                    delegate: SliverChildListDelegate([
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withOpacity(0.65),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 24,
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final date = dateKeys[index];
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index == dateKeys.length - 1 ? 0 : 24,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              for (var i = 0; i < dateKeys.length; i++) ...[
-                                if (i > 0) const SizedBox(height: 24),
-                                _buildTransactionGroup(
-                                  _formatDateHeader(dateKeys[i]),
-                                  groupedTransactions[dateKeys[i]]!,
-                                ),
-                              ],
-                            ],
+                          child: _buildTransactionGroup(
+                            _formatDateHeader(date),
+                            groupedTransactions[date]!,
                           ),
-                        ),
-                      ),
-                    ]),
+                        );
+                      },
+                      childCount: dateKeys.length,
+                    ),
                   );
                 }
 
@@ -433,7 +420,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           final tx = transactions[index];
           final isLast = index == transactions.length - 1;
           return Padding(
-            padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
             child: TransactionTile(
               transaction: tx,
               onTap: () => _navigateAndRefresh(transaction: tx),
