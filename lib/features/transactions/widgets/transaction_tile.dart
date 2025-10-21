@@ -21,60 +21,158 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final bool isIncome = transaction.type == 'ingreso';
-    final amountColor =
-        isIncome ? Colors.green.shade400 : Theme.of(context).colorScheme.onSurface;
-    final amountString =
-        '${isIncome ? '+' : '-'}${NumberFormat.currency(locale: 'es_ES', symbol: '€').format(transaction.amount)}';
+    final bool isExpense = transaction.type == 'gasto';
     final bool isTransfer = transaction.type == 'transferencia';
-    final fallbackIcon = isIncome ? Icons.arrow_upward : Icons.arrow_downward;
-    final iconData = parseIconFromHex(transaction.categoryIcon, fallback: fallbackIcon);
 
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      color: Theme.of(context).cardColor.withOpacity(0.5),
-      child: ListTile(
-        onTap: onTap,
-        leading: CircleAvatar(
-          backgroundColor: transaction.category?.type == 'ingreso'
-              ? Colors.green.withOpacity(0.2)
-              : Colors.red.withOpacity(0.1),
-          child: Icon(
-            iconData,
-            color: isIncome ? Colors.green.shade400 : Colors.red.shade300,
-            size: 20,
-          ),
+    final Color amountColor = isIncome
+        ? Colors.greenAccent.shade400
+        : isExpense
+            ? Colors.redAccent.shade200
+            : Colors.white;
+
+    final currencyFormatter =
+        NumberFormat.currency(locale: 'es_ES', symbol: '€');
+    final String amountPrefix = isIncome
+        ? '+'
+        : isExpense
+            ? '-'
+            : '';
+    final String amountString = '$amountPrefix${currencyFormatter.format(transaction.amount)}';
+
+    final IconData iconData = isTransfer
+        ? Icons.lock
+        : parseIconFromHex(
+            transaction.categoryIcon,
+            fallback: isIncome
+                ? Icons.trending_up
+                : Icons.trending_down,
+          );
+
+    final Color avatarColor = isIncome
+        ? Colors.greenAccent.withOpacity(0.15)
+        : isExpense
+            ? Colors.redAccent.withOpacity(0.15)
+            : Colors.white.withOpacity(0.1);
+
+    final Color backgroundColor = theme.brightness == Brightness.dark
+        ? Colors.white.withOpacity(0.08)
+        : const Color(0xFF1E1E1E);
+
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+      color: Colors.white,
+      fontWeight: FontWeight.w600,
+    );
+    final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
+      color: Colors.white70,
+    );
+
+    final subtitleText =
+        '${transaction.category?.name ?? 'Sin Categoría'} · ${DateFormat.Hm().format(transaction.date)}';
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
         ),
-        title: Text(
-          transaction.description,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(transaction.category?.name ?? 'Sin Categoría'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            if (transaction.relatedScheduledExpenseId != null)
-              const Padding(
-                padding: EdgeInsets.only(right: 4.0),
-                child: Icon(Icons.repeat, size: 16),
-              ),
-            Text(
-              amountString,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: avatarColor,
+              child: Icon(
+                iconData,
                 color: amountColor,
-                fontSize: 16,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20),
-              onPressed: isTransfer ? null : onEdit,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          transaction.description,
+                          style: titleStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (transaction.relatedScheduledExpenseId != null)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 8.0),
+                          child: Icon(
+                            Icons.autorenew,
+                            size: 16,
+                            color: Colors.white54,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    subtitleText,
+                    style: subtitleStyle,
+                  ),
+                ],
+              ),
             ),
-            IconButton(
-              icon: const Icon(Icons.delete, size: 20),
-              onPressed: onDelete,
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  amountString,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: amountColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                PopupMenuButton<_TransactionAction>(
+                  icon: const Icon(
+                    Icons.more_vert,
+                    color: Colors.white70,
+                    size: 20,
+                  ),
+                  color: theme.colorScheme.surface,
+                  onSelected: (value) {
+                    switch (value) {
+                      case _TransactionAction.edit:
+                        if (!isTransfer) {
+                          onEdit?.call();
+                        }
+                        break;
+                      case _TransactionAction.delete:
+                        onDelete?.call();
+                        break;
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem<_TransactionAction>(
+                      value: _TransactionAction.edit,
+                      enabled: !isTransfer && onEdit != null,
+                      child: const Text('Editar'),
+                    ),
+                    PopupMenuItem<_TransactionAction>(
+                      value: _TransactionAction.delete,
+                      enabled: onDelete != null,
+                      child: const Text('Eliminar'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
@@ -82,3 +180,5 @@ class TransactionTile extends StatelessWidget {
     );
   }
 }
+
+enum _TransactionAction { edit, delete }
