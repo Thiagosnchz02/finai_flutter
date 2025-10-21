@@ -289,20 +289,48 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             ),
           ],
           const SizedBox(height: 24),
-          Text(
-            'Balance actual',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
-                  fontWeight: FontWeight.w500,
+          Container(
+            width: double.infinity,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
+            decoration: const BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0x33B400C4),
+                  blurRadius: 32,
+                  spreadRadius: -12,
+                  offset: Offset(0, 12),
+                  blurStyle: BlurStyle.inner,
                 ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            balanceText,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onBackground,
-                  fontWeight: FontWeight.bold,
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text(
+                  'Balance actual',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFE0E0E0),
+                  ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  balanceText,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 28,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFB400C4),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           Row(
