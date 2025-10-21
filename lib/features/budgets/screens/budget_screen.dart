@@ -55,16 +55,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
     final userId = client.auth.currentUser?.id;
     if (userId == null) return;
 
-    final now = DateTime.now();
-    final firstDay = DateTime(now.year, now.month, 1);
-    final firstDayNext = DateTime(now.year, now.month + 1, 1);
-
     _transactionsSubscription = client
         .from('transactions')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .filter('transaction_date', 'gte', firstDay.toIso8601String())
-        .lt('transaction_date', firstDayNext.toIso8601String())
         .listen((_) {
       _loadData();
     });
@@ -73,8 +67,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
         .from('budgets')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .filter('start_date', 'gte', firstDay.toIso8601String())
-        .lt('start_date', firstDayNext.toIso8601String())
         .listen((_) {
       _loadData();
     });
