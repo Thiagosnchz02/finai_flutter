@@ -130,44 +130,56 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            children: [
-              _buildHeader(), // Mantenemos tu cabecera
-              const SizedBox(height: 20),
-              Expanded(
-                child: FutureBuilder<List<Transaction>>(
-                  future: _transactionsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-                    final transactions = snapshot.data ?? [];
-                    if (transactions.isEmpty) {
-                      return const Center(child: Text('No hay transacciones todavía.'));
-                    }
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFEA00FF), Color(0xFF121212)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              children: [
+                _buildHeader(), // Mantenemos tu cabecera
+                const SizedBox(height: 20),
+                Expanded(
+                  child: FutureBuilder<List<Transaction>>(
+                    future: _transactionsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+                      final transactions = snapshot.data ?? [];
+                      if (transactions.isEmpty) {
+                        return const Center(child: Text('No hay transacciones todavía.'));
+                      }
 
-                    final groupedTransactions = _groupTransactionsByDate(transactions);
-                    final dateKeys = groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
+                      final groupedTransactions = _groupTransactionsByDate(transactions);
+                      final dateKeys = groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
 
-                    return ListView.builder(
-                      itemCount: dateKeys.length,
-                      itemBuilder: (context, index) {
-                        final dateKey = dateKeys[index];
-                        final transactionsInGroup = groupedTransactions[dateKey]!;
-                        return _buildTransactionGroup(_formatDateHeader(dateKey), transactionsInGroup);
-                      },
-                    );
-                  },
+                      return ListView.builder(
+                        itemCount: dateKeys.length,
+                        itemBuilder: (context, index) {
+                          final dateKey = dateKeys[index];
+                          final transactionsInGroup = groupedTransactions[dateKey]!;
+                          return _buildTransactionGroup(
+                            _formatDateHeader(dateKey),
+                            transactionsInGroup,
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-              _buildPaginationControls(), // Mantenemos tus controles de paginación
-            ],
+                _buildPaginationControls(), // Mantenemos tus controles de paginación
+              ],
+            ),
           ),
         ),
       ),
