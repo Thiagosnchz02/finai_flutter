@@ -39,6 +39,7 @@ class _FixedExpenseHistoryModalState extends State<FixedExpenseHistoryModal> {
       accountId: null,
       notes: null,
       category: null,
+      categoryIcon: null,
     );
 
     Navigator.of(context).pop();

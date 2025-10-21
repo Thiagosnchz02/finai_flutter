@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:finai_flutter/core/utils/icon_utils.dart';
 import 'package:finai_flutter/features/transactions/models/transaction_model.dart';
 
 class TransactionTile extends StatelessWidget {
@@ -26,6 +27,8 @@ class TransactionTile extends StatelessWidget {
     final amountString =
         '${isIncome ? '+' : '-'}${NumberFormat.currency(locale: 'es_ES', symbol: '€').format(transaction.amount)}';
     final bool isTransfer = transaction.type == 'transferencia';
+    final fallbackIcon = isIncome ? Icons.arrow_upward : Icons.arrow_downward;
+    final iconData = parseIconFromHex(transaction.categoryIcon, fallback: fallbackIcon);
 
     return Card(
       elevation: 0,
@@ -35,11 +38,11 @@ class TransactionTile extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: transaction.category?.type == 'ingreso' 
+          backgroundColor: transaction.category?.type == 'ingreso'
               ? Colors.green.withOpacity(0.2)
               : Colors.red.withOpacity(0.1),
           child: Icon(
-            isIncome ? Icons.arrow_upward : Icons.arrow_downward,
+            iconData,
             color: isIncome ? Colors.green.shade400 : Colors.red.shade300,
             size: 20,
           ),

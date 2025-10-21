@@ -54,6 +54,58 @@ class AccountsService {
     }
   }
 
+  Future<double?> getParaGastarBalance() async {
+    try {
+      final userId = _supabase.auth.currentUser!.id;
+      final accountsResponse = await _supabase
+          .from('accounts')
+          .select('id, name, conceptual_type, is_archived')
+          .eq('user_id', userId)
+          .eq('is_archived', false);
+
+      final accounts = List<Map<String, dynamic>>.from(accountsResponse);
+      if (accounts.isEmpty) {
+        return null;
+      }
+
+      Map<String, dynamic>? targetAccount;
+      for (final account in accounts) {
+        final name = (account['name'] as String?)?.toLowerCase();
+        final conceptualType = (account['conceptual_type'] as String?)?.toLowerCase();
+        if (name == 'para gastar' ||
+            conceptualType == 'para_gastar' ||
+            conceptualType == 'para gastar' ||
+            conceptualType == 'spending') {
+          targetAccount = account;
+          break;
+        }
+      }
+
+      if (targetAccount == null) {
+        return null;
+      }
+
+      final balancesResponse = await _supabase
+          .rpc('get_account_balances', params: {'user_id_param': userId});
+
+      if (balancesResponse is! List) {
+        return null;
+      }
+
+      final balancesList = List<Map<String, dynamic>>.from(balancesResponse);
+
+      for (final balance in balancesList) {
+        if (balance['account_id'] == targetAccount['id']) {
+          return (balance['balance'] as num).toDouble();
+        }
+      }
+
+      return 0.0;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // --- MÉTODO ACTUALIZADO ---
   /// Ejecuta una transferencia interna llamando a la función RPC.
   Future<void> executeInternalTransfer({
