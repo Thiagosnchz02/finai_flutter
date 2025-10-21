@@ -203,19 +203,29 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 if (transactions.isEmpty) {
                   listWidget = const Center(child: Text('No hay transacciones todavía.'));
                 } else {
+                  final theme = Theme.of(context);
                   final groupedTransactions = _groupTransactionsByDate(transactions);
                   final dateKeys =
                       groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
-                  listWidget = ListView.builder(
-                    itemCount: dateKeys.length,
-                    itemBuilder: (context, index) {
-                      final dateKey = dateKeys[index];
-                      final transactionsInGroup = groupedTransactions[dateKey]!;
-                      return _buildTransactionGroup(
-                        _formatDateHeader(dateKey),
-                        transactionsInGroup,
-                      );
-                    },
+                  listWidget = Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface.withOpacity(0.65),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                      itemCount: dateKeys.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 24),
+                      itemBuilder: (context, index) {
+                        final dateKey = dateKeys[index];
+                        final transactionsInGroup = groupedTransactions[dateKey]!;
+                        return _buildTransactionGroup(
+                          _formatDateHeader(dateKey),
+                          transactionsInGroup,
+                        );
+                      },
+                    ),
                   );
                 }
 
@@ -360,24 +370,30 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   // TU WIDGET DE GRUPO DE TRANSACCIONES (MODIFICADO PARA USAR EL NUEVO MODELO)
   Widget _buildTransactionGroup(String title, List<Transaction> transactions) {
+    final theme = Theme.of(context);
+    final headerStyle = theme.textTheme.titleSmall?.copyWith(
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.4,
+      color: theme.colorScheme.onSurface.withOpacity(0.7),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16.0),
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-        ),
-        ...transactions.map((tx) => TransactionTile(
-          transaction: tx,
-          onTap: () => _navigateAndRefresh(transaction: tx),
-          onDelete: () => _deleteTransaction(tx),
-        )).toList(),
+        Text(title, style: headerStyle),
+        const SizedBox(height: 12),
+        ...List.generate(transactions.length, (index) {
+          final tx = transactions[index];
+          final isLast = index == transactions.length - 1;
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 12),
+            child: TransactionTile(
+              transaction: tx,
+              onTap: () => _navigateAndRefresh(transaction: tx),
+              onDelete: () => _deleteTransaction(tx),
+            ),
+          );
+        }),
       ],
     );
   }
