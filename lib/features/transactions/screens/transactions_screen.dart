@@ -164,45 +164,48 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Column(
-              children: [
-                _buildHeader(), // Mantenemos tu cabecera
-                const SizedBox(height: 20),
-                Expanded(
-                  child: FutureBuilder<TransactionsViewData>(
-                    future: _transactionsFuture,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      }
-                      final viewData = snapshot.data;
-                      final transactions = viewData?.transactions ?? [];
-                      if (transactions.isEmpty) {
-                        return const Center(child: Text('No hay transacciones todavía.'));
-                      }
+            child: FutureBuilder<TransactionsViewData>(
+              future: _transactionsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-                      final groupedTransactions = _groupTransactionsByDate(transactions);
-                      final dateKeys = groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
+                final viewData = snapshot.data;
+                final transactions = viewData?.transactions ?? [];
 
-                      return ListView.builder(
-                        itemCount: dateKeys.length,
-                        itemBuilder: (context, index) {
-                          final dateKey = dateKeys[index];
-                          final transactionsInGroup = groupedTransactions[dateKey]!;
-                          return _buildTransactionGroup(
-                            _formatDateHeader(dateKey),
-                            transactionsInGroup,
-                          );
-                        },
+                Widget listWidget;
+                if (transactions.isEmpty) {
+                  listWidget = const Center(child: Text('No hay transacciones todavía.'));
+                } else {
+                  final groupedTransactions = _groupTransactionsByDate(transactions);
+                  final dateKeys =
+                      groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
+                  listWidget = ListView.builder(
+                    itemCount: dateKeys.length,
+                    itemBuilder: (context, index) {
+                      final dateKey = dateKeys[index];
+                      final transactionsInGroup = groupedTransactions[dateKey]!;
+                      return _buildTransactionGroup(
+                        _formatDateHeader(dateKey),
+                        transactionsInGroup,
                       );
                     },
-                  ),
-                ),
-                _buildPaginationControls(), // Mantenemos tus controles de paginación
-              ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    _buildHeader(viewData),
+                    const SizedBox(height: 20),
+                    Expanded(child: listWidget),
+                    _buildPaginationControls(),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -210,64 +213,150 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
-  // TU WIDGET DE CABECERA (INTACTO)
-  Widget _buildHeader() {
+  // Cabecera con resumen financiero y acciones
+  Widget _buildHeader(TransactionsViewData? viewData) {
+    final currencyFormat = NumberFormat.currency(locale: 'es_ES', symbol: '€');
+    final balance = viewData?.currentBalance;
+    final income = viewData?.totalIncome ?? 0;
+    final expenses = viewData?.totalExpenses ?? 0;
+
+    final balanceText = balance != null ? currencyFormat.format(balance) : '--';
+    final incomeText = '+${currencyFormat.format(income)}';
+    final expensesText = '-${currencyFormat.format(expenses)}';
+
     return Padding(
       padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Transacciones',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.onBackground,
-                ),
-          ),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                icon: const Icon(FontAwesomeIcons.filter),
-                onPressed: () async {
-                  final result =
-                      await showModalBottomSheet<Map<String, dynamic>>(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (context) => TransactionsFilterSheet(
-                      type: _filterType,
-                      minAmount: _minAmount,
-                      maxAmount: _maxAmount,
-                      categoryId: _categoryId,
-                      startDate: _startDate,
-                      endDate: _endDate,
-                      concept: _concept,
+              Text(
+                'Transacciones',
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onBackground,
                     ),
-                  );
-                  if (result != null) {
-                    setState(() {
-                      _filterType = result['type'] ?? 'todos';
-                      _minAmount = result['minAmount'];
-                      _maxAmount = result['maxAmount'];
-                      _categoryId = result['categoryId'];
-                      _startDate = result['startDate'];
-                      _endDate = result['endDate'];
-                      _concept = result['concept'];
-                    });
-                    _loadTransactions();
-                  }
-                },
               ),
-              IconButton(
-                icon: const Icon(Icons.list),
-                onPressed: () { /* TODO: Lógica de cambio de vista */ },
-              ),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () => _navigateAndRefresh(),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(FontAwesomeIcons.filter),
+                    onPressed: () async {
+                      final result =
+                          await showModalBottomSheet<Map<String, dynamic>>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (context) => TransactionsFilterSheet(
+                          type: _filterType,
+                          minAmount: _minAmount,
+                          maxAmount: _maxAmount,
+                          categoryId: _categoryId,
+                          startDate: _startDate,
+                          endDate: _endDate,
+                          concept: _concept,
+                        ),
+                      );
+                      if (result != null) {
+                        setState(() {
+                          _filterType = result['type'] ?? 'todos';
+                          _minAmount = result['minAmount'];
+                          _maxAmount = result['maxAmount'];
+                          _categoryId = result['categoryId'];
+                          _startDate = result['startDate'];
+                          _endDate = result['endDate'];
+                          _concept = result['concept'];
+                        });
+                        _loadTransactions();
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.list),
+                    onPressed: () { /* TODO: Lógica de cambio de vista */ },
+                  ),
+                ],
               ),
             ],
           ),
+          const SizedBox(height: 24),
+          Text(
+            'Balance actual',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onBackground.withOpacity(0.7),
+                  fontWeight: FontWeight.w500,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            balanceText,
+            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onBackground,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSummaryItem('+ Positivo', incomeText, Colors.greenAccent.shade200),
+              _buildSummaryItem('- Negativo', expensesText, Colors.redAccent.shade200),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildNewTransactionButton(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(String label, String value, Color valueColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
+              ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: valueColor,
+                fontWeight: FontWeight.w700,
+              ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewTransactionButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFEA00FF), Color(0xFF6100FF)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: TextButton(
+          onPressed: () => _navigateAndRefresh(),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 18.0),
+            foregroundColor: Colors.white,
+            textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          ),
+          child: const Text('Nueva Transacción +'),
+        ),
       ),
     );
   }
