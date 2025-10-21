@@ -199,41 +199,53 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 final viewData = snapshot.data;
                 final transactions = viewData?.transactions ?? [];
 
-                Widget listWidget;
+                Widget transactionsSliver;
                 if (transactions.isEmpty) {
-                  listWidget = const Center(child: Text('No hay transacciones todavía.'));
+                  transactionsSliver = const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: Text('No hay transacciones todavía.')),
+                  );
                 } else {
                   final theme = Theme.of(context);
                   final groupedTransactions = _groupTransactionsByDate(transactions);
                   final dateKeys =
                       groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
-                  listWidget = Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface.withOpacity(0.65),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                      itemCount: dateKeys.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 24),
-                      itemBuilder: (context, index) {
-                        final dateKey = dateKeys[index];
-                        final transactionsInGroup = groupedTransactions[dateKey]!;
-                        return _buildTransactionGroup(
-                          _formatDateHeader(dateKey),
-                          transactionsInGroup,
-                        );
-                      },
-                    ),
+                  transactionsSliver = SliverList(
+                    delegate: SliverChildListDelegate([
+                      Container(
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface.withOpacity(0.65),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 24,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (var i = 0; i < dateKeys.length; i++) ...[
+                                if (i > 0) const SizedBox(height: 24),
+                                _buildTransactionGroup(
+                                  _formatDateHeader(dateKeys[i]),
+                                  groupedTransactions[dateKeys[i]]!,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                    ]),
                   );
                 }
 
-                return Column(
-                  children: [
-                    _buildHeader(viewData),
-                    const SizedBox(height: 20),
-                    Expanded(child: listWidget),
+                return CustomScrollView(
+                  slivers: [
+                    SliverToBoxAdapter(child: _buildHeader(viewData)),
+                    const SliverToBoxAdapter(child: SizedBox(height: 20)),
+                    transactionsSliver,
                   ],
                 );
               },
@@ -260,21 +272,11 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Transacciones',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onBackground,
-                      ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Flexible(child: _buildFilterSegmentedButton()),
-            ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: _buildFilterSegmentedButton(),
           ),
+          const SizedBox(height: 8),
           if (_hasActiveFilters) ...[
             const SizedBox(height: 8),
             Align(
