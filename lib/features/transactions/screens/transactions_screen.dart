@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:collection/collection.dart'; // Necesario para groupBy
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
 import 'package:finai_flutter/features/transactions/models/transaction_model.dart';
@@ -44,6 +45,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   String? _concept;
+  final Map<String, List<Map<String, dynamic>>> _filterCategoriesCache = {};
 
   String get _currentFilterSegment {
     switch (_filterType) {
@@ -465,10 +467,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     }
   }
 
-  Future<Map<String, dynamic>?> _showFiltersSheet({required String initialType}) {
+  Future<Map<String, dynamic>?> _showFiltersSheet({required String initialType}) async {
+    final categories = await _loadFilterCategories(initialType);
+    if (!mounted) return null;
     return showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (context) => TransactionsFilterSheet(
         type: initialType,
         minAmount: _minAmount,
@@ -477,8 +483,49 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         startDate: _startDate,
         endDate: _endDate,
         concept: _concept,
+        filteredCategories: categories,
+        loadCategoriesForType: _loadFilterCategories,
       ),
     );
+  }
+
+  Future<List<Map<String, dynamic>>> _loadFilterCategories(String type) async {
+    if (type == 'todos') {
+      final gasto = await _loadFilterCategories('gasto');
+      final ingreso = await _loadFilterCategories('ingreso');
+      final combined = <String, Map<String, dynamic>>{};
+      for (final category in [...gasto, ...ingreso]) {
+        final id = category['id'];
+        if (id is String) {
+          combined[id] = category;
+        }
+      }
+      final combinedList = combined.values.toList()
+        ..sort((a, b) =>
+            (a['name'] as String? ?? '').compareTo(b['name'] as String? ?? ''));
+      return combinedList;
+    }
+
+    final cached = _filterCategoriesCache[type];
+    if (cached != null) {
+      return cached;
+    }
+
+    try {
+      final response = await Supabase.instance.client
+          .from('categories')
+          .select('id, name, icon')
+          .eq('type', type)
+          .order('name');
+      final raw = response as List<dynamic>;
+      final categories = raw
+          .map((item) => Map<String, dynamic>.from(item as Map<String, dynamic>))
+          .toList();
+      _filterCategoriesCache[type] = categories;
+      return categories;
+    } catch (_) {
+      return [];
+    }
   }
 
   void _applyFilterResult(Map<String, dynamic> result,
