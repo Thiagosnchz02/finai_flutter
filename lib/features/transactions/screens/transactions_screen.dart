@@ -334,10 +334,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
           const SizedBox(height: 24),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildSummaryItem('+ Positivo', incomeText, Colors.greenAccent.shade200),
-              _buildSummaryItem('- Negativo', expensesText, Colors.redAccent.shade200),
+              Expanded(
+                child: _buildSummaryItem(
+                  '+ Positivo',
+                  incomeText,
+                  const Color(0xFF00FF00),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSummaryItem(
+                  '- Negativo',
+                  expensesText,
+                  const Color(0xFFFF0000),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
@@ -349,21 +361,28 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   Widget _buildSummaryItem(String label, String value, Color valueColor) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onBackground.withOpacity(0.6),
-              ),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: valueColor,
-                fontWeight: FontWeight.w700,
-              ),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: valueColor,
+          ),
         ),
       ],
     );
