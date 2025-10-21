@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:collection/collection.dart'; // Necesario para groupBy
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
 import 'package:finai_flutter/features/transactions/models/transaction_model.dart';
@@ -45,6 +44,27 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
   String? _concept;
+
+  String get _currentFilterSegment {
+    switch (_filterType) {
+      case 'ingreso':
+        return 'ingreso';
+      case 'gasto':
+        return 'gasto';
+      default:
+        return 'todos';
+    }
+  }
+
+  bool get _hasActiveFilters {
+    return _filterType != 'todos' ||
+        _minAmount != null ||
+        _maxAmount != null ||
+        _categoryId != null ||
+        _startDate != null ||
+        _endDate != null ||
+        (_concept != null && _concept!.isNotEmpty);
+  }
 
   @override
   void initState() {
@@ -230,56 +250,31 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Transacciones',
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onBackground,
-                    ),
+              Expanded(
+                child: Text(
+                  'Transacciones',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onBackground,
+                      ),
+                ),
               ),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(FontAwesomeIcons.filter),
-                    onPressed: () async {
-                      final result =
-                          await showModalBottomSheet<Map<String, dynamic>>(
-                        context: context,
-                        isScrollControlled: true,
-                        builder: (context) => TransactionsFilterSheet(
-                          type: _filterType,
-                          minAmount: _minAmount,
-                          maxAmount: _maxAmount,
-                          categoryId: _categoryId,
-                          startDate: _startDate,
-                          endDate: _endDate,
-                          concept: _concept,
-                        ),
-                      );
-                      if (result != null) {
-                        setState(() {
-                          _filterType = result['type'] ?? 'todos';
-                          _minAmount = result['minAmount'];
-                          _maxAmount = result['maxAmount'];
-                          _categoryId = result['categoryId'];
-                          _startDate = result['startDate'];
-                          _endDate = result['endDate'];
-                          _concept = result['concept'];
-                        });
-                        _loadTransactions();
-                      }
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.list),
-                    onPressed: () { /* TODO: Lógica de cambio de vista */ },
-                  ),
-                ],
-              ),
+              const SizedBox(width: 12),
+              Flexible(child: _buildFilterSegmentedButton()),
             ],
           ),
+          if (_hasActiveFilters) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _editActiveFilters,
+                icon: const Icon(Icons.filter_list),
+                label: const Text('Editar filtros'),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           Text(
             'Balance actual',
@@ -409,5 +404,94 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ],
       ),
     );
+  }
+
+  SegmentedButton<String> _buildFilterSegmentedButton() {
+    return SegmentedButton<String>(
+      segments: const [
+        ButtonSegment(value: 'todos', label: Text('Todo')),
+        ButtonSegment(value: 'ingreso', label: Text('Ingreso')),
+        ButtonSegment(value: 'gasto', label: Text('Gasto')),
+      ],
+      selected: <String>{_currentFilterSegment},
+      onSelectionChanged: (newSelection) async {
+        if (newSelection.isEmpty) {
+          return;
+        }
+        final selectedType = newSelection.first;
+        await _handleFilterSelection(selectedType);
+      },
+    );
+  }
+
+  Future<void> _handleFilterSelection(String selectedType) async {
+    if (selectedType == 'todos') {
+      if (!_hasActiveFilters) {
+        if (_filterType != 'todos') {
+          setState(() {
+            _filterType = 'todos';
+          });
+        }
+        return;
+      }
+
+      setState(() {
+        _filterType = 'todos';
+        _minAmount = null;
+        _maxAmount = null;
+        _categoryId = null;
+        _startDate = null;
+        _endDate = null;
+        _concept = null;
+      });
+      _loadTransactions();
+      return;
+    }
+
+    final result = await _showFiltersSheet(initialType: selectedType);
+    if (!mounted) return;
+
+    if (result != null) {
+      _applyFilterResult(result, fallbackType: selectedType);
+    }
+  }
+
+  Future<void> _editActiveFilters() async {
+    final result = await _showFiltersSheet(initialType: _currentFilterSegment);
+    if (!mounted) return;
+
+    if (result != null) {
+      _applyFilterResult(result, fallbackType: _currentFilterSegment);
+    }
+  }
+
+  Future<Map<String, dynamic>?> _showFiltersSheet({required String initialType}) {
+    return showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => TransactionsFilterSheet(
+        type: initialType,
+        minAmount: _minAmount,
+        maxAmount: _maxAmount,
+        categoryId: _categoryId,
+        startDate: _startDate,
+        endDate: _endDate,
+        concept: _concept,
+      ),
+    );
+  }
+
+  void _applyFilterResult(Map<String, dynamic> result,
+      {required String fallbackType}) {
+    setState(() {
+      _filterType = (result['type'] as String?) ?? fallbackType;
+      _minAmount = result['minAmount'] as double?;
+      _maxAmount = result['maxAmount'] as double?;
+      _categoryId = result['categoryId'] as String?;
+      _startDate = result['startDate'] as DateTime?;
+      _endDate = result['endDate'] as DateTime?;
+      _concept = result['concept'] as String?;
+    });
+    _loadTransactions();
   }
 }
