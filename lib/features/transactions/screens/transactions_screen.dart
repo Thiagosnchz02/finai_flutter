@@ -272,22 +272,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Align(
-            alignment: Alignment.centerRight,
-            child: _buildFilterSegmentedButton(),
-          ),
-          const SizedBox(height: 8),
-          if (_hasActiveFilters) ...[
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton.icon(
-                onPressed: _editActiveFilters,
-                icon: const Icon(Icons.filter_list),
-                label: const Text('Editar filtros'),
-              ),
-            ),
-          ],
           const SizedBox(height: 24),
           Container(
             width: double.infinity,
@@ -354,6 +338,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           ),
           const SizedBox(height: 24),
           _buildNewTransactionButton(),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: _buildFilterSegmentedButton(),
+          ),
+          if (_hasActiveFilters) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: _editActiveFilters,
+                icon: const Icon(Icons.filter_list),
+                label: const Text('Editar filtros'),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -452,6 +452,19 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         ButtonSegment(value: 'gasto', label: Text('Gasto')),
       ],
       selected: <String>{_currentFilterSegment},
+      showSelectedIcon: false,
+      style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (states) => states.contains(WidgetState.selected)
+              ? const Color(0x3DEA00FF)
+              : const Color(0x1FEA00FF),
+        ),
+        shape: WidgetStateProperty.all(
+          RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+      ),
       onSelectionChanged: (newSelection) async {
         if (newSelection.isEmpty) {
           return;
