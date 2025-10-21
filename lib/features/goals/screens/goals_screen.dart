@@ -120,63 +120,75 @@ class _GoalsScreenState extends State<GoalsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _dataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error al cargar los datos: ${snapshot.error}'));
-          }
-          if (!snapshot.hasData) {
-            return const Center(child: Text('No hay datos disponibles.'));
-          }
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF4D0029),
+              Color(0xFF121212),
+            ],
+          ),
+        ),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _dataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error al cargar los datos: ${snapshot.error}'));
+            }
+            if (!snapshot.hasData) {
+              return const Center(child: Text('No hay datos disponibles.'));
+            }
 
-          final summary = snapshot.data!['summary'] as GoalsSummary;
-          final goals = snapshot.data!['goals'] as List<Goal>;
-          final activeGoals = goals.where((g) => !g.isArchived).toList();
+            final summary = snapshot.data!['summary'] as GoalsSummary;
+            final goals = snapshot.data!['goals'] as List<Goal>;
+            final activeGoals = goals.where((g) => !g.isArchived).toList();
 
-          return RefreshIndicator(
-            onRefresh: () async => _loadData(),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: GoalsSummaryHeader(summary: summary),
-                ),
-                Expanded(
-                  child: activeGoals.isEmpty
-                      ? const Center(
-                          child: Text('¡Crea tu primera hucha para empezar a ahorrar!'),
-                        )
-                      : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          itemCount: activeGoals.length,
-                          itemBuilder: (context, index) {
-                            final goal = activeGoals[index];
-                            return GestureDetector(
-                              onTap: () => _navigateAndRefresh(goal: goal),
-                              child: GoalCard(
-                                goal: goal,
-                                onContribute: () {
-                                  _showContributionDialog(goal, summary.availableToAllocate);
-                                },
-                                onAddExpense: () {
-                                  // 4. LLAMAMOS AL NUEVO MÉTODO
-                                  _showTripExpenseDialog(goal);
-                                },
-                                onArchive: () => _archiveGoal(goal),
-                                onViewHistory: () => _showHistoryDialog(goal),
-                              ),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-          );
-        },
+            return RefreshIndicator(
+              onRefresh: () async => _loadData(),
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: GoalsSummaryHeader(summary: summary),
+                  ),
+                  Expanded(
+                    child: activeGoals.isEmpty
+                        ? const Center(
+                            child: Text('¡Crea tu primera hucha para empezar a ahorrar!'),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            itemCount: activeGoals.length,
+                            itemBuilder: (context, index) {
+                              final goal = activeGoals[index];
+                              return GestureDetector(
+                                onTap: () => _navigateAndRefresh(goal: goal),
+                                child: GoalCard(
+                                  goal: goal,
+                                  onContribute: () {
+                                    _showContributionDialog(goal, summary.availableToAllocate);
+                                  },
+                                  onAddExpense: () {
+                                    // 4. LLAMAMOS AL NUEVO MÉTODO
+                                    _showTripExpenseDialog(goal);
+                                  },
+                                  onArchive: () => _archiveGoal(goal),
+                                  onViewHistory: () => _showHistoryDialog(goal),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
