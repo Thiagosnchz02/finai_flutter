@@ -192,12 +192,20 @@ class _BudgetScreenState extends State<BudgetScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _dataFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0714A4), Color(0xFF121212)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: _dataFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
           if (snapshot.hasError) {
             return Center(child: Text('Error al cargar los datos: ${snapshot.error}'));
           }
@@ -250,6 +258,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
             ),
           );
         },
+        ),
       ),
     );
   }
