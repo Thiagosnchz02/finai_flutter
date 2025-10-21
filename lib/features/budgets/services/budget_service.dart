@@ -350,8 +350,6 @@ class BudgetService {
 
   Stream<BudgetSummary> watchBudgetSummary() {
     final userId = _supabase.auth.currentUser!.id;
-    final range = _currentMonthRange();
-
     return Stream.multi((multi) {
       StreamSubscription<List<Map<String, dynamic>>>? transactionSub;
       StreamSubscription<List<Map<String, dynamic>>>? budgetSub;
@@ -367,26 +365,16 @@ class BudgetService {
       }
 
       Future(() async {
-        final accountIds = await _getSpendingAccountIds(userId);
-        var transactionsQuery = _supabase
+        transactionSub = _supabase
             .from('transactions')
             .stream(primaryKey: ['id'])
             .eq('user_id', userId)
-            .gte('transaction_date', range.start.toIso8601String())
-            .lt('transaction_date', range.end.toIso8601String());
-
-        if (accountIds.isNotEmpty) {
-          transactionsQuery = transactionsQuery.in_('account_id', accountIds);
-        }
-
-        transactionSub = transactionsQuery.listen((_) => emitSummary());
+            .listen((_) => emitSummary());
 
         budgetSub = _supabase
             .from('budgets')
             .stream(primaryKey: ['id'])
             .eq('user_id', userId)
-            .gte('start_date', range.start.toIso8601String())
-            .lt('start_date', range.end.toIso8601String())
             .listen((_) => emitSummary());
 
         await emitSummary();
@@ -459,7 +447,7 @@ class BudgetService {
         .from('transactions')
         .select('amount, type')
         .eq('user_id', userId)
-        .in_('account_id', accountIds)
+        .inFilter('account_id', accountIds)
         .gte('transaction_date', range.start.toIso8601String())
         .lt('transaction_date', range.end.toIso8601String());
 
