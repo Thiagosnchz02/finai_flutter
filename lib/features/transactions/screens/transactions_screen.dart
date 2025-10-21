@@ -234,7 +234,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                     _buildHeader(viewData),
                     const SizedBox(height: 20),
                     Expanded(child: listWidget),
-                    _buildPaginationControls(),
                   ],
                 );
               },
@@ -397,33 +396,6 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ],
     );
   }
-
-  // TU WIDGET DE PAGINACIÓN (INTACTO)
-  Widget _buildPaginationControls() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          TextButton.icon(
-            onPressed: () { /* TODO: Lógica página anterior */ },
-            icon: const Icon(Icons.chevron_left),
-            label: const Text('Anterior'),
-          ),
-          Text(
-            'Página 1 de 5', // TODO: Hacer dinámico
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          TextButton.icon(
-            onPressed: () { /* TODO: Lógica página siguiente */ },
-            label: const Text('Siguiente'),
-            icon: const Icon(Icons.chevron_right),
-          ),
-        ],
-      ),
-    );
-  }
-
   SegmentedButton<String> _buildFilterSegmentedButton() {
     return SegmentedButton<String>(
       segments: const [
