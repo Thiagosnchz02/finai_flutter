@@ -56,9 +56,13 @@ class TransactionTile extends StatelessWidget {
             ? Colors.redAccent.withOpacity(0.15)
             : Colors.white.withOpacity(0.1);
 
-    final Color backgroundColor = theme.brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.08)
+    final bool isDark = theme.brightness == Brightness.dark;
+    final Color backgroundColor = isDark
+        ? Colors.white.withOpacity(0.12)
         : const Color(0xFF1E1E1E);
+    final Color borderColor = isDark
+        ? Colors.white.withOpacity(0.18)
+        : Colors.black.withOpacity(0.05);
 
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
       color: Colors.white,
@@ -75,12 +79,11 @@ class TransactionTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: borderColor),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
