@@ -126,7 +126,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF4D0029),
+              Color(0xFF381D74),
               Color(0xFF121212),
             ],
           ),
