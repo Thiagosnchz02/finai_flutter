@@ -391,27 +391,26 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget _buildNewTransactionButton() {
     return SizedBox(
       width: double.infinity,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFEA00FF), Color(0xFF6100FF)],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () => _navigateAndRefresh(),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14.0),
+          backgroundColor: const Color(0x1FEA00FF),
+          foregroundColor: const Color(0xFFE0E0E0),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: TextButton(
-          onPressed: () => _navigateAndRefresh(),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 18.0),
-            foregroundColor: Colors.white,
-            textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(
+              color: Color(0xFFEA00FF),
+              width: 4.19,
+            ),
           ),
-          child: const Text('Nueva Transacción +'),
         ),
+        child: const Text('Nueva Transacción +'),
       ),
     );
   }
