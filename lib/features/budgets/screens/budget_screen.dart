@@ -63,7 +63,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         .from('transactions')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .gte('transaction_date', firstDay.toIso8601String())
+        .filter('transaction_date', 'gte', firstDay.toIso8601String())
         .lt('transaction_date', firstDayNext.toIso8601String())
         .listen((_) {
       _loadData();
@@ -73,7 +73,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
         .from('budgets')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .gte('start_date', firstDay.toIso8601String())
+        .filter('start_date', 'gte', firstDay.toIso8601String())
         .lt('start_date', firstDayNext.toIso8601String())
         .listen((_) {
       _loadData();
