@@ -326,10 +326,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           const SizedBox(height: 24),
           _buildNewTransactionButton(),
           const SizedBox(height: 16),
-          Align(
-            alignment: Alignment.centerRight,
-            child: _buildFilterSegmentedButton(),
-          ),
+          _buildFilterSegmentedButton(),
           if (_hasActiveFilters) ...[
             const SizedBox(height: 8),
             Align(
@@ -431,34 +428,49 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ],
     );
   }
-  SegmentedButton<String> _buildFilterSegmentedButton() {
-    return SegmentedButton<String>(
-      segments: const [
-        ButtonSegment(value: 'todos', label: Text('Todo')),
-        ButtonSegment(value: 'ingreso', label: Text('Ingreso')),
-        ButtonSegment(value: 'gasto', label: Text('Gasto')),
-      ],
-      selected: <String>{_currentFilterSegment},
-      showSelectedIcon: false,
-      style: ButtonStyle(
-        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-          (states) => states.contains(WidgetState.selected)
-              ? const Color(0x3DEA00FF)
-              : const Color(0x1FEA00FF),
-        ),
-        shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
+  Widget _buildFilterSegmentedButton() {
+    const filters = [
+      ('todos', 'Todo'),
+      ('ingreso', 'Ingreso'),
+      ('gasto', 'Gasto'),
+    ];
+
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        children: [
+          for (int i = 0; i < filters.length; i++) ...[
+            Expanded(
+              child: TextButton(
+                onPressed: () => _handleFilterSelection(filters[i].$1),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                  backgroundColor: _currentFilterSegment == filters[i].$1
+                      ? const Color(0x3DEA00FF)
+                      : const Color(0x1FEA00FF),
+                  foregroundColor: const Color(0xFFE0E0E0),
+                  textStyle: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                      color: _currentFilterSegment == filters[i].$1
+                          ? const Color(0xFFEA00FF)
+                          : const Color(0x66EA00FF),
+                      width: 2,
+                    ),
+                  ),
+                ),
+                child: Text(filters[i].$2),
+              ),
+            ),
+            if (i < filters.length - 1) const SizedBox(width: 12),
+          ],
+        ],
       ),
-      onSelectionChanged: (newSelection) async {
-        if (newSelection.isEmpty) {
-          return;
-        }
-        final selectedType = newSelection.first;
-        await _handleFilterSelection(selectedType);
-      },
     );
   }
 
