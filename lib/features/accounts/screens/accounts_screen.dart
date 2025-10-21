@@ -57,13 +57,21 @@ class _AccountsScreenState extends State<AccountsScreen> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1C1E22),
-      appBar: AppBar(
-        title: const Text('Mis Cuentas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
-        elevation: 0,
-        centerTitle: false,
-        actions: [
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF4D0029), Color(0xFF121212)],
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          title: const Text('Mis Cuentas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
+          elevation: 0,
+          centerTitle: false,
+          actions: [
           // 3. AÑADIMOS EL BOTÓN DE TRANSFERENCIA A LA APPBAR
           FutureBuilder<AccountSummary>(
             future: _accountSummaryFuture,
@@ -88,9 +96,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<AccountSummary>(
-        future: _accountSummaryFuture,
-        builder: (context, snapshot) {
+        body: FutureBuilder<AccountSummary>(
+          future: _accountSummaryFuture,
+          builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -108,11 +116,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
             return const EmptyAccountsWidget();
           }
 
-          return RefreshIndicator(
-            onRefresh: () async => _loadData(),
-            child: ListView(
-              padding: const EdgeInsets.all(16.0),
-              children: [
+            return RefreshIndicator(
+              onRefresh: () async => _loadData(),
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
                 // SECCIÓN 1: CUENTAS PARA GASTAR
                 AccountsSummaryCard(
                   title: 'Total Disponible',
@@ -171,8 +179,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   ),
               ],
             ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
