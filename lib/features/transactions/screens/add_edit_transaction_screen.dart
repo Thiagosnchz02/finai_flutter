@@ -16,8 +16,13 @@ const Color _inputFillColor = Color(0x1FFFFFFF);
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
+  final String initialType;
 
-  const AddEditTransactionScreen({super.key, this.transaction});
+  const AddEditTransactionScreen({
+    super.key,
+    this.transaction,
+    this.initialType = 'gasto',
+  });
 
   @override
   State<AddEditTransactionScreen> createState() => _AddEditTransactionScreenState();
@@ -28,7 +33,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
   final _descriptionController = TextEditingController();
   final _amountController = TextEditingController();
 
-  String _transactionType = 'gasto';
+  late String _transactionType;
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
   String? _selectedAccountId;
@@ -56,6 +61,10 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       _selectedCategoryId = tx.category?.id;
       _selectedAccountId = tx.accountId;
       _selectedFixedExpenseId = tx.relatedScheduledExpenseId;
+    } else {
+      final normalizedInitialType = widget.initialType.toLowerCase();
+      _transactionType =
+          normalizedInitialType == 'ingreso' ? 'ingreso' : 'gasto';
     }
 
     _categoriesFuture = _fetchCategories(_transactionType);
