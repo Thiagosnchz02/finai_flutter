@@ -7,6 +7,7 @@ import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
 import 'package:finai_flutter/features/accounts/widgets/account_card.dart';
 import 'package:finai_flutter/features/accounts/widgets/accounts_summary_card.dart';
 import 'package:finai_flutter/features/accounts/widgets/empty_accounts_widget.dart';
+import 'package:finai_flutter/features/transactions/screens/add_edit_transaction_screen.dart';
 import '../widgets/internal_transfer_dialog.dart';
 import 'add_edit_account_screen.dart';
 
@@ -189,7 +190,20 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           )
                         : Column(
                             children: summary.spendingAccounts
-                                .map((acc) => AccountCard(account: acc))
+                                .map(
+                                  (acc) => AccountCard(
+                                    account: acc,
+                                    onAddMoney: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const AddEditTransactionScreen(
+                                            initialType: 'ingreso',
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                )
                                 .toList(),
                           ),
                   ),
@@ -204,30 +218,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AccountCard(account: summary.savingsAccount!),
-                          const SizedBox(height: 8),
-                          // 2. El texto ahora es un botón funcional.
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                // Navegamos a la pantalla de Metas
-                                Navigator.of(context).pushNamed('/goals');
-                              },
-                              child: const Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Gestionar mis Huchas',
-                                    style: TextStyle(color: Colors.purpleAccent),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Icon(Icons.arrow_forward, color: Colors.purpleAccent, size: 16),
-                                ],
-                              ),
-                            ),
-                          )
-                          // --- FIN DE LA MODIFICACIÓN ---
+                          AccountCard(
+                            account: summary.savingsAccount!,
+                            onManageSavings: () {
+                              Navigator.of(context).pushNamed('/goals');
+                            },
+                          ),
                         ],
                       ),
                     ),

@@ -2,41 +2,269 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../presentation/widgets/glass_card.dart'; // Asumiendo la ruta
 import '../models/account_model.dart';
 
 class AccountCard extends StatelessWidget {
   final Account account;
+  final bool? showAddMoneyButton;
+  final bool? showManageSavingsButton;
+  final VoidCallback? onAddMoney;
+  final VoidCallback? onManageSavings;
 
-  const AccountCard({super.key, required this.account});
+  const AccountCard({
+    super.key,
+    required this.account,
+    this.showAddMoneyButton,
+    this.showManageSavingsButton,
+    this.onAddMoney,
+    this.onManageSavings,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final balanceColor = account.balance < 0 ? Colors.redAccent : Colors.greenAccent;
-    final formattedBalance = NumberFormat.currency(locale: 'es_ES', symbol: '€').format(account.balance);
-    
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(account.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                    if (account.bankName != null && account.bankName!.isNotEmpty)
-                      Text(account.bankName!, style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
-                  ],
-                ),
+    final theme = Theme.of(context);
+    final formattedBalance =
+        NumberFormat.currency(locale: 'es_ES', symbol: '€').format(account.balance);
+    final isSavingsAccount = account.conceptualType.toLowerCase() == 'ahorro';
+    final shouldShowAddMoneyButton = showAddMoneyButton ?? !isSavingsAccount;
+    final shouldShowManageSavingsButton =
+        showManageSavingsButton ?? isSavingsAccount;
+    final infoTextStyle = theme.textTheme.bodyMedium?.copyWith(
+      color: Colors.white.withOpacity(0.86),
+      fontWeight: FontWeight.w500,
+    );
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6.0),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF72585), Color(0xFF7209B7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0x66000000),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _AccountInfoRow(
+              label: 'Nombre',
+              value: account.name,
+              valueStyle: theme.textTheme.titleMedium?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
               ),
-              Text(
-                formattedBalance,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: balanceColor),
+            ),
+            const SizedBox(height: 10),
+            _AccountInfoRow(
+              label: 'Banco',
+              value: (account.bankName?.isNotEmpty ?? false)
+                  ? account.bankName!
+                  : 'Sin banco asociado',
+              valueStyle: infoTextStyle,
+            ),
+            const SizedBox(height: 10),
+            _AccountInfoRow(
+              label: 'Tipo de cuenta',
+              value: _prettyConceptualType(account.conceptualType, account.type),
+              valueStyle: infoTextStyle,
+            ),
+            const SizedBox(height: 12),
+            const Divider(color: Color(0x33FFFFFF), thickness: 1, height: 1),
+            const SizedBox(height: 12),
+            _AccountInfoRow(
+              label: 'Saldo',
+              value: formattedBalance,
+              valueStyle: theme.textTheme.headlineSmall?.copyWith(
+                color: account.balance < 0 ? const Color(0xFFFFD166) : const Color(0xFFADF6FF),
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.4,
+              ),
+            ),
+            if (shouldShowAddMoneyButton || shouldShowManageSavingsButton)
+              const SizedBox(height: 18),
+            if (shouldShowAddMoneyButton || shouldShowManageSavingsButton)
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  if (shouldShowAddMoneyButton)
+                    _GradientActionButton(
+                      label: 'Añadir dinero',
+                      onTap: onAddMoney,
+                    ),
+                  if (shouldShowManageSavingsButton)
+                    _SolidActionButton(
+                      label: 'Gestionar mis huchas',
+                      onTap: onManageSavings,
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _prettyConceptualType(String conceptualType, String rawType) {
+    final normalizedConcept = conceptualType.toLowerCase();
+    switch (normalizedConcept) {
+      case 'ahorro':
+        return 'Ahorro';
+      case 'nomina':
+        return 'Gasto / Nómina';
+      default:
+        return rawType.isEmpty ? conceptualType : _capitalize(rawType);
+    }
+  }
+
+  static String _capitalize(String value) {
+    if (value.isEmpty) return value;
+    return value[0].toUpperCase() + value.substring(1);
+  }
+}
+
+class _AccountInfoRow extends StatelessWidget {
+  const _AccountInfoRow({
+    required this.label,
+    required this.value,
+    this.valueStyle,
+  });
+
+  final String label;
+  final String value;
+  final TextStyle? valueStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Text(
+            label.toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: Colors.white.withOpacity(0.72),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.1,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: valueStyle ??
+                theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _GradientActionButton extends StatelessWidget {
+  const _GradientActionButton({
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF85E5), Color(0xFF7C1DC9)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 12,
+                offset: Offset(0, 6),
               ),
             ],
+          ),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 22.0, vertical: 12.0),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SolidActionButton extends StatelessWidget {
+  const _SolidActionButton({
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: const Color(0xFF008842),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x40000000),
+                blurRadius: 4,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 22.0, vertical: 12.0),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
+                ),
           ),
         ),
       ),
