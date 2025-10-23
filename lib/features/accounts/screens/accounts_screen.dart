@@ -43,17 +43,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
     }
   }
 
-  Future<void> _editAccount(Account account) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (context) => AddEditAccountScreen(account: account),
-      ),
-    );
-    if (result == true && mounted) {
-      _loadData();
-    }
-  }
-
   Future<void> _confirmDeleteAccount(Account account) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
@@ -103,17 +92,26 @@ class _AccountsScreenState extends State<AccountsScreen> {
     }
   }
 
-  List<Widget> _buildAccountHeaderActions(Account account) {
+  List<Widget> _buildAccountHeaderActions(Account cuenta) {
     return [
       IconButton(
         tooltip: 'Editar cuenta',
         icon: const Icon(Icons.edit_outlined, color: Colors.white),
-        onPressed: () => _editAccount(account),
+        onPressed: () async {
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (_) => AddEditAccountScreen(account: cuenta),
+            ),
+          );
+          if (result == true && mounted) {
+            _loadData();
+          }
+        },
       ),
       IconButton(
         tooltip: 'Eliminar cuenta',
         icon: const Icon(Icons.delete_outline, color: Colors.white),
-        onPressed: () => _confirmDeleteAccount(account),
+        onPressed: () => _confirmDeleteAccount(cuenta),
       ),
     ];
   }
