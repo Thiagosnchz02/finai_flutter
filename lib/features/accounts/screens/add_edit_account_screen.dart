@@ -128,60 +128,395 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.account == null ? 'Nueva Cuenta' : 'Editar Cuenta'),
+    final isEditing = widget.account != null;
+
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF120C2E),
+            Color(0xFF2B0B3F),
+            Color(0xFF3E0B4D),
+          ],
+        ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16.0),
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Nombre de la Cuenta'),
-              validator: (value) => value == null || value.isEmpty ? 'El nombre es obligatorio' : null,
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 520),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+              decoration: BoxDecoration(
+                color: const Color(0xFF121126).withOpacity(0.95),
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: const Color(0xFFFF4F9A).withOpacity(0.35)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.4),
+                    blurRadius: 30,
+                    offset: const Offset(0, 20),
+                  ),
+                ],
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => Navigator.of(context).pop(),
+                            child: const Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(Icons.arrow_back, color: Colors.white70),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            isEditing ? 'Editar Cuenta' : 'Nueva Cuenta',
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    _AccountInputField(
+                      label: 'Nombre de la Cuenta',
+                      controller: _nameController,
+                      validator: (value) =>
+                          value == null || value.isEmpty ? 'El nombre es obligatorio' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    _AccountInputField(
+                      label: 'Nombre del Banco (Opcional)',
+                      controller: _bankNameController,
+                    ),
+                    if (!isEditing) ...[
+                      const SizedBox(height: 20),
+                      _AccountInputField(
+                        label: 'Saldo Inicial',
+                        controller: _initialBalanceController,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        validator: (value) {
+                          if (value != null &&
+                              value.isNotEmpty &&
+                              double.tryParse(value.replaceAll(',', '.')) == null) {
+                            return 'Introduce un número válido';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 28),
+                    const Text(
+                      '¿Cuál es el propósito de esta cuenta?',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white70,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _ConceptualTypeSelector(
+                      selectedValue: _conceptualType,
+                      onChanged: (newValue) {
+                        setState(() => _conceptualType = newValue);
+                      },
+                    ),
+                    const SizedBox(height: 36),
+                    _PrimaryGradientButton(
+                      label: 'Guardar Cuenta',
+                      isLoading: _isLoading,
+                      onPressed: _isLoading ? null : _saveAccount,
+                    ),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _bankNameController,
-              decoration: const InputDecoration(labelText: 'Nombre del Banco (Opcional)'),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountInputField extends StatelessWidget {
+  const _AccountInputField({
+    required this.label,
+    required this.controller,
+    this.keyboardType,
+    this.validator,
+  });
+
+  final String label;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final String? Function(String?)? validator;
+
+  @override
+  Widget build(BuildContext context) {
+    final baseBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: Color(0xFFFF4F9A), width: 1),
+    );
+
+    final errorBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: const BorderSide(color: Color(0xFFFF6B81), width: 1.5),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 10),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: validator,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 15,
+            color: Colors.white,
+          ),
+          cursorColor: const Color(0xFFFF6BCB),
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: const Color(0xFF1C1B33),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+            enabledBorder: baseBorder,
+            focusedBorder: baseBorder.copyWith(
+              borderSide: const BorderSide(color: Color(0xFFFF6BCB), width: 1.5),
             ),
-            if (widget.account == null) ...[ // Solo para cuentas nuevas
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _initialBalanceController,
-                decoration: const InputDecoration(labelText: 'Saldo Inicial'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value != null && value.isNotEmpty && double.tryParse(value.replaceAll(',', '.')) == null) {
-                    return 'Introduce un número válido';
-                  }
-                  return null;
-                },
+            errorBorder: errorBorder,
+            focusedErrorBorder: errorBorder,
+            errorStyle: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              color: Color(0xFFFFB4B4),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ConceptualTypeSelector extends StatelessWidget {
+  const _ConceptualTypeSelector({
+    required this.selectedValue,
+    required this.onChanged,
+  });
+
+  final String selectedValue;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const options = [
+      _ConceptualTypeOption(
+        value: 'nomina',
+        label: 'Para Gastar',
+        icon: Icons.payment,
+      ),
+      _ConceptualTypeOption(
+        value: 'ahorro',
+        label: 'Para Ahorrar',
+        icon: Icons.savings,
+      ),
+    ];
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        for (final option in options)
+          _FilterChipButton(
+            option: option,
+            isSelected: option.value == selectedValue,
+            onSelected: () => onChanged(option.value),
+          ),
+      ],
+    );
+  }
+}
+
+class _FilterChipButton extends StatelessWidget {
+  const _FilterChipButton({
+    required this.option,
+    required this.isSelected,
+    required this.onSelected,
+  });
+
+  final _ConceptualTypeOption option;
+  final bool isSelected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color activeColor = const Color(0xFFFF4F9A);
+    final Color inactiveColor = Colors.white.withOpacity(0.12);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onSelected,
+        borderRadius: BorderRadius.circular(40),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(40),
+            gradient: isSelected
+                ? const LinearGradient(
+                    colors: [Color(0xFFFF4F9A), Color(0xFFFF6BCB)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: isSelected ? null : inactiveColor,
+            border: Border.all(
+              color: isSelected ? Colors.transparent : Colors.white.withOpacity(0.2),
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: activeColor.withOpacity(0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                option.icon,
+                size: 18,
+                color: Colors.white.withOpacity(isSelected ? 1 : 0.7),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                option.label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withOpacity(isSelected ? 1 : 0.7),
+                ),
               ),
             ],
-            const SizedBox(height: 24),
-            const Text('¿Cuál es el propósito de esta cuenta?', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'nomina', label: Text('Para Gastar'), icon: Icon(Icons.payment)),
-                ButtonSegment(value: 'ahorro', label: Text('Para Ahorrar'), icon: Icon(Icons.savings)),
-              ],
-              selected: {_conceptualType},
-              onSelectionChanged: (newSelection) {
-                setState(() {
-                  _conceptualType = newSelection.first;
-                });
-              },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ConceptualTypeOption {
+  const _ConceptualTypeOption({
+    required this.value,
+    required this.label,
+    required this.icon,
+  });
+
+  final String value;
+  final String label;
+  final IconData icon;
+}
+
+class _PrimaryGradientButton extends StatelessWidget {
+  const _PrimaryGradientButton({
+    required this.label,
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool isLoading;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isEnabled = onPressed != null;
+
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 200),
+      opacity: isEnabled ? 1 : 0.7,
+      child: SizedBox(
+        width: double.infinity,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFF4F9A), Color(0xFF9C1AFF)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _saveAccount,
-              child: _isLoading ? const CircularProgressIndicator() : const Text('Guardar Cuenta'),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x66FF4F9A),
+                blurRadius: 20,
+                offset: Offset(0, 12),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: isEnabled ? onPressed : null,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                child: Center(
+                  child: isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          label,
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
