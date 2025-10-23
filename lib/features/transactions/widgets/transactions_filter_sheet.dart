@@ -238,9 +238,9 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    width: 48,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 20),
+                    width: 10,
+                    height: 3,
+                    margin: const EdgeInsets.only(left: 160, right: 160, bottom: 20),
                     decoration: BoxDecoration(
                       color: Colors.white24,
                       borderRadius: BorderRadius.circular(2),
