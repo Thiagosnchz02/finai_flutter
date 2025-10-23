@@ -359,7 +359,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             children: [
               Expanded(
                 child: _buildSummaryItem(
-                  '+ Positivo',
+                  'Positivo',
                   incomeText,
                   const Color(0xFF00FF00),
                 ),
@@ -367,7 +367,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSummaryItem(
-                  '- Negativo',
+                  'Negativo',
                   expensesText,
                   const Color(0xFFFF0000),
                 ),
