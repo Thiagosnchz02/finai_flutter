@@ -9,6 +9,11 @@ import 'package:finai_flutter/core/services/event_logger_service.dart';
 import '../models/transaction_model.dart';
 import '../services/transactions_service.dart';
 
+const Color _highlightColor = Color(0xFFEA00FF);
+const Color _selectedBackgroundColor = Color(0x3DEA00FF);
+const Color _unselectedBackgroundColor = Color(0x1FEA00FF);
+const Color _inputFillColor = Color(0x1FFFFFFF);
+
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
 
@@ -289,152 +294,357 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    InputDecoration buildInputDecoration(String label) {
+      return InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: _inputFillColor,
+        labelStyle: const TextStyle(color: Color(0xFFE0E0E0)),
+        floatingLabelStyle: const TextStyle(color: Color(0xFFEA00FF), fontWeight: FontWeight.w600),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0x66EA00FF)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0x66EA00FF)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFEA00FF), width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      );
+    }
+
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(widget.transaction == null ? 'Nueva Transacción' : 'Editar Transacción'),
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SegmentedButton<String>(
-                segments: const [
-                  ButtonSegment(value: 'gasto', label: Text('Gasto'), icon: Icon(FontAwesomeIcons.arrowDown)),
-                  ButtonSegment(value: 'ingreso', label: Text('Ingreso'), icon: Icon(FontAwesomeIcons.arrowUp)),
-                ],
-                selected: {_transactionType},
-                onSelectionChanged: (Set<String> newSelection) {
-                  setState(() {
-                    _transactionType = newSelection.first;
-                    _categoriesFuture = _fetchCategories(_transactionType);
-                    _selectedCategoryId = null;
-                  });
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Descripción', border: OutlineInputBorder()),
-                validator: (value) => value == null || value.isEmpty ? 'Introduce una descripción' : null,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Cantidad (€)', border: OutlineInputBorder()),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Introduce una cantidad';
-                  if (double.tryParse(value.replaceAll(',', '.')) == null) return 'Introduce un número válido';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _accountsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const ListTile(title: Text('Cuenta'), subtitle: Text('No se encontraron cuentas'));
-                  }
-                  final accounts = snapshot.data!;
-                  return DropdownButtonFormField<String>(
-                    value: _selectedAccountId,
-                    decoration: const InputDecoration(labelText: 'Cuenta', border: OutlineInputBorder()),
-                    items: accounts.map((account) {
-                      return DropdownMenuItem<String>(
-                        value: account['id'] as String,
-                        child: Text(account['name'] as String),
-                      );
-                    }).toList(),
-                    onChanged: (value) => setState(() => _selectedAccountId = value),
-                    validator: (value) => value == null ? 'Selecciona una cuenta' : null,
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _fixedExpensesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError || !snapshot.hasData ||
-                      snapshot.data!.isEmpty) {
-                    return const SizedBox.shrink();
-                  }
-                  final expenses = snapshot.data!;
-                  if (_selectedFixedExpenseId != null &&
-                      !expenses.any((e) => e['id'] == _selectedFixedExpenseId)) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        setState(() => _selectedFixedExpenseId = null);
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF80008B),
+              Color(0xFF3C0F48),
+              Color(0xFF1A0A22),
+              Color(0xFF121212),
+            ],
+            stops: [0.0, 0.45, 0.75, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            if (_transactionType == 'gasto') return;
+                            setState(() {
+                              _transactionType = 'gasto';
+                              _categoriesFuture = _fetchCategories(_transactionType);
+                              _selectedCategoryId = null;
+                            });
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            backgroundColor: _transactionType == 'gasto'
+                                ? _selectedBackgroundColor
+                                : _unselectedBackgroundColor,
+                            foregroundColor: const Color(0xFFE0E0E0),
+                            textStyle: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: _transactionType == 'gasto'
+                                    ? _highlightColor
+                                    : const Color(0x66EA00FF),
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(FontAwesomeIcons.arrowDown, size: 16),
+                              const SizedBox(width: 8),
+                              const Text('Gasto'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            if (_transactionType == 'ingreso') return;
+                            setState(() {
+                              _transactionType = 'ingreso';
+                              _categoriesFuture = _fetchCategories(_transactionType);
+                              _selectedCategoryId = null;
+                            });
+                          },
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
+                            backgroundColor: _transactionType == 'ingreso'
+                                ? _selectedBackgroundColor
+                                : _unselectedBackgroundColor,
+                            foregroundColor: const Color(0xFFE0E0E0),
+                            textStyle: const TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: _transactionType == 'ingreso'
+                                    ? _highlightColor
+                                    : const Color(0x66EA00FF),
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(FontAwesomeIcons.arrowUp, size: 16),
+                              const SizedBox(width: 8),
+                              const Text('Ingreso'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _descriptionController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: buildInputDecoration('Descripción'),
+                    validator: (value) => value == null || value.isEmpty ? 'Introduce una descripción' : null,
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _amountController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: buildInputDecoration('Cantidad (€)'),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return 'Introduce una cantidad';
+                      if (double.tryParse(value.replaceAll(',', '.')) == null) return 'Introduce un número válido';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _accountsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: _highlightColor),
+                        );
                       }
-                    });
-                  }
-                  return DropdownButtonFormField<String>(
-                    value: _selectedFixedExpenseId,
-                    decoration: const InputDecoration(
-                        labelText: 'Gasto fijo (opcional)',
-                        border: OutlineInputBorder()),
-                    items: expenses.map((exp) {
-                      return DropdownMenuItem<String>(
-                        value: exp['id'] as String,
-                        child: Text(exp['description'] as String),
+                      if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                          decoration: BoxDecoration(
+                            color: _unselectedBackgroundColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                          ),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Cuenta', style: TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600)),
+                              SizedBox(height: 4),
+                              Text('No se encontraron cuentas', style: TextStyle(color: Colors.white70)),
+                            ],
+                          ),
+                        );
+                      }
+                      final accounts = snapshot.data!;
+                      return DropdownButtonFormField<String>(
+                        value: _selectedAccountId,
+                        decoration: buildInputDecoration('Cuenta'),
+                        style: const TextStyle(color: Colors.white),
+                        dropdownColor: const Color(0xFF2A1237),
+                        iconEnabledColor: _highlightColor,
+                        items: accounts.map((account) {
+                          return DropdownMenuItem<String>(
+                            value: account['id'] as String,
+                            child: Text(
+                              account['name'] as String,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedAccountId = value),
+                        validator: (value) => value == null ? 'Selecciona una cuenta' : null,
                       );
-                    }).toList(),
-                    onChanged: (value) =>
-                        setState(() => _selectedFixedExpenseId = value),
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              FutureBuilder<List<Map<String, dynamic>>>(
-                future: _categoriesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return const Text('Error al cargar categorías');
-                  }
-                  final categories = snapshot.data;
-                  if (categories == null || categories.isEmpty) {
-                    return const ListTile(title: Text('Categoría'), subtitle: Text('No hay categorías para este tipo'));
-                  }
-                  return DropdownButtonFormField<String>(
-                    value: _selectedCategoryId,
-                    decoration: const InputDecoration(labelText: 'Categoría', border: OutlineInputBorder()),
-                    items: categories.map((category) {
-                      return DropdownMenuItem<String>(
-                        value: category['id'] as String,
-                        child: Text(category['name'] as String),
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _fixedExpensesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: _highlightColor),
+                        );
+                      }
+                      if (snapshot.hasError || !snapshot.hasData ||
+                          snapshot.data!.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      final expenses = snapshot.data!;
+                      if (_selectedFixedExpenseId != null &&
+                          !expenses.any((e) => e['id'] == _selectedFixedExpenseId)) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() => _selectedFixedExpenseId = null);
+                          }
+                        });
+                      }
+                      return DropdownButtonFormField<String>(
+                        value: _selectedFixedExpenseId,
+                        decoration: buildInputDecoration('Gasto fijo (opcional)'),
+                        style: const TextStyle(color: Colors.white),
+                        dropdownColor: const Color(0xFF2A1237),
+                        iconEnabledColor: _highlightColor,
+                        items: expenses.map((exp) {
+                          return DropdownMenuItem<String>(
+                            value: exp['id'] as String,
+                            child: Text(
+                              exp['description'] as String,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) =>
+                            setState(() => _selectedFixedExpenseId = value),
                       );
-                    }).toList(),
-                    onChanged: (value) => setState(() => _selectedCategoryId = value),
-                    validator: (value) => value == null ? 'Selecciona una categoría' : null,
-                  );
-                },
-              ),
-              const SizedBox(height: 20),
-              ListTile(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4), side: BorderSide(color: Colors.grey.shade400)),
-                title: Text('Fecha: ${DateFormat.yMMMd('es_ES').format(_selectedDate)}'),
-                trailing: const Icon(Icons.calendar_today),
-                onTap: () => _selectDate(context),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _saveTransaction,
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                child: _isLoading
-                    ? const SizedBox(height: 24, width: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : const Text('Guardar Transacción', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: _categoriesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(
+                          child: CircularProgressIndicator(color: _highlightColor),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                          decoration: BoxDecoration(
+                            color: _unselectedBackgroundColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                          ),
+                          child: const Text(
+                            'Error al cargar categorías',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        );
+                      }
+                      final categories = snapshot.data;
+                      if (categories == null || categories.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                          decoration: BoxDecoration(
+                            color: _unselectedBackgroundColor,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                          ),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Categoría', style: TextStyle(color: Color(0xFFE0E0E0), fontWeight: FontWeight.w600)),
+                              SizedBox(height: 4),
+                              Text('No hay categorías para este tipo', style: TextStyle(color: Colors.white70)),
+                            ],
+                          ),
+                        );
+                      }
+                      return DropdownButtonFormField<String>(
+                        value: _selectedCategoryId,
+                        decoration: buildInputDecoration('Categoría'),
+                        style: const TextStyle(color: Colors.white),
+                        dropdownColor: const Color(0xFF2A1237),
+                        iconEnabledColor: _highlightColor,
+                        items: categories.map((category) {
+                          return DropdownMenuItem<String>(
+                            value: category['id'] as String,
+                            child: Text(
+                              category['name'] as String,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) => setState(() => _selectedCategoryId = value),
+                        validator: (value) => value == null ? 'Selecciona una categoría' : null,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => _selectDate(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                      decoration: BoxDecoration(
+                        color: _unselectedBackgroundColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Fecha: ${DateFormat.yMMMd('es_ES').format(_selectedDate)}',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                          ),
+                          const Icon(Icons.calendar_today, color: Color(0xFFEA00FF)),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _saveTransaction,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: _highlightColor,
+                      foregroundColor: Colors.white,
+                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text('Guardar Transacción'),
+                  ),
             ],
           ),
         ),
