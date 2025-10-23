@@ -48,21 +48,62 @@ class _AccountsScreenState extends State<AccountsScreen> {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        const backgroundColor = Color(0xFF31090D);
+        const borderColor = Color(0xFFFF4D4D);
+        const highlightColor = Color(0xFFFF6B6B);
+
         return AlertDialog(
-          backgroundColor: const Color(0xFF1D1228),
-          title: const Text(
-            'Eliminar cuenta',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          backgroundColor: backgroundColor,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(
+              color: borderColor,
+              width: 1.6,
+            ),
           ),
-          content: Text('¿Seguro que deseas eliminar "${account.name}"? Esta acción no se puede deshacer.'),
+          titleTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+          contentTextStyle: const TextStyle(
+            color: Color(0xFFFFCDD2),
+            fontSize: 16,
+            height: 1.4,
+          ),
+          title: const Text('Eliminar cuenta'),
+          content: Text(
+            '¿Seguro que deseas eliminar "${account.name}"? Esta acción no se puede deshacer.',
+          ),
+          actionsAlignment: MainAxisAlignment.end,
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                foregroundColor: Colors.white70,
+                backgroundColor: Colors.white.withOpacity(0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: Colors.white.withOpacity(0.18),
+                  ),
+                ),
+              ),
               child: const Text('Cancelar'),
             ),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD0004B)),
+            TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                foregroundColor: Colors.white,
+                backgroundColor: highlightColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
               child: const Text('Eliminar'),
             ),
           ],
@@ -71,25 +112,20 @@ class _AccountsScreenState extends State<AccountsScreen> {
     );
 
     if (shouldDelete == true) {
-      try {
-        await _accountsService.deleteAccount(account.id);
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Cuenta "${account.name}" eliminada correctamente'),
-            backgroundColor: Colors.green.shade600,
-          ),
-        );
-        _loadData();
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al eliminar la cuenta: $e'),
-            backgroundColor: Colors.red.shade700,
-          ),
-        );
-      }
+      final result = await _accountsService.deleteAccount(account.id);
+      if (!mounted) return;
+
+      final snackBarMessage =
+          result.success ? '${result.message} (${account.name})' : result.message;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(snackBarMessage),
+          backgroundColor:
+              result.success ? Colors.green.shade600 : Colors.red.shade700,
+        ),
+      );
+      _loadData();
     }
   }
 

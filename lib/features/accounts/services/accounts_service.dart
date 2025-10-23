@@ -3,6 +3,13 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/account_model.dart';
 
+class DeleteAccountResult {
+  const DeleteAccountResult({required this.success, required this.message});
+
+  final bool success;
+  final String message;
+}
+
 class AccountsService {
   final _supabase = Supabase.instance.client;
 
@@ -143,12 +150,48 @@ class AccountsService {
     });
   }
 
-  Future<void> deleteAccount(String accountId) async {
-    final userId = _supabase.auth.currentUser!.id;
+  Future<DeleteAccountResult> deleteAccount(String accountId) async {
+    try {
+      final result = await _supabase.rpc('delete_account_if_empty', params: {
+        'p_account_id': accountId,
+      });
 
-    await _supabase
-        .from('accounts')
-        .update({'is_archived': true})
-        .match({'id': accountId, 'user_id': userId});
+      final code = result as String?;
+      switch (code) {
+        case 'ACCOUNT_ARCHIVED_SUCCESSFULLY':
+          return const DeleteAccountResult(
+            success: true,
+            message: 'Cuenta archivada correctamente.',
+          );
+        case 'ERROR_ACCOUNT_HAS_TRANSACTIONS':
+          return const DeleteAccountResult(
+            success: false,
+            message:
+                'No puedes eliminar la cuenta porque tiene transacciones asociadas.',
+          );
+        case 'ACCOUNT_NOT_FOUND':
+          return const DeleteAccountResult(
+            success: false,
+            message: 'No encontramos la cuenta o no te pertenece.',
+          );
+        case 'ERROR_UNKNOWN':
+        default:
+          return const DeleteAccountResult(
+            success: false,
+            message:
+                'Ocurrió un error al eliminar la cuenta. Inténtalo de nuevo en unos segundos.',
+          );
+      }
+    } on PostgrestException catch (e) {
+      final message = e.message?.isNotEmpty == true
+          ? 'No se pudo eliminar la cuenta: ${e.message}'
+          : 'No se pudo eliminar la cuenta por un error en Supabase.';
+      return DeleteAccountResult(success: false, message: message);
+    } catch (e) {
+      return DeleteAccountResult(
+        success: false,
+        message: 'Error inesperado al eliminar la cuenta: $e',
+      );
+    }
   }
 }
