@@ -67,120 +67,228 @@ class _AccountsScreenState extends State<AccountsScreen> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const Text('Mis Cuentas', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30)),
-          elevation: 0,
-          centerTitle: false,
-          actions: [
-          // 3. AÑADIMOS EL BOTÓN DE TRANSFERENCIA A LA APPBAR
-          FutureBuilder<AccountSummary>(
-            future: _accountSummaryFuture,
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.spendingAccounts.isNotEmpty && snapshot.data!.savingsAccount != null) {
-                return IconButton(
-                  icon: const Icon(FontAwesomeIcons.rightLeft),
-                  tooltip: 'Realizar Traspaso',
-                  onPressed: () => _showTransferDialog(
-                    snapshot.data!.spendingAccounts,
-                    snapshot.data!.savingsAccount!,
-                  ),
-                );
-              }
-              return const SizedBox.shrink(); // Oculta el botón si no se cumplen las condiciones
-            },
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(120),
+          child: Container(
+            color: Colors.transparent,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: SizedBox(
+                        width: 200,
+                        height: 75,
+                        child: Stack(
+                          children: [
+                            Align(
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: 200,
+                                height: 75,
+                                color: const Color(0xFFFF0A7A),
+                              ),
+                            ),
+                            const Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Mis cuentas',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 30,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        FutureBuilder<AccountSummary>(
+                          future: _accountSummaryFuture,
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData &&
+                                snapshot.data!.spendingAccounts.isNotEmpty &&
+                                snapshot.data!.savingsAccount != null) {
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 12),
+                                child: AccountsActionButton(
+                                  icon: const FaIcon(FontAwesomeIcons.rightLeft, size: 18),
+                                  tooltip: 'Realizar Traspaso',
+                                  onPressed: () => _showTransferDialog(
+                                    snapshot.data!.spendingAccounts,
+                                    snapshot.data!.savingsAccount!,
+                                  ),
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink(); // Oculta el botón si no se cumplen las condiciones
+                          },
+                        ),
+                        AccountsActionButton(
+                          icon: const Icon(Icons.add, size: 20),
+                          tooltip: 'Añadir cuenta',
+                          onPressed: _navigateToAddAccount,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Añadir cuenta',
-            onPressed: _navigateToAddAccount,
-          ),
-        ],
-      ),
+        ),
         body: FutureBuilder<AccountSummary>(
           future: _accountSummaryFuture,
           builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
-          }
-          if (!snapshot.hasData) {
-            return const EmptyAccountsWidget(); // Fallback por si no hay datos
-          }
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(
+                child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)),
+              );
+            }
+            if (!snapshot.hasData) {
+              return const EmptyAccountsWidget(); // Fallback por si no hay datos
+            }
 
-          final summary = snapshot.data!;
-          
-          // --- LÓGICA CORREGIDA PARA EL ESTADO VACÍO ---
-          if (summary.spendingAccounts.isEmpty && summary.savingsAccount == null) {
-            return const EmptyAccountsWidget();
-          }
+            final summary = snapshot.data!;
+
+            // --- LÓGICA CORREGIDA PARA EL ESTADO VACÍO ---
+            if (summary.spendingAccounts.isEmpty && summary.savingsAccount == null) {
+              return const EmptyAccountsWidget();
+            }
 
             return RefreshIndicator(
               onRefresh: () async => _loadData(),
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                // SECCIÓN 1: CUENTAS PARA GASTAR
-                AccountsSummaryCard(
-                  title: 'Total Disponible',
-                  totalAmount: summary.totalSpendingBalance,
-                  iconData: FontAwesomeIcons.wallet,
-                  neonColor: Colors.blueAccent,
-                  child: summary.spendingAccounts.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text('No hay cuentas para gastos.', style: TextStyle(color: Colors.white70, fontStyle: FontStyle.italic)),
-                        )
-                      : Column(
-                          children: summary.spendingAccounts
-                              .map((acc) => AccountCard(account: acc))
-                              .toList(),
-                        ),
-                ),
-                const SizedBox(height: 24),
-
-                // SECCIÓN 2: CUENTA DE AHORRO (CON TARJETA REDISEÑADA)
-                if (summary.savingsAccount != null)
+                  // SECCIÓN 1: CUENTAS PARA GASTAR
                   AccountsSummaryCard(
-                    title: 'Total Ahorrado',
-                    totalAmount: summary.totalSavingsBalance,
-                    iconData: FontAwesomeIcons.piggyBank,
-                    neonColor: Colors.purpleAccent,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AccountCard(account: summary.savingsAccount!),
-                        const SizedBox(height: 8),
-                        // 2. El texto ahora es un botón funcional.
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () {
-                              // Navegamos a la pantalla de Metas
-                              Navigator.of(context).pushNamed('/goals');
-                            },
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Gestionar mis Huchas',
-                                  style: TextStyle(color: Colors.purpleAccent),
-                                ),
-                                SizedBox(width: 4),
-                                Icon(Icons.arrow_forward, color: Colors.purpleAccent, size: 16),
-                              ],
+                    title: 'Total Disponible',
+                    totalAmount: summary.totalSpendingBalance,
+                    iconData: FontAwesomeIcons.wallet,
+                    neonColor: Colors.blueAccent,
+                    child: summary.spendingAccounts.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              'No hay cuentas para gastos.',
+                              style: TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
                             ),
+                          )
+                        : Column(
+                            children: summary.spendingAccounts
+                                .map((acc) => AccountCard(account: acc))
+                                .toList(),
                           ),
-                        )
-                        // --- FIN DE LA MODIFICACIÓN ---
-                      ],
-                    ),
                   ),
-              ],
-            ),
+                  const SizedBox(height: 24),
+
+                  // SECCIÓN 2: CUENTA DE AHORRO (CON TARJETA REDISEÑADA)
+                  if (summary.savingsAccount != null)
+                    AccountsSummaryCard(
+                      title: 'Total Ahorrado',
+                      totalAmount: summary.totalSavingsBalance,
+                      iconData: FontAwesomeIcons.piggyBank,
+                      neonColor: Colors.purpleAccent,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AccountCard(account: summary.savingsAccount!),
+                          const SizedBox(height: 8),
+                          // 2. El texto ahora es un botón funcional.
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () {
+                                // Navegamos a la pantalla de Metas
+                                Navigator.of(context).pushNamed('/goals');
+                              },
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Gestionar mis Huchas',
+                                    style: TextStyle(color: Colors.purpleAccent),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Icon(Icons.arrow_forward, color: Colors.purpleAccent, size: 16),
+                                ],
+                              ),
+                            ),
+                          )
+                          // --- FIN DE LA MODIFICACIÓN ---
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class AccountsActionButton extends StatelessWidget {
+  const AccountsActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    super.key,
+  });
+
+  final Widget icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: OutlinedButton(
+          style: ButtonStyle(
+            shape: MaterialStateProperty.all(const CircleBorder()),
+            side: MaterialStateProperty.all(
+              BorderSide(color: Colors.white.withOpacity(0.9), width: 1),
+            ),
+            backgroundColor: MaterialStateProperty.all(Colors.transparent),
+            foregroundColor: MaterialStateProperty.all(Colors.white),
+            overlayColor: MaterialStateProperty.resolveWith(
+              (states) {
+                if (states.contains(MaterialState.pressed)) {
+                  return Colors.white.withOpacity(0.3);
+                }
+                if (states.contains(MaterialState.hovered)) {
+                  return Colors.white.withOpacity(0.2);
+                }
+                if (states.contains(MaterialState.focused)) {
+                  return Colors.white.withOpacity(0.25);
+                }
+                return null;
+              },
+            ),
+            minimumSize: MaterialStateProperty.all(const Size(48, 48)),
+            padding: MaterialStateProperty.all(EdgeInsets.zero),
+          ),
+          onPressed: onPressed,
+          child: icon,
         ),
       ),
     );
