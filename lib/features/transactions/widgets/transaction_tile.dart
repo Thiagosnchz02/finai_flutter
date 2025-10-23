@@ -73,8 +73,6 @@ class TransactionTile extends StatelessWidget {
     final subtitleText =
         '${transaction.category?.name ?? 'Sin Categoría'} · ${DateFormat.Hm().format(transaction.date)}';
 
-    final Color deleteActionBackground = const Color(0xFF1C0E29);
-    final Color deleteActionBorder = const Color(0xFFEA00FF);
     final Color deleteAccentColor = const Color(0xFFFF6B6B);
     final bool canDelete = onDelete != null;
 
@@ -150,27 +148,15 @@ class TransactionTile extends StatelessWidget {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: canDelete ? onDelete : null,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(24),
                     splashColor: deleteAccentColor.withOpacity(0.2),
-                    child: Ink(
+                    child: Padding(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: canDelete
-                            ? deleteActionBackground
-                            : deleteActionBackground.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: canDelete
-                              ? deleteActionBorder.withOpacity(0.8)
-                              : deleteActionBorder.withOpacity(0.3),
-                          width: 1.2,
-                        ),
-                      ),
                       child: Icon(
                         Icons.delete_outline,
                         color: canDelete
                             ? deleteAccentColor
-                            : deleteAccentColor.withOpacity(0.5),
+                            : deleteAccentColor.withOpacity(0.45),
                         size: 20,
                       ),
                     ),
