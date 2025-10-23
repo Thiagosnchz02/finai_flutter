@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/account_model.dart';
+import 'account_button_styles.dart';
 
 class AccountCard extends StatelessWidget {
   final Account account;
@@ -37,20 +38,12 @@ class AccountCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFF72585), Color(0xFF7209B7)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white.withOpacity(0.02),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x66000000),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-            spreadRadius: 0,
-          ),
-        ],
+        border: Border.all(
+          color: Colors.white.withOpacity(0.18),
+          width: 1.2,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 18.0),
@@ -100,17 +93,19 @@ class AccountCard extends StatelessWidget {
                 runSpacing: 12,
                 children: [
                   if (shouldShowAddMoneyButton)
-                    _GradientActionButton(
+                    _AccountActionButton(
                       label: 'Añadir dinero',
-                      onTap: onAddMoney,
+                      onPressed: onAddMoney,
+                      style: AccountButtonStyles.maroon,
                     ),
                   if (shouldShowManageSavingsButton)
-                    _SolidActionButton(
+                    _AccountActionButton(
                       label: 'Gestionar mis huchas',
-                      onTap: onManageSavings,
+                      onPressed: onManageSavings,
+                      style: AccountButtonStyles.pink,
                     ),
-                ],
-              ),
+              ],
+            ),
           ],
         ),
       ),
@@ -180,91 +175,30 @@ class _AccountInfoRow extends StatelessWidget {
   }
 }
 
-class _GradientActionButton extends StatelessWidget {
-  const _GradientActionButton({
+class _AccountActionButton extends StatelessWidget {
+  const _AccountActionButton({
     required this.label,
-    required this.onTap,
+    required this.onPressed,
+    required this.style,
   });
 
   final String label;
-  final VoidCallback? onTap;
+  final VoidCallback? onPressed;
+  final ButtonStyle style;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF85E5), Color(0xFF7C1DC9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 12,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 22.0, vertical: 12.0),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
-                ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SolidActionButton extends StatelessWidget {
-  const _SolidActionButton({
-    required this.label,
-    required this.onTap,
-  });
-
-  final String label;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: const Color(0xFF008842),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x40000000),
-                blurRadius: 4,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 22.0, vertical: 12.0),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.3,
-                ),
+    final theme = Theme.of(context);
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 44),
+      child: TextButton(
+        onPressed: onPressed,
+        style: style,
+        child: Text(
+          label,
+          style: theme.textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
           ),
         ),
       ),
