@@ -393,11 +393,7 @@ class _GradientFieldContainer extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: const LinearGradient(
-          colors: [Color(0x33F72585), Color(0x3300B4D8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: const Color.fromARGB(51, 255, 76, 156),
         border: Border.all(color: const Color(0x22FFFFFF)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
