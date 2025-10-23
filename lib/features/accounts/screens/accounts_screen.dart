@@ -160,14 +160,18 @@ class _AccountsScreenState extends State<AccountsScreen> {
               );
             }
             if (!snapshot.hasData) {
-              return const EmptyAccountsWidget(); // Fallback por si no hay datos
+              return EmptyAccountsWidget(
+                onAddAccount: _navigateToAddAccount,
+              ); // Fallback por si no hay datos
             }
 
             final summary = snapshot.data!;
 
             // --- LÓGICA CORREGIDA PARA EL ESTADO VACÍO ---
             if (summary.spendingAccounts.isEmpty && summary.savingsAccount == null) {
-              return const EmptyAccountsWidget();
+              return EmptyAccountsWidget(
+                onAddAccount: _navigateToAddAccount,
+              );
             }
 
             return RefreshIndicator(
