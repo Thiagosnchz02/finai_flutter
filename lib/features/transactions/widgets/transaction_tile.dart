@@ -73,9 +73,10 @@ class TransactionTile extends StatelessWidget {
     final subtitleText =
         '${transaction.category?.name ?? 'Sin Categoría'} · ${DateFormat.Hm().format(transaction.date)}';
 
-    final Color menuBackgroundColor = const Color(0xFF1C0E29);
-    final Color menuBorderColor = const Color(0xFFEA00FF);
+    final Color deleteActionBackground = const Color(0xFF1C0E29);
+    final Color deleteActionBorder = const Color(0xFFEA00FF);
     final Color deleteAccentColor = const Color(0xFFFF6B6B);
+    final bool canDelete = onDelete != null;
 
     return InkWell(
       borderRadius: BorderRadius.circular(24),
@@ -145,52 +146,35 @@ class TransactionTile extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                PopupMenuButton<_TransactionAction>(
-                  icon: const Icon(
-                    Icons.more_vert,
-                    color: Colors.white70,
-                    size: 20,
-                  ),
-                  color: menuBackgroundColor,
-                  surfaceTintColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(
-                      color: menuBorderColor.withOpacity(0.8),
-                      width: 1.2,
-                    ),
-                  ),
-                  onSelected: (value) {
-                    switch (value) {
-                      case _TransactionAction.delete:
-                        onDelete?.call();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem<_TransactionAction>(
-                      value: _TransactionAction.delete,
-                      enabled: onDelete != null,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.delete_outline,
-                            color: deleteAccentColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Eliminar',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: canDelete ? onDelete : null,
+                    borderRadius: BorderRadius.circular(14),
+                    splashColor: deleteAccentColor.withOpacity(0.2),
+                    child: Ink(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: canDelete
+                            ? deleteActionBackground
+                            : deleteActionBackground.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: canDelete
+                              ? deleteActionBorder.withOpacity(0.8)
+                              : deleteActionBorder.withOpacity(0.3),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.delete_outline,
+                        color: canDelete
+                            ? deleteAccentColor
+                            : deleteAccentColor.withOpacity(0.5),
+                        size: 20,
                       ),
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -200,5 +184,3 @@ class TransactionTile extends StatelessWidget {
     );
   }
 }
-
-enum _TransactionAction { delete }
