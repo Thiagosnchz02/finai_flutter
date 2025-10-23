@@ -59,7 +59,7 @@ class AccountsService {
       final userId = _supabase.auth.currentUser!.id;
       final accountsResponse = await _supabase
           .from('accounts')
-          .select('id, name, conceptual_type, is_archived')
+          .select('id, name, type, conceptual_type, is_archived')
           .eq('user_id', userId)
           .eq('is_archived', false);
 
@@ -74,20 +74,23 @@ class AccountsService {
       for (final account in accounts) {
         final name = (account['name'] as String?)?.toLowerCase();
         final conceptualType = (account['conceptual_type'] as String?)?.toLowerCase();
+        final accountType = (account['type'] as String?)?.toLowerCase();
 
         final normalizedName = name?.replaceAll('ó', 'o');
         final isNominaName = normalizedName != null && normalizedName.contains('nomina');
-        final isSpendingType = conceptualType == 'nomina' ||
-            conceptualType == 'para_gastar' ||
-            conceptualType == 'para gastar' ||
-            conceptualType == 'spending';
+        final isNominaType = conceptualType == 'nomina';
+        final isCorrienteType = accountType == 'corriente';
 
-        if (isNominaName) {
+        if (isNominaType && nominaAccount == null) {
+          nominaAccount = account;
+        }
+
+        if (isNominaName && isNominaType) {
           nominaAccount = account;
           break;
         }
 
-        if (isSpendingType && spendingAccount == null) {
+        if (isCorrienteType && spendingAccount == null) {
           spendingAccount = account;
         }
       }
