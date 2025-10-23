@@ -183,7 +183,7 @@ class AccountsService {
           );
       }
     } on PostgrestException catch (e) {
-      final message = e.message?.isNotEmpty == true
+      final message = e.message.isNotEmpty == true
           ? 'No se pudo eliminar la cuenta: ${e.message}'
           : 'No se pudo eliminar la cuenta por un error en Supabase.';
       return DeleteAccountResult(success: false, message: message);
