@@ -187,6 +187,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               Color(0xFF121212),
             ],
             stops: [0.0, 0.45, 0.75, 1.0],
+            colors: [Color.fromARGB(255, 128, 0, 139), Color(0xFF121212)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
