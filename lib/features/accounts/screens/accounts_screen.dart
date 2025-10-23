@@ -7,9 +7,9 @@ import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
 import 'package:finai_flutter/features/accounts/widgets/account_card.dart';
 import 'package:finai_flutter/features/accounts/widgets/accounts_summary_card.dart';
 import 'package:finai_flutter/features/accounts/widgets/empty_accounts_widget.dart';
-import 'package:finai_flutter/features/transactions/screens/add_edit_transaction_screen.dart';
 import '../widgets/internal_transfer_dialog.dart';
 import 'add_edit_account_screen.dart';
+import 'add_money_screen.dart';
 
 class AccountsScreen extends StatefulWidget {
   const AccountsScreen({super.key});
@@ -193,14 +193,15 @@ class _AccountsScreenState extends State<AccountsScreen> {
                                 .map(
                                   (acc) => AccountCard(
                                     account: acc,
-                                    onAddMoney: () {
-                                      Navigator.of(context).push(
+                                    onAddMoney: () async {
+                                      final result = await Navigator.of(context).push<bool>(
                                         MaterialPageRoute(
-                                          builder: (_) => const AddEditTransactionScreen(
-                                            initialType: 'ingreso',
-                                          ),
+                                          builder: (_) => AddMoneyScreen(initialAccount: acc),
                                         ),
                                       );
+                                      if (result == true && mounted) {
+                                        _loadData();
+                                      }
                                     },
                                   ),
                                 )
