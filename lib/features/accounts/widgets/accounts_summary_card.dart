@@ -14,6 +14,7 @@ class AccountsSummaryCard extends StatelessWidget {
   final List<BoxShadow> boxShadows;
   final Color iconBackgroundColor;
   final Color iconBorderColor;
+  final Color iconColor;
   final Widget? child; // Para la lista de cuentas o CTA
 
   const AccountsSummaryCard({
@@ -30,7 +31,7 @@ class AccountsSummaryCard extends StatelessWidget {
       ],
       stops: [0, 0.7071],
     ),
-    this.borderColor = const Color(0xFF008857),
+    this.borderColor = const Color(0x57FF0088),
     this.boxShadows = const [
       BoxShadow(
         color: Color(0x40000000),
@@ -39,8 +40,9 @@ class AccountsSummaryCard extends StatelessWidget {
         spreadRadius: 0,
       ),
     ],
-    this.iconBackgroundColor = const Color(0xFF2E0019),
-    this.iconBorderColor = const Color(0xFFE5E7EB),
+    this.iconBackgroundColor = const Color(0xFFFF0088),
+    this.iconBorderColor = Colors.transparent,
+    this.iconColor = Colors.white,
     this.child,
   });
 
@@ -67,6 +69,7 @@ class AccountsSummaryCard extends StatelessWidget {
                     iconData: iconData,
                     backgroundColor: iconBackgroundColor,
                     borderColor: iconBorderColor,
+                    iconColor: iconColor,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -113,11 +116,13 @@ class _AccountsSummaryIcon extends StatelessWidget {
   final IconData iconData;
   final Color backgroundColor;
   final Color borderColor;
+  final Color iconColor;
 
   const _AccountsSummaryIcon({
     required this.iconData,
     required this.backgroundColor,
     required this.borderColor,
+    required this.iconColor,
   });
 
   @override
@@ -133,7 +138,7 @@ class _AccountsSummaryIcon extends StatelessWidget {
       child: Center(
         child: FaIcon(
           iconData,
-          color: Colors.white,
+          color: iconColor,
           size: 24,
         ),
       ),
