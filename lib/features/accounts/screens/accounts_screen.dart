@@ -201,28 +201,24 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Wrap(
-                            spacing: 12,
-                            runSpacing: 8,
-                            alignment: WrapAlignment.end,
-                            children: [
-                              AccountsActionButton(
-                                label: 'Añadir cuenta',
-                                icon: Icons.add,
-                                onPressed: _navigateToAddAccount,
-                              ),
-                              AccountsActionButton(
-                                label: 'Transferencia entre cuentas',
-                                icon: Icons.sync_alt_rounded,
-                                onPressed: (summary.spendingAccounts.isEmpty ||
-                                        summary.savingsAccount == null)
-                                    ? null
-                                    : () => _showInternalTransferDialog(summary),
-                              ),
-                            ],
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            AccountsActionButton(
+                              label: 'Añadir cuenta',
+                              icon: Icons.add,
+                              onPressed: _navigateToAddAccount,
+                            ),
+                            const SizedBox(width: 12),
+                            AccountsActionButton(
+                              label: 'Transferencia entre cuentas',
+                              icon: Icons.sync_alt_rounded,
+                              onPressed: (summary.spendingAccounts.isEmpty ||
+                                      summary.savingsAccount == null)
+                                  ? null
+                                  : () => _showInternalTransferDialog(summary),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 24),
                       ],
