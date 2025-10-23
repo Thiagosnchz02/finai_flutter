@@ -97,7 +97,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
     return [
       IconButton(
         tooltip: 'Editar cuenta',
-        icon: const Icon(Icons.edit_outlined, color: Colors.white),
+        icon: const Icon(Icons.edit_outlined, color: Color(0xFFFF0088)),
         onPressed: () async {
           final result = await Navigator.of(context).push<bool>(
             MaterialPageRoute(
@@ -111,7 +111,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
       ),
       IconButton(
         tooltip: 'Eliminar cuenta',
-        icon: const Icon(Icons.delete_outline, color: Colors.white),
+        icon: const Icon(Icons.delete_outline, color: Color(0xFFFF0088)),
         onPressed: () => _confirmDeleteAccount(cuenta),
       ),
     ];
@@ -232,6 +232,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       title: 'Total Disponible',
                       totalAmount: summary.totalSpendingBalance,
                       iconData: FontAwesomeIcons.wallet,
+                      iconColor: const Color(0xFFFF0088),
+                      iconBackgroundColor: const Color.fromARGB(255, 44, 0, 23),
                       child: summary.spendingAccounts.isEmpty
                           ? const Padding(
                               padding: EdgeInsets.symmetric(vertical: 8.0),
@@ -270,6 +272,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
                         title: 'Total Ahorrado',
                         totalAmount: summary.totalSavingsBalance,
                         iconData: FontAwesomeIcons.piggyBank,
+                        iconColor: const Color(0xFFFF0088),
+                      iconBackgroundColor: const Color.fromARGB(255, 44, 0, 23),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

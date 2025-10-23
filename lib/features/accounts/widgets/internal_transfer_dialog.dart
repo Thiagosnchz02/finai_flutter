@@ -96,9 +96,13 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
         },
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF121212),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF4D0029), Color(0xFF121212)],
+            ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFFF33CC), width: 2),
+            border: Border.all(color: const Color.fromARGB(255, 255, 0, 187), width: 2),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
           child: FocusTraversalGroup(

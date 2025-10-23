@@ -38,10 +38,10 @@ class AccountCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: Colors.white.withOpacity(0.18),
+          color: Colors.transparent,
           width: 1.2,
         ),
       ),
