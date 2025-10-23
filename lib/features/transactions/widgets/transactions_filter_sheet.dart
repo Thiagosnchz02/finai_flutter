@@ -3,6 +3,12 @@ import 'package:intl/intl.dart';
 
 import 'package:finai_flutter/core/utils/icon_utils.dart';
 
+const Color _backgroundColor = Color.fromARGB(255, 46, 12, 56);
+const Color _highlightColor = Color(0xFFEA00FF);
+const Color _borderColor = Color(0x66EA00FF);
+const Color _inputFillColor = Color(0x1FFFFFFF);
+const Color _primaryTextColor = Color(0xFFE0E0E0);
+
 class TransactionsFilterSheet extends StatefulWidget {
   final String type;
   final double? minAmount;
@@ -185,6 +191,34 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
       return 'Selecciona un rango';
     }
 
+    InputDecoration buildInputDecoration(String label) {
+      return InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: _inputFillColor,
+        labelStyle: const TextStyle(color: _primaryTextColor),
+        floatingLabelStyle: const TextStyle(
+          color: _highlightColor,
+          fontWeight: FontWeight.w600,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _borderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: _highlightColor, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      );
+    }
+
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
       padding: EdgeInsets.only(bottom: viewInsets.bottom),
       child: DraggableScrollableSheet(
@@ -194,72 +228,105 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
         maxChildSize: 0.95,
         builder: (context, scrollController) {
           return Material(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            color: _backgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             clipBehavior: Clip.antiAlias,
             child: SingleChildScrollView(
               controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    width: 40,
+                    width: 48,
                     height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
+                    margin: const EdgeInsets.only(bottom: 20),
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade400,
+                      color: Colors.white24,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                   Text(
                     'Filtros de transacciones',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   DropdownButtonFormField<String>(
                     value: _type,
-                    items: const [
-                      DropdownMenuItem(value: 'todos', child: Text('Todos')),
-                      DropdownMenuItem(value: 'gasto', child: Text('Gasto')),
-                      DropdownMenuItem(value: 'ingreso', child: Text('Ingreso')),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'todos',
+                        child: Text(
+                          'Todos',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'gasto',
+                        child: Text(
+                          'Gasto',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      DropdownMenuItem(
+                        value: 'ingreso',
+                        child: Text(
+                          'Ingreso',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
                     ],
                     onChanged: (value) {
                       if (value != null && value != _type) {
                         _handleTypeChanged(value);
                       }
                     },
-                    decoration: const InputDecoration(labelText: 'Tipo'),
+                    decoration: buildInputDecoration('Tipo'),
+                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: const Color(0xFF2A1237),
+                    iconEnabledColor: _highlightColor,
                     isExpanded: true,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _minAmountController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Importe mínimo'),
+                    decoration: buildInputDecoration('Importe mínimo'),
+                    style: const TextStyle(color: Colors.white),
+                    cursorColor: _highlightColor,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _maxAmountController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(labelText: 'Importe máximo'),
+                    decoration: buildInputDecoration('Importe máximo'),
+                    style: const TextStyle(color: Colors.white),
+                    cursorColor: _highlightColor,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   if (_isLoadingCategories)
                     const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Center(child: CircularProgressIndicator()),
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: CircularProgressIndicator(color: _highlightColor),
+                      ),
                     )
                   else
                     DropdownButtonFormField<String?>(
                       value: _selectedCategoryId,
-                      decoration: const InputDecoration(labelText: 'Categoría'),
+                      decoration: buildInputDecoration('Categoría'),
                       items: [
-                        const DropdownMenuItem<String?>(
+                        DropdownMenuItem<String?>(
                           value: null,
-                          child: Text('Todas las categorías'),
+                          child: Text(
+                            'Todas las categorías',
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
                         ..._categories.map((category) {
                           final icon =
@@ -268,12 +335,13 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                             value: category['id'] as String?,
                             child: Row(
                               children: [
-                                Icon(icon, size: 20),
+                                Icon(icon, size: 20, color: Colors.white),
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
                                     category['name'] as String? ?? 'Sin nombre',
                                     overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(color: Colors.white),
                                   ),
                                 ),
                               ],
@@ -286,6 +354,9 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                           _selectedCategoryId = value;
                         });
                       },
+                      style: const TextStyle(color: Colors.white),
+                      dropdownColor: const Color(0xFF2A1237),
+                      iconEnabledColor: _highlightColor,
                       isExpanded: true,
                     ),
                   if (!_isLoadingCategories && _categories.isEmpty)
@@ -293,19 +364,40 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       padding: EdgeInsets.only(top: 8),
                       child: Text(
                         'No hay categorías disponibles para este tipo.',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
                       ),
                     ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Rango de fechas'),
+                      const Text(
+                        'Rango de fechas',
+                        style: TextStyle(
+                          color: _primaryTextColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(
                             child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: _inputFillColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 18,
+                                ),
+                                side: const BorderSide(color: _borderColor),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                               onPressed: () => _pickDateRange(),
                               icon: const Icon(Icons.calendar_today_outlined),
                               label: Align(
@@ -313,6 +405,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                                 child: Text(
                                   _buildRangeText(),
                                   overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: Colors.white),
                                 ),
                               ),
                             ),
@@ -322,29 +415,46 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                               tooltip: 'Limpiar fechas',
                               onPressed: _clearDateRange,
                               icon: const Icon(Icons.clear),
+                              color: Colors.white70,
+                              splashRadius: 24,
                             ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   TextField(
                     controller: _conceptController,
-                    decoration: const InputDecoration(
-                      labelText: 'Concepto (opcional)',
-                    ),
+                    decoration: buildInputDecoration('Concepto (opcional)'),
+                    style: const TextStyle(color: Colors.white),
+                    cursorColor: _highlightColor,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 28),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         onPressed: () => _clear(),
+                        style: TextButton.styleFrom(
+                          foregroundColor: _highlightColor,
+                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                         child: const Text('Limpiar'),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                       ElevatedButton(
                         onPressed: _apply,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _highlightColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
                         child: const Text('Aplicar'),
                       ),
                     ],
