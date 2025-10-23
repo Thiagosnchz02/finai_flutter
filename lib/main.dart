@@ -18,6 +18,7 @@ import 'features/profile/screens/ai_avatar_options_screen.dart';
 import 'features/profile/screens/image_to_image_screen.dart';
 import 'features/transactions/screens/transactions_screen.dart';
 import 'features/accounts/screens/accounts_screen.dart';
+import 'features/accounts/screens/add_money_screen.dart';
 import 'features/fixed_expenses/screens/fixed_expenses_screen.dart';
 import 'features/goals/screens/goals_screen.dart';
 import 'features/budgets/screens/budget_screen.dart';
@@ -25,6 +26,7 @@ import 'features/reports/screens/reports_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
 import 'features/categories/screens/category_management_screen.dart';
 import 'features/fincount/screens/fincount_screen.dart';
+import 'features/accounts/models/account_model.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -143,6 +145,10 @@ class _MyAppState extends State<MyApp> {
         '/dashboard': (context) => const DashboardScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/accounts': (context) => const AccountsScreen(),
+        '/accounts/add-money': (context) {
+          final account = ModalRoute.of(context)?.settings.arguments as Account?;
+          return AddMoneyScreen(initialAccount: account);
+        },
         '/avatar/generative': (context) => const GenerativeAiScreen(),
         '/avatar/meta-import': (context) => const MetaImportScreen(),
         '/avatar/ai-options': (context) => const AiAvatarOptionsScreen(),
