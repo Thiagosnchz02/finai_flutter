@@ -80,6 +80,7 @@ class AccountsService {
         final isNominaName = normalizedName != null && normalizedName.contains('nomina');
         final isNominaType = conceptualType == 'nomina';
         final isCorrienteType = accountType == 'corriente';
+        final isSavingsConcept = conceptualType == 'ahorro';
 
         if (isNominaType && nominaAccount == null) {
           nominaAccount = account;
@@ -90,12 +91,12 @@ class AccountsService {
           break;
         }
 
-        if (isCorrienteType && spendingAccount == null) {
+        if (isCorrienteType && !isSavingsConcept && spendingAccount == null) {
           spendingAccount = account;
         }
       }
 
-      final targetAccount = nominaAccount ?? spendingAccount ?? (accounts.isNotEmpty ? accounts.first : null);
+      final targetAccount = nominaAccount ?? spendingAccount;
 
       if (targetAccount == null) {
         return null;
@@ -133,7 +134,7 @@ class AccountsService {
     required double amount,
   }) async {
     final userId = _supabase.auth.currentUser!.id; // Obtenemos el ID del usuario actual
-    
+
     await _supabase.rpc('execute_internal_transfer', params: {
       'p_user_id': userId, // <-- Le pasamos el ID del usuario a la función
       'p_from_account_id': fromAccountId,
