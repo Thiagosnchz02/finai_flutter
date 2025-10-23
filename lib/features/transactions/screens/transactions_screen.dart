@@ -182,12 +182,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           gradient: LinearGradient(
             colors: [
               Color(0xFF80008B),
-              Color(0xFF3C0F48),
-              Color(0xFF1A0A22),
               Color(0xFF121212),
             ],
-            stops: [0.0, 0.45, 0.75, 1.0],
-            colors: [Color.fromARGB(255, 128, 0, 139), Color(0xFF121212)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -276,7 +272,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             decoration: const BoxDecoration(
               boxShadow: [
                 BoxShadow(
-                  color: Color(0x33B400C4),
+                  color: Colors.transparent,
                   blurRadius: 32,
                   spreadRadius: -12,
                   offset: Offset(0, 12),
@@ -399,7 +395,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(
               color: Color(0xFFEA00FF),
-              width: 4.19,
+              width: 2,
             ),
           ),
         ),
