@@ -318,27 +318,15 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFF3C0F48),
       appBar: AppBar(
         title: Text(widget.transaction == null ? 'Nueva Transacción' : 'Editar Transacción'),
-        backgroundColor: Colors.transparent,
+        backgroundColor: const Color(0xFF3C0F48),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF80008B),
-              Color(0xFF3C0F48),
-              Color(0xFF1A0A22),
-              Color(0xFF121212),
-            ],
-            stops: [0.0, 0.45, 0.75, 1.0],
-          ),
-        ),
+        color: const Color(0xFF3C0F48),
         child: SafeArea(
           child: Form(
             key: _formKey,
