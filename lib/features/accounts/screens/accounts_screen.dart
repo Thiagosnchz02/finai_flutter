@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:finai_flutter/features/accounts/models/account_model.dart';
 import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
 import 'package:finai_flutter/features/accounts/widgets/account_card.dart';
+import 'package:finai_flutter/features/accounts/widgets/accounts_action_button.dart';
 import 'package:finai_flutter/features/accounts/widgets/accounts_summary_card.dart';
 import 'package:finai_flutter/features/accounts/widgets/empty_accounts_widget.dart';
 import 'add_edit_account_screen.dart';
@@ -36,6 +37,19 @@ class _AccountsScreenState extends State<AccountsScreen> {
   void _navigateToAddAccount() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(builder: (context) => const AddEditAccountScreen()),
+    );
+    if (result == true && mounted) {
+      _loadData();
+    }
+  }
+
+  void _navigateToGoals() {
+    Navigator.of(context).pushNamed('/goals');
+  }
+
+  Future<void> _navigateToAddMoney() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (context) => const AddMoneyScreen()),
     );
     if (result == true && mounted) {
       _loadData();
@@ -89,19 +103,59 @@ class _AccountsScreenState extends State<AccountsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   children: [
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: const [
-                        SizedBox(height: 8),
-                        Text(
-                          'Mis Cuentas',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 30,
-                            color: Color(0xFFFF0088),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SizedBox(height: 8),
+                        const Center(
+                          child: Text(
+                            'Mis Cuentas',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 30,
+                              color: Color(0xFFFF0088),
+                            ),
                           ),
                         ),
-                        SizedBox(height: 24),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            TextButton(
+                              onPressed: _navigateToGoals,
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                textStyle: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              child: const Text('Mis metas'),
+                            ),
+                            const Spacer(),
+                            Flexible(
+                              child: Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                alignment: WrapAlignment.end,
+                                children: [
+                                  AccountsActionButton(
+                                    label: 'Añadir cuenta',
+                                    icon: Icons.add,
+                                    onPressed: _navigateToAddAccount,
+                                  ),
+                                  AccountsActionButton(
+                                    label: 'Registrar ingreso',
+                                    icon: Icons.savings_rounded,
+                                    onPressed: summary.spendingAccounts.isEmpty
+                                        ? null
+                                        : _navigateToAddMoney,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
                       ],
                     ),
                     // SECCIÓN 1: CUENTAS PARA GASTAR
