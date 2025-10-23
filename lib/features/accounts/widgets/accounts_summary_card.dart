@@ -9,7 +9,11 @@ class AccountsSummaryCard extends StatelessWidget {
   final String title;
   final double totalAmount;
   final IconData iconData;
-  final Color neonColor;
+  final Gradient gradient;
+  final Color borderColor;
+  final List<BoxShadow> boxShadows;
+  final Color iconBackgroundColor;
+  final Color iconBorderColor;
   final Widget? child; // Para la lista de cuentas o CTA
 
   const AccountsSummaryCard({
@@ -17,7 +21,26 @@ class AccountsSummaryCard extends StatelessWidget {
     required this.title,
     required this.totalAmount,
     required this.iconData,
-    required this.neonColor,
+    this.gradient = const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        Color(0xFF952D65),
+        Color(0xFF3D0020),
+      ],
+      stops: [0, 0.7071],
+    ),
+    this.borderColor = const Color(0xFF008857),
+    this.boxShadows = const [
+      BoxShadow(
+        color: Color(0x40000000),
+        offset: Offset(0, 25),
+        blurRadius: 50,
+        spreadRadius: 0,
+      ),
+    ],
+    this.iconBackgroundColor = const Color(0xFF2E0019),
+    this.iconBorderColor = const Color(0xFFE5E7EB),
     this.child,
   });
 
@@ -28,15 +51,10 @@ class AccountsSummaryCard extends StatelessWidget {
     return GlassCard(
       child: Container(
         decoration: BoxDecoration(
+          gradient: gradient,
           borderRadius: BorderRadius.circular(kCardBorderRadius),
-          border: Border.all(color: neonColor.withOpacity(0.7), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: neonColor.withOpacity(0.3),
-              blurRadius: 10,
-              spreadRadius: 2,
-            ),
-          ],
+          border: Border.all(color: borderColor, width: 1.5),
+          boxShadow: boxShadows,
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -45,16 +63,36 @@ class AccountsSummaryCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  FaIcon(iconData, color: Colors.white, size: 28),
+                  _AccountsSummaryIcon(
+                    iconData: iconData,
+                    backgroundColor: iconBackgroundColor,
+                    borderColor: iconBorderColor,
+                  ),
                   const SizedBox(width: 12),
-                  Text(title, style: TextStyle(fontSize: 18, color: Colors.white.withOpacity(0.8))),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        height: 1.0,
+                        color: Colors.white.withOpacity(0.85),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
               Center(
                 child: Text(
                   formattedTotal,
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                    color: Colors.white,
+                  ),
                 ),
               ),
               if (child != null) ...[
@@ -65,6 +103,38 @@ class AccountsSummaryCard extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AccountsSummaryIcon extends StatelessWidget {
+  final IconData iconData;
+  final Color backgroundColor;
+  final Color borderColor;
+
+  const _AccountsSummaryIcon({
+    required this.iconData,
+    required this.backgroundColor,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: backgroundColor,
+        border: Border.all(color: borderColor, width: 1.5),
+      ),
+      child: Center(
+        child: FaIcon(
+          iconData,
+          color: Colors.white,
+          size: 24,
         ),
       ),
     );

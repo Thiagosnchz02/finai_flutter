@@ -179,7 +179,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     title: 'Total Disponible',
                     totalAmount: summary.totalSpendingBalance,
                     iconData: FontAwesomeIcons.wallet,
-                    neonColor: Colors.blueAccent,
                     child: summary.spendingAccounts.isEmpty
                         ? const Padding(
                             padding: EdgeInsets.symmetric(vertical: 8.0),
@@ -202,7 +201,6 @@ class _AccountsScreenState extends State<AccountsScreen> {
                       title: 'Total Ahorrado',
                       totalAmount: summary.totalSavingsBalance,
                       iconData: FontAwesomeIcons.piggyBank,
-                      neonColor: Colors.purpleAccent,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
