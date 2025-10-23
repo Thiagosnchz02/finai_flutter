@@ -217,6 +217,8 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
                         hintStyle: TextStyle(color: Colors.white54),
                         border: InputBorder.none,
                         prefixIcon: Icon(Icons.euro, color: Colors.white70),
+                        filled: true,
+                        fillColor: Colors.transparent,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -252,7 +254,12 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
                           isExpanded: true,
                           dropdownColor: const Color(0xFF341931),
                           iconEnabledColor: Colors.white,
-                          decoration: const InputDecoration(border: InputBorder.none),
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            filled: true,
+                            fillColor: Colors.transparent,
+                          ),
                           items: accounts
                               .map(
                                 (acc) => DropdownMenuItem<String>(
@@ -272,7 +279,7 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
                     },
                   ),
                   const SizedBox(height: 24),
-                  _SectionLabel(label: 'Propósito'),
+                  _SectionLabel(label: 'Categoría'),
                   const SizedBox(height: 8),
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _categoriesFuture,
@@ -286,26 +293,33 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
                           message: 'Crea categorías de ingreso para clasificarlos mejor.',
                         );
                       }
-                      return Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: categories.map((category) {
-                          final id = category['id'] as String;
-                          final isSelected = id == _selectedCategoryId;
-                          return ChoiceChip(
-                            label: Text(category['name'] as String),
-                            labelStyle: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white70,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            selected: isSelected,
-                            selectedColor: const Color(0xFFF72585),
-                            backgroundColor: const Color(0x33FFFFFF),
-                            onSelected: (_) {
-                              setState(() => _selectedCategoryId = id);
-                            },
-                          );
-                        }).toList(),
+                      return _GradientFieldContainer(
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedCategoryId,
+                          isExpanded: true,
+                          dropdownColor: const Color(0xFF341931),
+                          iconEnabledColor: Colors.white,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            filled: true,
+                            fillColor: Colors.transparent,
+                          ),
+                          items: categories
+                              .map(
+                                (category) => DropdownMenuItem<String>(
+                                  value: category['id'] as String,
+                                  child: Text(
+                                    category['name'] as String,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() => _selectedCategoryId = value);
+                          },
+                        ),
                       );
                     },
                   ),
@@ -344,6 +358,8 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
                         hintText: 'Añade detalles adicionales',
                         hintStyle: TextStyle(color: Colors.white54),
                         border: InputBorder.none,
+                        filled: true,
+                        fillColor: Colors.transparent,
                       ),
                     ),
                   ),
