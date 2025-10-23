@@ -8,6 +8,7 @@ import 'package:finai_flutter/features/accounts/widgets/account_card.dart';
 import 'package:finai_flutter/features/accounts/widgets/accounts_action_button.dart';
 import 'package:finai_flutter/features/accounts/widgets/accounts_summary_card.dart';
 import 'package:finai_flutter/features/accounts/widgets/empty_accounts_widget.dart';
+import 'package:finai_flutter/features/accounts/widgets/internal_transfer_dialog.dart';
 import 'add_edit_account_screen.dart';
 import 'add_money_screen.dart';
 
@@ -120,10 +121,19 @@ class _AccountsScreenState extends State<AccountsScreen> {
     Navigator.of(context).pushNamed('/goals');
   }
 
-  Future<void> _navigateToAddMoney() async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => const AddMoneyScreen()),
+  Future<void> _showInternalTransferDialog(AccountSummary summary) async {
+    if (summary.savingsAccount == null || summary.spendingAccounts.isEmpty) {
+      return;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (_) => InternalTransferDialog(
+        spendingAccounts: summary.spendingAccounts,
+        savingsAccount: summary.savingsAccount!,
+      ),
     );
+
     if (result == true && mounted) {
       _loadData();
     }
@@ -191,42 +201,28 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: _navigateToGoals,
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                textStyle: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Wrap(
+                            spacing: 12,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.end,
+                            children: [
+                              AccountsActionButton(
+                                label: 'Añadir cuenta',
+                                icon: Icons.add,
+                                onPressed: _navigateToAddAccount,
                               ),
-                              child: const Text('Mis metas'),
-                            ),
-                            const Spacer(),
-                            Flexible(
-                              child: Wrap(
-                                spacing: 12,
-                                runSpacing: 8,
-                                alignment: WrapAlignment.end,
-                                children: [
-                                  AccountsActionButton(
-                                    label: 'Añadir cuenta',
-                                    icon: Icons.add,
-                                    onPressed: _navigateToAddAccount,
-                                  ),
-                                  AccountsActionButton(
-                                    label: 'Registrar ingreso',
-                                    icon: Icons.savings_rounded,
-                                    onPressed: summary.spendingAccounts.isEmpty
-                                        ? null
-                                        : _navigateToAddMoney,
-                                  ),
-                                ],
+                              AccountsActionButton(
+                                label: 'Transferencia entre cuentas',
+                                icon: Icons.sync_alt_rounded,
+                                onPressed: (summary.spendingAccounts.isEmpty ||
+                                        summary.savingsAccount == null)
+                                    ? null
+                                    : () => _showInternalTransferDialog(summary),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -283,9 +279,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                           children: [
                             AccountCard(
                               account: summary.savingsAccount!,
-                              onManageSavings: () {
-                                Navigator.of(context).pushNamed('/goals');
-                              },
+                              onManageSavings: _navigateToGoals,
                             ),
                           ],
                         ),
