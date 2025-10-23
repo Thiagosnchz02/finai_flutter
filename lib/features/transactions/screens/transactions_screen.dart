@@ -126,20 +126,66 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Future<void> _deleteTransaction(Transaction transaction) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar transacción'),
-        content: const Text('¿Seguro que deseas eliminar esta transacción?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+      builder: (context) {
+        const backgroundColor = Color(0xFF31090D);
+        const borderColor = Color(0xFFFF4D4D);
+        const highlightColor = Color(0xFFFF6B6B);
+
+        return AlertDialog(
+          backgroundColor: backgroundColor,
+          surfaceTintColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(
+              color: borderColor,
+              width: 1.6,
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Eliminar'),
+          titleTextStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
-        ],
-      ),
+          contentTextStyle: const TextStyle(
+            color: Color(0xFFFFCDD2),
+            fontSize: 16,
+            height: 1.4,
+          ),
+          title: const Text('Eliminar transacción'),
+          content: const Text('¿Seguro que deseas eliminar esta transacción?'),
+          actionsAlignment: MainAxisAlignment.end,
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                foregroundColor: Colors.white70,
+                backgroundColor: Colors.white.withOpacity(0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: Colors.white.withOpacity(0.18),
+                  ),
+                ),
+              ),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                foregroundColor: Colors.white,
+                backgroundColor: highlightColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
     );
 
     if (shouldDelete == true) {

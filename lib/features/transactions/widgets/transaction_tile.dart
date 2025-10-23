@@ -8,14 +8,12 @@ import 'package:finai_flutter/features/transactions/models/transaction_model.dar
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback? onTap;
-  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const TransactionTile({
     super.key,
     required this.transaction,
     this.onTap,
-    this.onEdit,
     this.onDelete,
   });
 
@@ -74,6 +72,11 @@ class TransactionTile extends StatelessWidget {
 
     final subtitleText =
         '${transaction.category?.name ?? 'Sin Categoría'} · ${DateFormat.Hm().format(transaction.date)}';
+
+    final Color deleteActionBackground = const Color(0xFF1C0E29);
+    final Color deleteActionBorder = const Color(0xFFEA00FF);
+    final Color deleteAccentColor = const Color(0xFFFF6B6B);
+    final bool canDelete = onDelete != null;
 
     return InkWell(
       borderRadius: BorderRadius.circular(24),
@@ -143,37 +146,35 @@ class TransactionTile extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                PopupMenuButton<_TransactionAction>(
-                  icon: const Icon(
-                    Icons.more_vert,
-                    color: Colors.white70,
-                    size: 20,
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: canDelete ? onDelete : null,
+                    borderRadius: BorderRadius.circular(14),
+                    splashColor: deleteAccentColor.withOpacity(0.2),
+                    child: Ink(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: canDelete
+                            ? deleteActionBackground
+                            : deleteActionBackground.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: canDelete
+                              ? deleteActionBorder.withOpacity(0.8)
+                              : deleteActionBorder.withOpacity(0.3),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.delete_outline,
+                        color: canDelete
+                            ? deleteAccentColor
+                            : deleteAccentColor.withOpacity(0.5),
+                        size: 20,
+                      ),
+                    ),
                   ),
-                  color: theme.colorScheme.surface,
-                  onSelected: (value) {
-                    switch (value) {
-                      case _TransactionAction.edit:
-                        if (!isTransfer) {
-                          onEdit?.call();
-                        }
-                        break;
-                      case _TransactionAction.delete:
-                        onDelete?.call();
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    PopupMenuItem<_TransactionAction>(
-                      value: _TransactionAction.edit,
-                      enabled: !isTransfer && onEdit != null,
-                      child: const Text('Editar'),
-                    ),
-                    PopupMenuItem<_TransactionAction>(
-                      value: _TransactionAction.delete,
-                      enabled: onDelete != null,
-                      child: const Text('Eliminar'),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -183,5 +184,3 @@ class TransactionTile extends StatelessWidget {
     );
   }
 }
-
-enum _TransactionAction { edit, delete }
