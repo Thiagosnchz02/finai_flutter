@@ -59,7 +59,7 @@ class AccountsService {
       final userId = _supabase.auth.currentUser!.id;
       final accountsResponse = await _supabase
           .from('accounts')
-          .select('id, name, conceptual_type, is_archived')
+          .select('id, name, type, conceptual_type, is_archived')
           .eq('user_id', userId)
           .eq('is_archived', false);
 
@@ -68,18 +68,35 @@ class AccountsService {
         return null;
       }
 
-      Map<String, dynamic>? targetAccount;
+      Map<String, dynamic>? spendingAccount;
+      Map<String, dynamic>? nominaAccount;
+
       for (final account in accounts) {
         final name = (account['name'] as String?)?.toLowerCase();
         final conceptualType = (account['conceptual_type'] as String?)?.toLowerCase();
-        if (name == 'para gastar' ||
-            conceptualType == 'para_gastar' ||
-            conceptualType == 'para gastar' ||
-            conceptualType == 'spending') {
-          targetAccount = account;
+        final accountType = (account['type'] as String?)?.toLowerCase();
+
+        final normalizedName = name?.replaceAll('ó', 'o');
+        final isNominaName = normalizedName != null && normalizedName.contains('nomina');
+        final isNominaType = conceptualType == 'nomina';
+        final isCorrienteType = accountType == 'corriente';
+        final isSavingsConcept = conceptualType == 'ahorro';
+
+        if (isNominaType && nominaAccount == null) {
+          nominaAccount = account;
+        }
+
+        if (isNominaName && isNominaType) {
+          nominaAccount = account;
           break;
         }
+
+        if (isCorrienteType && !isSavingsConcept && spendingAccount == null) {
+          spendingAccount = account;
+        }
       }
+
+      final targetAccount = nominaAccount ?? spendingAccount;
 
       if (targetAccount == null) {
         return null;
@@ -93,14 +110,17 @@ class AccountsService {
       }
 
       final balancesList = List<Map<String, dynamic>>.from(balancesResponse);
-
+      final balancesMap = <String, double>{};
       for (final balance in balancesList) {
-        if (balance['account_id'] == targetAccount['id']) {
-          return (balance['balance'] as num).toDouble();
+        final accountId = balance['account_id'];
+        if (accountId == null) {
+          continue;
         }
+        balancesMap[accountId.toString()] = (balance['balance'] as num).toDouble();
       }
 
-      return 0.0;
+      final targetAccountId = targetAccount['id'].toString();
+      return balancesMap[targetAccountId] ?? 0.0;
     } catch (e) {
       rethrow;
     }
@@ -114,7 +134,7 @@ class AccountsService {
     required double amount,
   }) async {
     final userId = _supabase.auth.currentUser!.id; // Obtenemos el ID del usuario actual
-    
+
     await _supabase.rpc('execute_internal_transfer', params: {
       'p_user_id': userId, // <-- Le pasamos el ID del usuario a la función
       'p_from_account_id': fromAccountId,
