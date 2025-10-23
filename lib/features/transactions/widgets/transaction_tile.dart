@@ -8,14 +8,12 @@ import 'package:finai_flutter/features/transactions/models/transaction_model.dar
 class TransactionTile extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback? onTap;
-  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
 
   const TransactionTile({
     super.key,
     required this.transaction,
     this.onTap,
-    this.onEdit,
     this.onDelete,
   });
 
@@ -74,6 +72,10 @@ class TransactionTile extends StatelessWidget {
 
     final subtitleText =
         '${transaction.category?.name ?? 'Sin Categoría'} · ${DateFormat.Hm().format(transaction.date)}';
+
+    final Color menuBackgroundColor = const Color(0xFF1C0E29);
+    final Color menuBorderColor = const Color(0xFFEA00FF);
+    final Color deleteAccentColor = const Color(0xFFFF6B6B);
 
     return InkWell(
       borderRadius: BorderRadius.circular(24),
@@ -149,14 +151,17 @@ class TransactionTile extends StatelessWidget {
                     color: Colors.white70,
                     size: 20,
                   ),
-                  color: theme.colorScheme.surface,
+                  color: menuBackgroundColor,
+                  surfaceTintColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: menuBorderColor.withOpacity(0.8),
+                      width: 1.2,
+                    ),
+                  ),
                   onSelected: (value) {
                     switch (value) {
-                      case _TransactionAction.edit:
-                        if (!isTransfer) {
-                          onEdit?.call();
-                        }
-                        break;
                       case _TransactionAction.delete:
                         onDelete?.call();
                         break;
@@ -164,14 +169,26 @@ class TransactionTile extends StatelessWidget {
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem<_TransactionAction>(
-                      value: _TransactionAction.edit,
-                      enabled: !isTransfer && onEdit != null,
-                      child: const Text('Editar'),
-                    ),
-                    PopupMenuItem<_TransactionAction>(
                       value: _TransactionAction.delete,
                       enabled: onDelete != null,
-                      child: const Text('Eliminar'),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.delete_outline,
+                            color: deleteAccentColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Eliminar',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -184,4 +201,4 @@ class TransactionTile extends StatelessWidget {
   }
 }
 
-enum _TransactionAction { edit, delete }
+enum _TransactionAction { delete }
