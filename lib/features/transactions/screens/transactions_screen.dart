@@ -175,10 +175,18 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Container(
+        constraints: const BoxConstraints.expand(),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFEA00FF), Color(0xFF121212)],
+            colors: [
+              Color(0xFF80008B),
+              Color(0xFF3C0F48),
+              Color(0xFF1A0A22),
+              Color(0xFF121212),
+            ],
+            stops: [0.0, 0.45, 0.75, 1.0],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
