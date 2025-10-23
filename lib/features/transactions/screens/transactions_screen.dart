@@ -176,9 +176,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+        constraints: const BoxConstraints.expand(),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFEA00FF), Color(0xFF121212)],
+            colors: [Color.fromARGB(255, 128, 0, 139), Color(0xFF121212)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
