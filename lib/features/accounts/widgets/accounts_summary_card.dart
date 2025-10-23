@@ -8,6 +8,7 @@ import '../../../presentation/widgets/glass_card.dart';
 class AccountsSummaryCard extends StatelessWidget {
   final String title;
   final double totalAmount;
+  final String? headerTitle;
   final IconData iconData;
   final Gradient gradient;
   final Color borderColor;
@@ -15,6 +16,7 @@ class AccountsSummaryCard extends StatelessWidget {
   final Color iconBackgroundColor;
   final Color iconBorderColor;
   final Color iconColor;
+  final List<Widget> headerActions;
   final Widget? child; // Para la lista de cuentas o CTA
 
   const AccountsSummaryCard({
@@ -22,6 +24,7 @@ class AccountsSummaryCard extends StatelessWidget {
     required this.title,
     required this.totalAmount,
     required this.iconData,
+    this.headerTitle,
     this.gradient = const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
@@ -43,6 +46,7 @@ class AccountsSummaryCard extends StatelessWidget {
     this.iconBackgroundColor = const Color(0xFFFF0088),
     this.iconBorderColor = Colors.transparent,
     this.iconColor = Colors.white,
+    this.headerActions = const [],
     this.child,
   });
 
@@ -63,6 +67,34 @@ class AccountsSummaryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (headerTitle != null || headerActions.isNotEmpty) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (headerTitle != null)
+                      Expanded(
+                        child: Text(
+                          headerTitle!,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    if (headerActions.isNotEmpty) ...[
+                      if (headerTitle != null) const SizedBox(width: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        alignment: WrapAlignment.end,
+                        children: headerActions,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
               Row(
                 children: [
                   _AccountsSummaryIcon(

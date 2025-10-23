@@ -142,4 +142,13 @@ class AccountsService {
       'p_amount': amount,
     });
   }
+
+  Future<void> deleteAccount(String accountId) async {
+    final userId = _supabase.auth.currentUser!.id;
+
+    await _supabase
+        .from('accounts')
+        .update({'is_archived': true})
+        .match({'id': accountId, 'user_id': userId});
+  }
 }

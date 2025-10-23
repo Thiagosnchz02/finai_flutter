@@ -43,6 +43,81 @@ class _AccountsScreenState extends State<AccountsScreen> {
     }
   }
 
+  Future<void> _editAccount(Account account) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => AddEditAccountScreen(account: account),
+      ),
+    );
+    if (result == true && mounted) {
+      _loadData();
+    }
+  }
+
+  Future<void> _confirmDeleteAccount(Account account) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1D1228),
+          title: const Text(
+            'Eliminar cuenta',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          content: Text('¿Seguro que deseas eliminar "${account.name}"? Esta acción no se puede deshacer.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: const Color(0xFFD0004B)),
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete == true) {
+      try {
+        await _accountsService.deleteAccount(account.id);
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cuenta "${account.name}" eliminada correctamente'),
+            backgroundColor: Colors.green.shade600,
+          ),
+        );
+        _loadData();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al eliminar la cuenta: $e'),
+            backgroundColor: Colors.red.shade700,
+          ),
+        );
+      }
+    }
+  }
+
+  List<Widget> _buildAccountHeaderActions(Account account) {
+    return [
+      IconButton(
+        tooltip: 'Editar cuenta',
+        icon: const Icon(Icons.edit_outlined, color: Colors.white),
+        onPressed: () => _editAccount(account),
+      ),
+      IconButton(
+        tooltip: 'Eliminar cuenta',
+        icon: const Icon(Icons.delete_outline, color: Colors.white),
+        onPressed: () => _confirmDeleteAccount(account),
+      ),
+    ];
+  }
+
   void _navigateToGoals() {
     Navigator.of(context).pushNamed('/goals');
   }
@@ -160,6 +235,10 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     ),
                     // SECCIÓN 1: CUENTAS PARA GASTAR
                     AccountsSummaryCard(
+                      headerTitle: 'Cuenta para gastos',
+                      headerActions: summary.spendingAccounts.length == 1
+                          ? _buildAccountHeaderActions(summary.spendingAccounts.first)
+                          : const [],
                       title: 'Total Disponible',
                       totalAmount: summary.totalSpendingBalance,
                       iconData: FontAwesomeIcons.wallet,
@@ -196,6 +275,8 @@ class _AccountsScreenState extends State<AccountsScreen> {
                     // SECCIÓN 2: CUENTA DE AHORRO (CON TARJETA REDISEÑADA)
                     if (summary.savingsAccount != null)
                       AccountsSummaryCard(
+                        headerTitle: 'Cuenta ahorro',
+                        headerActions: _buildAccountHeaderActions(summary.savingsAccount!),
                         title: 'Total Ahorrado',
                         totalAmount: summary.totalSavingsBalance,
                         iconData: FontAwesomeIcons.piggyBank,
