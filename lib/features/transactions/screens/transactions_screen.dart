@@ -302,8 +302,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     final expenses = viewData?.totalExpenses ?? 0;
 
     final balanceText = balance != null ? currencyFormat.format(balance) : '--';
-    final incomeText = '+${currencyFormat.format(income)}';
-    final expensesText = '-${currencyFormat.format(expenses)}';
+    final incomeText = '+${currencyFormat.format(income.abs())}';
+    final expensesText = '-${currencyFormat.format(expenses.abs())}';
 
     return Padding(
       padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),

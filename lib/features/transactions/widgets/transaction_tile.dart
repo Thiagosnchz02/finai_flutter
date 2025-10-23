@@ -37,7 +37,11 @@ class TransactionTile extends StatelessWidget {
         : isExpense
             ? '-'
             : '';
-    final String amountString = '$amountPrefix${currencyFormatter.format(transaction.amount)}';
+    final double amountForDisplay = amountPrefix.isEmpty
+        ? transaction.amount
+        : transaction.amount.abs();
+    final String amountString =
+        '$amountPrefix${currencyFormatter.format(amountForDisplay)}';
 
     final IconData iconData = isTransfer
         ? Icons.lock
