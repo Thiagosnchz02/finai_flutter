@@ -23,7 +23,7 @@ class GoalsSummaryHeader extends StatelessWidget {
             Color.fromRGBO(31, 1, 66, 0.6),
           ],
         ),
-        border: Border.all(color: const Color(0x8B5CF682)),
+        border: Border.all(color: const Color(0x828B5CF6)),
         borderRadius: BorderRadius.circular(24),
         boxShadow: const [
           BoxShadow(

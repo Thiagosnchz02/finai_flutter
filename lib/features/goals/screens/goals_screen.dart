@@ -206,6 +206,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                       bottom: false,
                       child: Column(
                         children: [
+                          const SizedBox(height: 24),
                           Align(
                             alignment: Alignment.topCenter,
                             child: Container(
@@ -215,6 +216,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                 vertical: 16,
                               ),
                               decoration: const BoxDecoration(
+                                color: Colors.transparent,
                                 boxShadow: [
                                   BoxShadow(
                                     color: Color(0x338B5CF6),
