@@ -317,47 +317,50 @@ class _AccountInputField extends StatelessWidget {
       borderSide: const BorderSide(color: Color(0xFFFF6B81), width: 1.5),
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: Colors.white70,
-          ),
-        ),
-        const SizedBox(height: 10),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 15,
-            color: Colors.white,
-          ),
-          cursorColor: const Color(0xFFFF6BCB),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFF1C1B33),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-            enabledBorder: baseBorder,
-            focusedBorder: baseBorder.copyWith(
-              borderSide: const BorderSide(color: Color(0xFFFF6BCB), width: 1.5),
-            ),
-            errorBorder: errorBorder,
-            focusedErrorBorder: errorBorder,
-            errorStyle: const TextStyle(
+    return Material(
+      color: Colors.transparent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
               fontFamily: 'Inter',
-              fontSize: 12,
-              color: Color(0xFFFFB4B4),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.white70,
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            validator: validator,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 15,
+              color: Colors.white,
+            ),
+            cursorColor: const Color(0xFFFF6BCB),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFF1C1B33),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+              enabledBorder: baseBorder,
+              focusedBorder: baseBorder.copyWith(
+                borderSide: const BorderSide(color: Color(0xFFFF6BCB), width: 1.5),
+              ),
+              errorBorder: errorBorder,
+              focusedErrorBorder: errorBorder,
+              errorStyle: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 12,
+                color: Color(0xFFFFB4B4),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
