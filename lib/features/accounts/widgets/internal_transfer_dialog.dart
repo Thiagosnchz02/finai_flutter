@@ -115,7 +115,7 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
                 Text(
                   'Realizar Traspaso',
                   style: textTheme.titleLarge?.copyWith(
-                    color: const Color(0xFFFF0088),
+                    color: const Color.fromARGB(255, 255, 255, 255),
                     fontWeight: FontWeight.bold,
                     fontSize: 24,
                   ),
@@ -172,7 +172,7 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
                       const SizedBox(height: 24),
                       DropdownButtonFormField<String>(
                         value: _selectedAccountId,
-                        dropdownColor: const Color(0xFF1E1E1E),
+                        dropdownColor: const Color(0xFF4D0029),
                         style: textTheme.bodyMedium?.copyWith(color: Colors.white),
                         decoration: _inputDecoration(
                           labelText: _direction == TransferDirection.toSavings
