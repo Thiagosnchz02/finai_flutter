@@ -8,9 +8,9 @@ import 'package:finai_flutter/features/goals/services/goals_service.dart';
 import 'package:finai_flutter/features/goals/widgets/goal_card.dart';
 import 'package:finai_flutter/features/goals/widgets/goals_summary_header.dart';
 import 'add_edit_goal_screen.dart'; 
-import '../widgets/add_contribution_dialog.dart';
-import '../widgets/add_trip_expense_dialog.dart'; // <-- 1. IMPORTAMOS EL NUEVO DIÁLOGO
 import '../widgets/contribution_history_dialog.dart';
+import '../widgets/bottom_sheets/contribution_bottom_sheet.dart';
+import '../widgets/bottom_sheets/trip_expense_bottom_sheet.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -50,13 +50,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
   
   void _showContributionDialog(Goal goal, double availableToAllocate) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AddContributionDialog(
-        goalId: goal.id,
-        goalName: goal.name,
-        availableToAllocate: availableToAllocate,
-      ),
+    final result = await showContributionSheet(
+      context,
+      goalId: goal.id,
+      goalName: goal.name,
+      availableToAllocate: availableToAllocate,
     );
     if (result == true && mounted) {
       _loadData();
@@ -66,13 +64,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
   // --- INICIO DEL NUEVO CÓDIGO ---
   /// Muestra el diálogo para añadir un gasto a un viaje.
   void _showTripExpenseDialog(Goal goal) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AddTripExpenseDialog(
-        goalId: goal.id,
-        goalName: goal.name,
-        goalBalance: goal.currentAmount,
-      ),
+    final result = await showTripExpenseSheet(
+      context,
+      goalId: goal.id,
+      goalName: goal.name,
+      goalBalance: goal.currentAmount,
     );
     if (result == true && mounted) {
       _loadData();
