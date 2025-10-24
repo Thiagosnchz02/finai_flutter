@@ -26,6 +26,15 @@ class GoalStyle {
   });
 }
 
+const _contributionButtonGradient = LinearGradient(
+  colors: [
+    Color(0xFF8B5CF6),
+    Color(0xFF5B21B6),
+  ],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
+
 GoalStyle paletteFor(Goal goal) {
   final type = goal.type.toLowerCase();
 
@@ -48,16 +57,16 @@ GoalStyle paletteFor(Goal goal) {
   if (type.contains('fondo de emergencia')) {
     return const GoalStyle(
       icon: Icons.shield_outlined,
-      iconColor: Color(0xFF22C55E),
+      iconColor: Color(0xFF5B21B6),
       titleColor: Colors.white,
-      subtitleColor: Color(0xFFD9FBEA),
+      subtitleColor: Color(0xFFE9D5FF),
       progressGradient: LinearGradient(
-        colors: [Color(0xFF4ADE80), Color(0xFF166534)],
+        colors: [Color(0xFF8B5CF6), Color(0xFF4C1D95)],
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
       pigAsset: 'assets/icons/piggy_purple.svg',
-      borderColor: Color(0xFF22C55E),
+      borderColor: Color(0xFF5B21B6),
     );
   }
 
@@ -123,18 +132,22 @@ class GoalCard extends StatelessWidget {
     final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
     final progress = goal.progress.clamp(0.0, 1.0).toDouble();
     final goalType = goal.type.toLowerCase();
+    final badgeBackgroundColor = style.iconColor.withOpacity(0.15);
+    final badgeBorderColor = style.iconColor.withOpacity(0.4);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
         color: const Color.fromRGBO(31, 1, 66, 0.6),
         borderRadius: BorderRadius.circular(24),
-        border: isCompleted
-            ? Border.all(color: completedGreen, width: 1.5)
-            : Border.all(
-                color: style.borderColor.withOpacity(0.35),
-                width: 1.5,
-              ),
+        border: Border.all(
+          color: isCompleted
+              ? (goalType.contains('fondo de emergencia')
+                  ? style.borderColor
+                  : completedGreen)
+              : style.borderColor.withOpacity(0.35),
+          width: 1.5,
+        ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x40000000),
@@ -190,12 +203,20 @@ class GoalCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            Text(
-              goal.type,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: style.iconColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: badgeBackgroundColor,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: badgeBorderColor, width: 1),
+              ),
+              child: Text(
+                goal.type,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: style.iconColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
             ),
             if (goal.targetDate != null) ...[
               const SizedBox(height: 4),
@@ -362,7 +383,7 @@ class GoalCard extends StatelessWidget {
                 Expanded(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      gradient: progressGradient,
+                      gradient: _contributionButtonGradient,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: FilledButton(
