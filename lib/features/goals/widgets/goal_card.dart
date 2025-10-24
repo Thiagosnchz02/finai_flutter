@@ -114,13 +114,6 @@ class GoalCard extends StatelessWidget {
     final style = paletteFor(goal);
     final isCompleted = goal.progress >= 1.0;
     const completedGreen = Color(0xFF00FF00);
-    final backgroundGradient = isCompleted
-        ? const LinearGradient(
-            colors: [Color(0xFF00FF00), Color(0xFF22C55E)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          )
-        : style.backgroundGradient;
     final progressGradient = isCompleted
         ? const LinearGradient(
             colors: [Color(0xFF00FF00), Color(0xFF22C55E)],
@@ -135,7 +128,7 @@ class GoalCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        gradient: backgroundGradient,
+        gradient: style.backgroundGradient,
         borderRadius: BorderRadius.circular(24),
         border: isCompleted
             ? Border.all(color: completedGreen, width: 1.5)
@@ -308,7 +301,7 @@ class GoalCard extends StatelessWidget {
                         TextSpan(
                           text: formatter.format(goal.currentAmount),
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: isCompleted ? completedGreen : Colors.white,
+                                color: Colors.white,
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
@@ -377,8 +370,7 @@ class GoalCard extends StatelessWidget {
                       onPressed: isCompleted ? null : onContribute,
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        disabledBackgroundColor:
-                            isCompleted ? const Color(0x3300FF00) : Colors.white24,
+                        disabledBackgroundColor: Colors.white24,
                         disabledForegroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
