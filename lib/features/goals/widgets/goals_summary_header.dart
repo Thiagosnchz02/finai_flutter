@@ -11,46 +11,111 @@ class GoalsSummaryHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildSummaryColumn(
-              context,
-              'Total Ahorrado',
-              summary.totalSavingsBalance,
-              Colors.blueAccent,
-            ),
-            _buildSummaryColumn(
-              context,
-              'Asignado a Huchas',
-              summary.totalAllocated,
-              Colors.purpleAccent,
-            ),
-            _buildSummaryColumn(
-              context,
-              'Disponible',
-              summary.availableToAllocate,
-              Colors.green,
-            ),
+    final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Color.fromRGBO(11, 11, 15, 0.8),
+            Color.fromRGBO(31, 1, 66, 0.6),
           ],
         ),
+        border: Border.all(color: const Color(0x8B5CF682)),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x40000000),
+            offset: Offset(0, 25),
+            blurRadius: 50,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Resumen Financiero',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF8B5CF6),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _buildSummaryColumn(
+                  'Total Ahorrado',
+                  formatter.format(summary.totalSavingsBalance),
+                  const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 24,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: _buildSummaryColumn(
+                  'Asignado a metas',
+                  formatter.format(summary.totalAllocated),
+                  const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2971FF),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 24),
+              Expanded(
+                child: _buildSummaryColumn(
+                  'Capital Disponible',
+                  formatter.format(summary.availableToAllocate),
+                  const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF8B5CF6),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildSummaryColumn(BuildContext context, String title, double amount, Color color) {
-    final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
+  static Widget _buildSummaryColumn(
+    String title,
+    String formattedAmount,
+    TextStyle amountStyle,
+  ) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 4),
         Text(
-          formatter.format(amount),
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: color),
+          title,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFFD1D5DB),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          formattedAmount,
+          style: amountStyle,
         ),
       ],
     );
