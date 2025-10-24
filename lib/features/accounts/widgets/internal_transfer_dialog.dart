@@ -133,41 +133,59 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
                         style: textTheme.labelLarge?.copyWith(color: Colors.white70),
                       ),
                       const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
-                        children: TransferDirection.values.map((direction) {
-                          final isSelected = _direction == direction;
-                          return ChoiceChip(
-                            label: Text(
-                              direction == TransferDirection.toSavings ? 'A Ahorro' : 'Desde Ahorro',
-                              style: textTheme.labelLarge?.copyWith(
-                                color: isSelected ? Colors.white : Colors.white70,
-                                fontWeight: FontWeight.w600,
+                      Row(
+                        children: [
+                          for (int i = 0; i < TransferDirection.values.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 12),
+                            Expanded(
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: Builder(
+                                  builder: (context) {
+                                    final direction = TransferDirection.values[i];
+                                    final isSelected = _direction == direction;
+                                    return ChoiceChip(
+                                      label: Center(
+                                        child: Text(
+                                          direction == TransferDirection.toSavings
+                                              ? 'A Ahorro'
+                                              : 'Desde Ahorro',
+                                          style: textTheme.labelLarge?.copyWith(
+                                            color: isSelected ? Colors.white : Colors.white70,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ),
+                                      selected: isSelected,
+                                      onSelected: (selected) {
+                                        if (selected) {
+                                          setState(() {
+                                            _direction = direction;
+                                            _selectedAccountId = null;
+                                          });
+                                        }
+                                      },
+                                      showCheckmark: false,
+                                      backgroundColor: Colors.white.withOpacity(0.1),
+                                      selectedColor: const Color(0xFFFF0088),
+                                      shape: StadiumBorder(
+                                        side: BorderSide(
+                                          color: isSelected
+                                              ? const Color(0xFFFF0088)
+                                              : Colors.white.withOpacity(0.2),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    );
+                                  },
+                                ),
                               ),
                             ),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() {
-                                  _direction = direction;
-                                  _selectedAccountId = null;
-                                });
-                              }
-                            },
-                            showCheckmark: false,
-                            backgroundColor: Colors.white.withOpacity(0.1),
-                            selectedColor: const Color(0xFFFF0088),
-                            shape: StadiumBorder(
-                              side: BorderSide(
-                                color: isSelected ? const Color(0xFFFF0088) : Colors.white.withOpacity(0.2),
-                                width: 1.5,
-                              ),
-                            ),
-                            elevation: 0,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          );
-                        }).toList(),
+                          ],
+                        ],
                       ),
                       const SizedBox(height: 24),
                       DropdownButtonFormField<String>(
