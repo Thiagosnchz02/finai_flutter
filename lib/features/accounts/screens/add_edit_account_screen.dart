@@ -80,7 +80,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
       }
 
       // Obtener el primer resultado de forma segura
-      final savedAccount = response.first as Map<String, dynamic>;
+      final savedAccount = response.first;
       final savedAccountId = savedAccount['id'] as String;
 
       // --- INICIO DE LA LÓGICA DE REGISTRO DE EVENTOS ---
