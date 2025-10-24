@@ -80,8 +80,40 @@ class _GoalsScreenState extends State<GoalsScreen> {
   // --- FIN DEL NUEVO CÓDIGO ---
 
   Future<void> _archiveGoal(Goal goal) async {
+    final isCompleted = goal.progress >= 1.0;
+
+    bool proceed = isCompleted;
+    if (!isCompleted) {
+      proceed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Archivar meta incompleta'),
+              content: const Text(
+                'Esta meta aún no se ha completado. Si decides archivarla, las aportaciones se moverán a tu capital disponible y se eliminarán los gastos asociados a esta meta. ¿Deseas continuar?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Archivar de todos modos'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+    }
+
+    if (!proceed) return;
+
     try {
-      await _service.archiveGoal(goal.id, goal.name);
+      if (isCompleted) {
+        await _service.archiveGoal(goal.id, goal.name);
+      } else {
+        await _service.forceArchiveGoal(goal.id, goal.name);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Meta archivada con éxito'), backgroundColor: Colors.green),

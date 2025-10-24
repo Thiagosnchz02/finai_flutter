@@ -155,11 +155,35 @@ class GoalsService {
 
   Future<void> archiveGoal(String goalId, String goalName) async {
     await _supabase.rpc('archive_goal', params: {'p_goal_id': goalId});
-    
+
     // Registramos el evento
     await _eventLogger.log(
       AppEvent.goalArchived,
       details: {'goal_id': goalId, 'goal_name': goalName},
+    );
+  }
+
+  /// Fuerza el archivado de una meta que aún no está completada.
+  ///
+  /// Requiere coordinación con backend para exponer el RPC `force_archive_goal`
+  /// en Supabase. Dicho procedimiento debe:
+  /// 1. Revertir las aportaciones existentes en `goal_allocations`, regresando los fondos
+  ///    al capital disponible del usuario.
+  /// 2. Eliminar las transacciones en `transactions` que tengan `related_goal_id`
+  ///    igual a la meta (por ejemplo, gastos de viaje asociados).
+  /// 3. Marcar la meta como archivada, manteniendo la lógica actual de `archive_goal`.
+  ///
+  /// Una vez creado el RPC, podremos invocarlo directamente desde aquí.
+  Future<void> forceArchiveGoal(String goalId, String goalName) async {
+    await _supabase.rpc('force_archive_goal', params: {'p_goal_id': goalId});
+
+    await _eventLogger.log(
+      AppEvent.goalArchived,
+      details: {
+        'goal_id': goalId,
+        'goal_name': goalName,
+        'forced': true,
+      },
     );
   }
   // --- FIN DEL NUEVO CÓDIGO ---
