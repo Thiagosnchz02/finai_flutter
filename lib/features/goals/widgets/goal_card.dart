@@ -26,15 +26,6 @@ class GoalStyle {
   });
 }
 
-const _contributionButtonGradient = LinearGradient(
-  colors: [
-    Color(0xFF8B5CF6),
-    Color(0xFF5B21B6),
-  ],
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-);
-
 GoalStyle paletteFor(Goal goal) {
   final type = goal.type.toLowerCase();
 
@@ -381,28 +372,23 @@ class GoalCard extends StatelessWidget {
                   ),
                 if (goalType.contains('viaje')) const SizedBox(width: 12),
                 Expanded(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: _contributionButtonGradient,
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: FilledButton(
-                      onPressed: isCompleted ? null : onContribute,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        disabledBackgroundColor: Colors.white24,
-                        disabledForegroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: OutlinedButton(
+                    onPressed: isCompleted ? null : onContribute,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF8B5CF6),
+                      backgroundColor: const Color(0x1F8B5CF6),
+                      side: const BorderSide(color: Color(0x338B5CF6)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Text(
-                        'Aportar',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w700,
-                            ),
+                      minimumSize: const Size.fromHeight(48),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text(
+                      'Aportar',
+                      style: TextStyle(
+                        color: Color(0xFF8B5CF6),
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
