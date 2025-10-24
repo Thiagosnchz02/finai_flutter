@@ -165,26 +165,44 @@ class GoalsService {
 
   /// Fuerza el archivado de una meta que aún no está completada.
   ///
-  /// Requiere coordinación con backend para exponer el RPC `force_archive_goal`
-  /// en Supabase. Dicho procedimiento debe:
-  /// 1. Revertir las aportaciones existentes en `goal_allocations`, regresando los fondos
-  ///    al capital disponible del usuario.
-  /// 2. Eliminar las transacciones en `transactions` que tengan `related_goal_id`
-  ///    igual a la meta (por ejemplo, gastos de viaje asociados).
-  /// 3. Marcar la meta como archivada, manteniendo la lógica actual de `archive_goal`.
-  ///
-  /// Una vez creado el RPC, podremos invocarlo directamente desde aquí.
+  /// Este flujo utiliza el RPC `force_archive_goal`, que revierte las
+  /// aportaciones de la meta hacia la cuenta asociada, conserva las
+  /// transacciones registradas y finalmente marca la meta como archivada.
   Future<void> forceArchiveGoal(String goalId, String goalName) async {
-    await _supabase.rpc('force_archive_goal', params: {'p_goal_id': goalId});
+    final response = await _supabase
+        .rpc('force_archive_goal', params: {'p_goal_id': goalId});
 
-    await _eventLogger.log(
-      AppEvent.goalArchived,
-      details: {
-        'goal_id': goalId,
-        'goal_name': goalName,
-        'forced': true,
-      },
-    );
+    final result = response as String?;
+    var shouldLogEvent = true;
+
+    switch (result) {
+      case null:
+      case 'GOAL_FORCE_ARCHIVED_SUCCESSFULLY':
+        break;
+      case 'GOAL_ALREADY_ARCHIVED':
+        shouldLogEvent = false;
+        break;
+      case 'ERROR_GOAL_NOT_FOUND':
+        throw Exception('No se encontró la meta seleccionada.');
+      case 'ERROR_GOAL_ACCOUNT_NOT_FOUND':
+        throw Exception(
+            'No se encontró la cuenta asociada a esta meta. Revisa la configuración.');
+      case 'ERROR_ARCHIVE_FAILED':
+        throw Exception('No fue posible archivar la meta. Inténtalo de nuevo.');
+      default:
+        throw Exception('Error desconocido al archivar la meta ($result).');
+    }
+
+    if (shouldLogEvent) {
+      await _eventLogger.log(
+        AppEvent.goalArchived,
+        details: {
+          'goal_id': goalId,
+          'goal_name': goalName,
+          'forced': true,
+        },
+      );
+    }
   }
   // --- FIN DEL NUEVO CÓDIGO ---
 

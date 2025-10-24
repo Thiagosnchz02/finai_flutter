@@ -30,7 +30,8 @@ class TransactionsService {
             notes,
             account_id,
             related_scheduled_expense_id,
-            categories (id, name, type, icon)
+            categories (id, name, type, icon),
+            goals!left(is_archived)
           ''')
           .eq('user_id', userId);
 
@@ -59,7 +60,19 @@ class TransactionsService {
       final response =
           await query.order('transaction_date', ascending: false);
 
-      return List<Map<String, dynamic>>.from(response);
+      final transactions = List<Map<String, dynamic>>.from(response);
+
+      return transactions
+          .where((transaction) {
+            final goalData = transaction['goals'];
+            return !(goalData is Map && goalData['is_archived'] == true);
+          })
+          .map((transaction) {
+            final sanitized = Map<String, dynamic>.from(transaction);
+            sanitized.remove('goals');
+            return sanitized;
+          })
+          .toList();
     } catch (e) {
       print('Error en fetchTransactions: $e');
       rethrow;
@@ -80,13 +93,26 @@ class TransactionsService {
             notes,
             account_id,
             related_scheduled_expense_id,
-            categories (id, name, type, icon)
+            categories (id, name, type, icon),
+            goals!left(is_archived)
           ''')
           .eq('user_id', userId)
           .order('transaction_date', ascending: false)
           .limit(limit); // <-- Usamos el límite aquí
-          
-      return List<Map<String, dynamic>>.from(response);
+
+      final transactions = List<Map<String, dynamic>>.from(response);
+
+      return transactions
+          .where((transaction) {
+            final goalData = transaction['goals'];
+            return !(goalData is Map && goalData['is_archived'] == true);
+          })
+          .map((transaction) {
+            final sanitized = Map<String, dynamic>.from(transaction);
+            sanitized.remove('goals');
+            return sanitized;
+          })
+          .toList();
 
     } catch (e) {
       print('Error en fetchRecentTransactions: $e');
