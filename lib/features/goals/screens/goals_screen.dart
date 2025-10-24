@@ -41,8 +41,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
   }
 
   void _navigateAndRefresh({Goal? goal}) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (context) => AddEditGoalScreen(goal: goal)),
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AddEditGoalSheet(goal: goal),
     );
     if (result == true && mounted) {
       _loadData();

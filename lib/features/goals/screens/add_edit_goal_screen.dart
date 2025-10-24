@@ -8,8 +8,9 @@ import 'package:finai_flutter/features/goals/services/goals_service.dart';
 
 class AddEditGoalScreen extends StatefulWidget {
   final Goal? goal; // Para editar una meta existente
+  final ValueChanged<bool>? onLoadingChanged;
 
-  const AddEditGoalScreen({super.key, this.goal});
+  const AddEditGoalScreen({super.key, this.goal, this.onLoadingChanged});
 
   @override
   State<AddEditGoalScreen> createState() => _AddEditGoalScreenState();
@@ -69,6 +70,35 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
     }
   }
 
+  bool get isLoading => _isLoading;
+
+  Future<void> submit() => _saveGoal();
+
+  InputDecoration _baseDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Color(0xFFD1D5DB)),
+      filled: true,
+      fillColor: const Color(0x1AFFFFFF),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF8B5CF6)),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+    );
+  }
+
   Future<void> _saveGoal() async {
     if (_formKey.currentState!.validate()) {
       if (_savingsAccountId == null) {
@@ -77,8 +107,9 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
         );
         return;
       }
-      
+
       setState(() => _isLoading = true);
+      widget.onLoadingChanged?.call(true);
 
       try {
         final userId = Supabase.instance.client.auth.currentUser!.id;
@@ -108,72 +139,193 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
           );
         }
       } finally {
-        if (mounted) setState(() => _isLoading = false);
+        if (mounted) {
+          setState(() => _isLoading = false);
+          widget.onLoadingChanged?.call(false);
+        } else {
+          widget.onLoadingChanged?.call(false);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.goal == null ? 'Nueva Hucha' : 'Editar Hucha'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.save),
-            onPressed: _isLoading ? null : _saveGoal,
-          )
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.all(16.0),
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: _nameController,
+            style: const TextStyle(color: Colors.white),
+            decoration: _baseDecoration('Nombre de la Hucha'),
+            validator: (value) => (value == null || value.isEmpty) ? 'El nombre es obligatorio' : null,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _targetAmountController,
+            style: const TextStyle(color: Colors.white),
+            decoration: _baseDecoration('Objetivo (€)'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            validator: (value) {
+              if (value == null || value.isEmpty) return 'El objetivo es obligatorio';
+              if (double.tryParse(value.replaceAll(',', '.')) == null) return 'Introduce un número válido';
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: _goalType,
+            dropdownColor: const Color(0xFF1F1235),
+            style: const TextStyle(color: Colors.white),
+            iconEnabledColor: const Color(0xFFD1D5DB),
+            decoration: _baseDecoration('Tipo de Hucha'),
+            items: ['Ahorro', 'Viaje', 'Fondo de emergencia', 'Otro']
+                .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                .toList(),
+            onChanged: (value) => setState(() => _goalType = value!),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => _selectDate(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+              decoration: BoxDecoration(
+                color: const Color(0x1AFFFFFF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF8B5CF6)),
+              ),
+              child: Row(
                 children: [
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Nombre de la Hucha'),
-                    validator: (value) => (value == null || value.isEmpty) ? 'El nombre es obligatorio' : null,
+                  Expanded(
+                    child: Text(
+                      _targetDate == null
+                          ? 'Seleccionar fecha objetivo (Opcional)'
+                          : 'Fecha Objetivo: ${DateFormat.yMMMd('es_ES').format(_targetDate!)}',
+                      style: TextStyle(
+                        color: _targetDate == null ? const Color(0xFFD1D5DB) : Colors.white,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _targetAmountController,
-                    decoration: const InputDecoration(labelText: 'Objetivo (€)'),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) return 'El objetivo es obligatorio';
-                      if (double.tryParse(value.replaceAll(',', '.')) == null) return 'Introduce un número válido';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _goalType,
-                    decoration: const InputDecoration(labelText: 'Tipo de Hucha'),
-                    items: ['Ahorro', 'Viaje', 'Fondo de emergencia', 'Otro']
-                        .map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                        .toList(),
-                    onChanged: (value) => setState(() => _goalType = value!),
-                  ),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    title: Text(_targetDate == null
-                        ? 'Seleccionar fecha objetivo (Opcional)'
-                        : 'Fecha Objetivo: ${DateFormat.yMMMd('es_ES').format(_targetDate!)}'),
-                    trailing: const Icon(Icons.calendar_today),
-                    onTap: () => _selectDate(context),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _notesController,
-                    decoration: const InputDecoration(labelText: 'Notas (Opcional)'),
-                    maxLines: 3,
-                  ),
+                  const Icon(Icons.calendar_today, color: Color(0xFFD1D5DB)),
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _notesController,
+            style: const TextStyle(color: Colors.white),
+            decoration: _baseDecoration('Notas (Opcional)'),
+            maxLines: 3,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AddEditGoalSheet extends StatefulWidget {
+  final Goal? goal;
+
+  const AddEditGoalSheet({super.key, this.goal});
+
+  @override
+  State<AddEditGoalSheet> createState() => _AddEditGoalSheetState();
+}
+
+class _AddEditGoalSheetState extends State<AddEditGoalSheet> {
+  final GlobalKey<_AddEditGoalScreenState> _formKey = GlobalKey<_AddEditGoalScreenState>();
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+    return FractionallySizedBox(
+      heightFactor: 0.95,
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF381D74),
+              Color(0xFF121212),
+            ],
+          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: EdgeInsets.only(left: 24, right: 24, top: 16, bottom: 16 + viewInsets),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 48,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0x33FFFFFF),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.goal == null ? 'Nueva Hucha' : 'Editar Hucha',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: AddEditGoalScreen(
+                      key: _formKey,
+                      goal: widget.goal,
+                      onLoadingChanged: (value) => setState(() => _isLoading = value),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: _isLoading ? null : () => _formKey.currentState?.submit(),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: const Color(0xFF8B5CF6),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text(
+                          'Guardar Hucha',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
