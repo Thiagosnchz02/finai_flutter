@@ -1,5 +1,7 @@
 // lib/features/goals/screens/goals_screen.dart
 
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:finai_flutter/features/goals/models/goal_model.dart';
 import 'package:finai_flutter/features/goals/services/goals_service.dart';
@@ -111,20 +113,16 @@ class _GoalsScreenState extends State<GoalsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mis Metas (Huchas)'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => _navigateAndRefresh(),
-          ),
-        ],
+      extendBodyBehindAppBar: true,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _navigateAndRefresh(),
+        child: const Icon(Icons.add),
       ),
-      body: Container(
+      body: DecoratedBox(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+          gradient: RadialGradient(
+            center: Alignment(0.0013, -1),
+            radius: 1.0,
             colors: [
               Color(0xFF381D74),
               Color(0xFF121212),
@@ -149,24 +147,78 @@ class _GoalsScreenState extends State<GoalsScreen> {
             final activeGoals = goals.where((g) => !g.isArchived).toList();
 
             return RefreshIndicator(
-              onRefresh: () async => _loadData(),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: GoalsSummaryHeader(summary: summary),
+              onRefresh: () async {
+                _loadData();
+                await _dataFuture;
+              },
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: SafeArea(
+                      bottom: false,
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.topCenter,
+                            child: Container(
+                              width: 200,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
+                              decoration: const BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Color(0x338B5CF6),
+                                    blurRadius: 24,
+                                    spreadRadius: 4,
+                                    blurStyle: BlurStyle.inner,
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Mis metas',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color(0xFF8B5CF6),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 92),
+                        ],
+                      ),
+                    ),
                   ),
-                  Expanded(
-                    child: activeGoals.isEmpty
-                        ? const Center(
-                            child: Text('¡Crea tu primera hucha para empezar a ahorrar!'),
+                  SliverList(
+                    delegate: SliverChildListDelegate(
+                      [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          child: GoalsSummaryHeader(summary: summary),
+                        ),
+                        const SizedBox(height: 24),
+                        if (activeGoals.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16.0),
+                            child: Center(
+                              child: Text('¡Crea tu primera hucha para empezar a ahorrar!'),
+                            ),
                           )
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            itemCount: activeGoals.length,
-                            itemBuilder: (context, index) {
-                              final goal = activeGoals[index];
-                              return GestureDetector(
+                        else
+                          ...activeGoals.map(
+                            (goal) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                                vertical: 8.0,
+                              ),
+                              child: GestureDetector(
                                 onTap: () => _navigateAndRefresh(goal: goal),
                                 child: GoalCard(
                                   goal: goal,
@@ -180,9 +232,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                   onArchive: () => _archiveGoal(goal),
                                   onViewHistory: () => _showHistoryDialog(goal),
                                 ),
-                              );
-                            },
+                              ),
+                            ),
                           ),
+                        const SizedBox(height: 32),
+                      ],
+                    ),
                   ),
                 ],
               ),
