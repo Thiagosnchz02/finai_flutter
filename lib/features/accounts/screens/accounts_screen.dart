@@ -162,8 +162,10 @@ class _AccountsScreenState extends State<AccountsScreen> {
       return;
     }
 
-    final result = await showDialog<bool>(
+    final result = await showModalBottomSheet<bool>(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (_) => InternalTransferDialog(
         spendingAccounts: summary.spendingAccounts,
         savingsAccount: summary.savingsAccount!,
