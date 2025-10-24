@@ -55,8 +55,8 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
     try {
       final userId = _supabase.auth.currentUser!.id;
       final isEditing = widget.account != null; // Saber si estamos editando
-      
-      final upsertData = {
+
+      final upsertData = <String, dynamic>{
         'user_id': userId,
         'name': _nameController.text.trim(),
         'bank_name': _bankNameController.text.trim(),
@@ -68,30 +68,65 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
         upsertData['id'] = widget.account!.id;
       }
 
-      final savedAccount = await _supabase.from('accounts').upsert(upsertData).select().single();
-      final savedAccountId = savedAccount['id'];
+      // Reemplazar .single() con manejo seguro para evitar crashes
+      final response = await _supabase
+          .from('accounts')
+          .upsert(upsertData, onConflict: isEditing ? 'id' : null)
+          .select();
+
+      // Verificar que la respuesta no esté vacía
+      if (response.isEmpty) {
+        throw Exception('No se pudo guardar la cuenta. La base de datos no devolvió datos.');
+      }
+
+      // Obtener el primer resultado de forma segura
+      final savedAccount = response.first as Map<String, dynamic>;
+      final savedAccountId = savedAccount['id'] as String;
 
       // --- INICIO DE LA LÓGICA DE REGISTRO DE EVENTOS ---
-      
-      if (isEditing) {
-        // Si estamos editando, registramos el evento de edición.
-        _eventLogger.log(AppEvent.accountEdited, details: {'account_id': savedAccountId});
-      } else {
-        // Si es una cuenta nueva, registramos el evento de creación.
-        _eventLogger.log(AppEvent.accountCreated, details: {'account_id': savedAccountId});
+
+      // Registrar eventos con manejo de errores (no bloquean el flujo principal)
+      try {
+        if (isEditing) {
+          // Si estamos editando, registramos el evento de edición.
+          await _eventLogger.log(AppEvent.accountEdited, details: {'account_id': savedAccountId});
+        } else {
+          // Si es una cuenta nueva, registramos el evento de creación.
+          await _eventLogger.log(AppEvent.accountCreated, details: {'account_id': savedAccountId});
+        }
+      } catch (e) {
+        // Log del error pero no interrumpe el flujo
+        debugPrint('Error al registrar evento: $e');
       }
 
-      // Si se designó como AHORRO, registramos este evento tan importante.
+      // Si se designó como AHORRO, ejecutar el RPC con manejo de errores mejorado
       if (_conceptualType == 'ahorro') {
-        await _supabase.rpc('set_primary_savings_account', params: {
-          'p_user_id': userId,
-          'p_account_id': savedAccountId,
-        });
-        
-        // Registrar que esta cuenta ha sido designada como la principal de ahorro.
-        _eventLogger.log(AppEvent.savingsAccountDesignated, details: {'account_id': savedAccountId});
+        try {
+          await _supabase.rpc('set_primary_savings_account', params: {
+            'p_user_id': userId,
+            'p_account_id': savedAccountId,
+          });
+
+          // Registrar que esta cuenta ha sido designada como la principal de ahorro.
+          try {
+            await _eventLogger.log(AppEvent.savingsAccountDesignated, details: {'account_id': savedAccountId});
+          } catch (e) {
+            debugPrint('Error al registrar evento de ahorro: $e');
+          }
+        } catch (e) {
+          // Mostrar advertencia pero no interrumpir el flujo
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Advertencia: No se pudo establecer como cuenta principal de ahorro: $e'),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        }
       }
-      
+
       // --- FIN DE LA LÓGICA DE REGISTRO DE EVENTOS ---
 
       // La lógica de la transacción de saldo inicial se mantiene igual
@@ -106,7 +141,7 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
           'transaction_date': DateTime.now().toIso8601String(),
         });
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cuenta guardada con éxito'), backgroundColor: Colors.green),
