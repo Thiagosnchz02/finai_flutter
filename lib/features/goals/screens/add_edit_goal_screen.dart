@@ -32,6 +32,7 @@ class _AddEditGoalScreenState extends State<AddEditGoalScreen> {
   void initState() {
     super.initState();
     _service.getPrimarySavingsAccount().then((account) {
+      if (!mounted) return;
       if (account != null) {
         setState(() {
           _savingsAccountId = account['id'];

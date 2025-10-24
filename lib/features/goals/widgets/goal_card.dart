@@ -263,9 +263,10 @@ class GoalCard extends StatelessWidget {
                             ),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(6.0),
+                            padding: const EdgeInsets.all(4.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 SizedBox(
                                   height: 22,
@@ -277,7 +278,7 @@ class GoalCard extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 2),
                                 Text(
                                   '${(progress * 100).toStringAsFixed(0)}%',
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
