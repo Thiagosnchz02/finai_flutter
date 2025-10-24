@@ -114,10 +114,6 @@ class _GoalsScreenState extends State<GoalsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateAndRefresh(),
-        child: const Icon(Icons.add),
-      ),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
@@ -202,6 +198,34 @@ class _GoalsScreenState extends State<GoalsScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           child: GoalsSummaryHeader(summary: summary),
+                        ),
+                        const SizedBox(height: 24),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: SizedBox(
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _navigateAndRefresh(),
+                              icon: const Icon(
+                                Icons.add,
+                                color: Color(0xFF8B5CF6),
+                              ),
+                              label: const Text(
+                                'Añadir meta',
+                                style: TextStyle(
+                                  color: Color(0xFF8B5CF6),
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: const Color(0x1F8B5CF6),
+                                side: const BorderSide(color: Color(0x338B5CF6)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                minimumSize: const Size.fromHeight(48),
+                              ),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 24),
                         if (activeGoals.isEmpty)
