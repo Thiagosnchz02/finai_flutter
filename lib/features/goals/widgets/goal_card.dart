@@ -11,7 +11,6 @@ class GoalStyle {
   final Color iconColor;
   final Color titleColor;
   final Color subtitleColor;
-  final Gradient backgroundGradient;
   final Gradient progressGradient;
   final String pigAsset;
   final Color borderColor;
@@ -21,7 +20,6 @@ class GoalStyle {
     required this.iconColor,
     required this.titleColor,
     required this.subtitleColor,
-    required this.backgroundGradient,
     required this.progressGradient,
     required this.pigAsset,
     required this.borderColor,
@@ -37,11 +35,6 @@ GoalStyle paletteFor(Goal goal) {
       iconColor: Color(0xFF875CF6),
       titleColor: Colors.white,
       subtitleColor: Color(0xFFE0D9FF),
-      backgroundGradient: LinearGradient(
-        colors: [Color(0xFF2971FF), Color(0xFF875CF6)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
       progressGradient: LinearGradient(
         colors: [Color(0xFF3E8BFF), Color(0xFF9F7BFF)],
         begin: Alignment.centerLeft,
@@ -52,17 +45,28 @@ GoalStyle paletteFor(Goal goal) {
     );
   }
 
+  if (type.contains('fondo de emergencia')) {
+    return const GoalStyle(
+      icon: Icons.shield_outlined,
+      iconColor: Color(0xFF22C55E),
+      titleColor: Colors.white,
+      subtitleColor: Color(0xFFD9FBEA),
+      progressGradient: LinearGradient(
+        colors: [Color(0xFF4ADE80), Color(0xFF166534)],
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+      ),
+      pigAsset: 'assets/icons/piggy_purple.svg',
+      borderColor: Color(0xFF22C55E),
+    );
+  }
+
   if (type.contains('ahorro')) {
     return const GoalStyle(
       icon: Icons.savings_rounded,
       iconColor: Color(0xFF2971FF),
       titleColor: Colors.white,
       subtitleColor: Color(0xFFD1E2FF),
-      backgroundGradient: LinearGradient(
-        colors: [Color(0xFF875CF6), Color(0xFF040404)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
       progressGradient: LinearGradient(
         colors: [Color(0xFF2971FF), Color(0xFF0A2A66)],
         begin: Alignment.centerLeft,
@@ -74,15 +78,10 @@ GoalStyle paletteFor(Goal goal) {
   }
 
   return const GoalStyle(
-    icon: Icons.flag_rounded,
+    icon: Icons.flag,
     iconColor: Color(0xFFFF0088),
     titleColor: Colors.white,
     subtitleColor: Color(0xFFFFC2E1),
-    backgroundGradient: LinearGradient(
-      colors: [Color(0xFFFF4FA6), Color(0xFFFF0088)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    ),
     progressGradient: LinearGradient(
       colors: [Color(0xFFFF71B5), Color(0xFFB30061)],
       begin: Alignment.centerLeft,
@@ -128,7 +127,7 @@ class GoalCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        gradient: style.backgroundGradient,
+        color: const Color.fromRGBO(31, 1, 66, 0.6),
         borderRadius: BorderRadius.circular(24),
         border: isCompleted
             ? Border.all(color: completedGreen, width: 1.5)
