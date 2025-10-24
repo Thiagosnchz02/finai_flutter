@@ -113,6 +113,21 @@ class GoalCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final style = paletteFor(goal);
     final isCompleted = goal.progress >= 1.0;
+    const completedGreen = Color(0xFF00FF00);
+    final backgroundGradient = isCompleted
+        ? const LinearGradient(
+            colors: [Color(0xFF00FF00), Color(0xFF22C55E)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          )
+        : style.backgroundGradient;
+    final progressGradient = isCompleted
+        ? const LinearGradient(
+            colors: [Color(0xFF00FF00), Color(0xFF22C55E)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          )
+        : style.progressGradient;
     final formatter = NumberFormat.currency(locale: 'es_ES', symbol: '€');
     final progress = goal.progress.clamp(0.0, 1.0).toDouble();
     final goalType = goal.type.toLowerCase();
@@ -120,12 +135,14 @@ class GoalCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       decoration: BoxDecoration(
-        gradient: style.backgroundGradient,
+        gradient: backgroundGradient,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: style.borderColor.withOpacity(isCompleted ? 0.8 : 0.35),
-          width: 1.5,
-        ),
+        border: isCompleted
+            ? Border.all(color: completedGreen, width: 1.5)
+            : Border.all(
+                color: style.borderColor.withOpacity(0.35),
+                width: 1.5,
+              ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x40000000),
@@ -225,7 +242,7 @@ class GoalCard extends StatelessWidget {
                         child: Container(
                           height: barHeight,
                           decoration: BoxDecoration(
-                            gradient: style.progressGradient,
+                            gradient: progressGradient,
                             borderRadius: BorderRadius.circular(barHeight),
                           ),
                         ),
@@ -239,7 +256,11 @@ class GoalCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.white,
-                            border: Border.all(color: style.iconColor.withOpacity(0.2), width: 2),
+                            border: Border.all(
+                              color: (isCompleted ? completedGreen : style.iconColor)
+                                  .withOpacity(0.2),
+                              width: 2,
+                            ),
                           ),
                           child: Padding(
                             padding: const EdgeInsets.all(6.0),
@@ -250,7 +271,10 @@ class GoalCard extends StatelessWidget {
                                   height: 22,
                                   child: SvgPicture.asset(
                                     style.pigAsset,
-                                    colorFilter: ColorFilter.mode(style.iconColor, BlendMode.srcIn),
+                                    colorFilter: ColorFilter.mode(
+                                      isCompleted ? completedGreen : style.iconColor,
+                                      BlendMode.srcIn,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -258,7 +282,8 @@ class GoalCard extends StatelessWidget {
                                   '${(progress * 100).toStringAsFixed(0)}%',
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                         fontWeight: FontWeight.w700,
-                                        color: style.iconColor,
+                                        color:
+                                            isCompleted ? completedGreen : style.iconColor,
                                       ),
                                 ),
                               ],
@@ -272,31 +297,55 @@ class GoalCard extends StatelessWidget {
               },
             ),
             const SizedBox(height: 20),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: formatter.format(goal.currentAmount),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: isCompleted ? Colors.greenAccent : Colors.white,
-                          fontWeight: FontWeight.w700,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: formatter.format(goal.currentAmount),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: isCompleted ? completedGreen : Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
+                        TextSpan(
+                          text: ' / ',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: style.subtitleColor,
+                              ),
+                        ),
+                        TextSpan(
+                          text: formatter.format(goal.targetAmount),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
-                  TextSpan(
-                    text: ' / ',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: style.subtitleColor,
-                        ),
-                  ),
-                  TextSpan(
-                    text: formatter.format(goal.targetAmount),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
+                ),
+                if (isCompleted) ...[
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0x3322C55E),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '¡Meta conseguida!',
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: completedGreen,
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
             const SizedBox(height: 16),
             Row(
@@ -320,14 +369,16 @@ class GoalCard extends StatelessWidget {
                 Expanded(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      gradient: style.progressGradient,
+                      gradient: progressGradient,
                       borderRadius: BorderRadius.circular(18),
                     ),
                     child: FilledButton(
                       onPressed: isCompleted ? null : onContribute,
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        disabledBackgroundColor: Colors.white24,
+                        disabledBackgroundColor:
+                            isCompleted ? const Color(0x3300FF00) : Colors.white24,
+                        disabledForegroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
