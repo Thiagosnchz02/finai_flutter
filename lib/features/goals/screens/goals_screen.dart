@@ -213,13 +213,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
                               width: 200,
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 24,
-                                vertical: 16,
+                                vertical: 20,
                               ),
                               decoration: const BoxDecoration(
                                 color: Colors.transparent,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Color(0x338B5CF6),
+                                    color: Colors.transparent,
                                     blurRadius: 24,
                                     spreadRadius: 4,
                                     blurStyle: BlurStyle.inner,
@@ -232,7 +232,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontFamily: 'Inter',
-                                    fontSize: 28,
+                                    fontSize: 30,
                                     fontWeight: FontWeight.w500,
                                     color: Color(0xFF8B5CF6),
                                   ),
@@ -240,7 +240,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 92),
+                          const SizedBox(height: 30),
                         ],
                       ),
                     ),

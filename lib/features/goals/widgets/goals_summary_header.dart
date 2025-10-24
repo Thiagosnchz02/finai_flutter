@@ -46,7 +46,7 @@ class GoalsSummaryHeader extends StatelessWidget {
               color: Color(0xFF8B5CF6),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 13),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -56,8 +56,8 @@ class GoalsSummaryHeader extends StatelessWidget {
                   formatter.format(summary.totalSavingsBalance),
                   const TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
