@@ -78,6 +78,9 @@ flutter:
     - .env
     - assets/images/avatar_predeterminado.png
     - assets/images/Isotipo.png
+    - assets/icons/piggy_purple.svg
+    - assets/icons/piggy_blue.svg
+    - assets/icons/piggy_pink.svg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
