@@ -87,9 +87,26 @@ class _GoalsScreenState extends State<GoalsScreen> {
       proceed = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text('Archivar meta incompleta'),
-              content: const Text(
-                'Esta meta aún no se ha completado. Si decides archivarla, las aportaciones se moverán a tu capital disponible y se eliminarán los gastos asociados a esta meta. ¿Deseas continuar?',
+              title: const Text('¿Archivar meta incompleta?'),
+              content: Text.rich(
+                TextSpan(
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  children: [
+                    TextSpan(
+                      text:
+                          "Las aportaciones realizadas a '${goal.name}' serán devueltas a tu cuenta de ahorro asociada. ",
+                    ),
+                    const TextSpan(
+                      text:
+                          'Los gastos registrados (si es un viaje) se conservarán en tu historial general. ',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const TextSpan(
+                      text:
+                          '¿Estás seguro de que quieres archivarla?',
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -98,7 +115,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                 ),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Archivar de todos modos'),
+                  child: const Text('Sí, Archivar'),
                 ),
               ],
             ),
@@ -115,8 +132,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
         await _service.forceArchiveGoal(goal.id, goal.name);
       }
       if (mounted) {
+        final successMessage = isCompleted
+            ? 'Meta archivada con éxito'
+            : 'Meta archivada. Las aportaciones han sido devueltas a tu cuenta de ahorro.';
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meta archivada con éxito'), backgroundColor: Colors.green),
+          SnackBar(content: Text(successMessage), backgroundColor: Colors.green),
         );
         _loadData(); // Recargamos para que desaparezca de la lista
       }

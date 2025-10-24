@@ -41,15 +41,22 @@ class BudgetService {
 
     final spendingResponse = await _supabase
         .from('transactions')
-        .select('category_id, amount')
+        .select('category_id, amount, goals!left(is_archived)')
         .eq('user_id', userId)
         .eq('type', 'gasto')
         .gte('transaction_date', range.start.toIso8601String())
         .lt('transaction_date', range.end.toIso8601String());
 
     final spendingByCategory = <String, double>{};
-    for (final spent in spendingResponse) {
+    for (final rawSpent in spendingResponse) {
+      final spent = Map<String, dynamic>.from(rawSpent as Map);
       if (spent['category_id'] == null) continue;
+
+      final goalData = spent['goals'];
+      if (goalData is Map && goalData['is_archived'] == true) {
+        continue;
+      }
+
       final categoryId = spent['category_id'] as String;
       final amount = (spent['amount'] as num).abs().toDouble();
       spendingByCategory[categoryId] =
@@ -72,15 +79,22 @@ class BudgetService {
 
     final lastSpendingResponse = await _supabase
         .from('transactions')
-        .select('category_id, amount')
+        .select('category_id, amount, goals!left(is_archived)')
         .eq('user_id', userId)
         .eq('type', 'gasto')
         .gte('transaction_date', previousRange.start.toIso8601String())
         .lt('transaction_date', previousRange.end.toIso8601String());
 
     final lastSpendingByCategory = <String, double>{};
-    for (final spent in lastSpendingResponse) {
+    for (final rawSpent in lastSpendingResponse) {
+      final spent = Map<String, dynamic>.from(rawSpent as Map);
       if (spent['category_id'] == null) continue;
+
+      final goalData = spent['goals'];
+      if (goalData is Map && goalData['is_archived'] == true) {
+        continue;
+      }
+
       final categoryId = spent['category_id'] as String;
       final amount = (spent['amount'] as num).abs().toDouble();
       lastSpendingByCategory[categoryId] =
@@ -286,7 +300,7 @@ class BudgetService {
 
     final response = await _supabase
         .from('transactions')
-        .select('amount, transaction_date')
+        .select('amount, transaction_date, goals!left(is_archived)')
         .eq('user_id', userId)
         .eq('category_id', categoryId)
         .eq('type', 'gasto')
@@ -298,7 +312,13 @@ class BudgetService {
     }
 
     final grouped = <DateTime, double>{};
-    for (final item in response) {
+    for (final rawItem in response) {
+      final item = Map<String, dynamic>.from(rawItem as Map);
+      final goalData = item['goals'];
+      if (goalData is Map && goalData['is_archived'] == true) {
+        continue;
+      }
+
       final date = DateTime.parse(item['transaction_date'] as String);
       final monthKey = DateTime(date.year, date.month, 1);
       final amount = (item['amount'] as num).abs().toDouble();
@@ -319,7 +339,7 @@ class BudgetService {
 
     final response = await _supabase
         .from('transactions')
-        .select('amount, transaction_date')
+        .select('amount, transaction_date, goals!left(is_archived)')
         .eq('user_id', userId)
         .eq('category_id', categoryId)
         .eq('type', 'gasto')
@@ -327,7 +347,13 @@ class BudgetService {
         .lt('transaction_date', end.toIso8601String());
 
     final spendingByMonth = <DateTime, double>{};
-    for (final item in response) {
+    for (final rawItem in response) {
+      final item = Map<String, dynamic>.from(rawItem as Map);
+      final goalData = item['goals'];
+      if (goalData is Map && goalData['is_archived'] == true) {
+        continue;
+      }
+
       final date = DateTime.parse(item['transaction_date'] as String);
       final monthKey = DateTime(date.year, date.month, 1);
       final amount = (item['amount'] as num).abs().toDouble();
@@ -445,7 +471,7 @@ class BudgetService {
 
     final transactionsResponse = await _supabase
         .from('transactions')
-        .select('amount, type')
+        .select('amount, type, goals!left(is_archived)')
         .eq('user_id', userId)
         .inFilter('account_id', accountIds)
         .gte('transaction_date', range.start.toIso8601String())
@@ -453,7 +479,13 @@ class BudgetService {
 
     double netChange = 0;
     double incomes = 0;
-    for (final transaction in transactionsResponse) {
+    for (final rawTransaction in transactionsResponse) {
+      final transaction = Map<String, dynamic>.from(rawTransaction as Map);
+      final goalData = transaction['goals'];
+      if (goalData is Map && goalData['is_archived'] == true) {
+        continue;
+      }
+
       final amount = (transaction['amount'] as num).toDouble();
       netChange += amount;
 

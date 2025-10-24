@@ -74,9 +74,22 @@ class FixedExpensesService {
   Future<List<Map<String, dynamic>>> getHistory(String expenseId) async {
     final response = await _supabase
         .from('transactions')
-        .select('id, transaction_date, description, amount')
+        .select('id, transaction_date, description, amount, goals!left(is_archived)')
         .eq('related_scheduled_expense_id', expenseId)
         .order('transaction_date', ascending: false);
-    return List<Map<String, dynamic>>.from(response);
+    final transactions = List<Map<String, dynamic>>.from(response);
+
+    return transactions
+        .where((transaction) {
+          final goalData = transaction['goals'];
+          return !(goalData is Map && goalData['is_archived'] == true);
+        })
+        .map((transaction) {
+          final sanitized = Map<String, dynamic>.from(transaction);
+          sanitized.remove('goals');
+          return sanitized;
+        })
+        .toList();
   }
 }
+
