@@ -226,15 +226,15 @@ class GoalCard extends StatelessWidget {
                 ],
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
             LayoutBuilder(
               builder: (context, constraints) {
                 final barHeight = 16.0;
-                final pigSize = 54.0;
+                final pigSize = 68.0;
                 final availableWidth =
                     (constraints.maxWidth - pigSize).clamp(0.0, double.infinity);
                 final pigLeft = (availableWidth * progress).clamp(0.0, availableWidth);
-                final stackHeight = pigSize + 12;
+                final stackHeight = pigSize + 16;
 
                 return SizedBox(
                   height: stackHeight,
@@ -268,38 +268,51 @@ class GoalCard extends StatelessWidget {
                           width: pigSize,
                           height: pigSize,
                           decoration: BoxDecoration(
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(pigSize / 2),
                             color: Colors.white,
                             border: Border.all(
                               color: (isCompleted ? completedGreen : style.iconColor)
                                   .withOpacity(0.2),
                               width: 2,
                             ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(2.0),
+                            padding: const EdgeInsets.all(6.0),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                SizedBox(
-                                  height: 22,
+                                Flexible(
+                                  flex: 2,
                                   child: SvgPicture.asset(
                                     style.pigAsset,
+                                    fit: BoxFit.contain,
                                     colorFilter: ColorFilter.mode(
                                       isCompleted ? completedGreen : style.iconColor,
                                       BlendMode.srcIn,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${(progress * 100).toStringAsFixed(0)}%',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color:
-                                            isCompleted ? completedGreen : style.iconColor,
-                                      ),
+                                const SizedBox(height: 3),
+                                Flexible(
+                                  flex: 1,
+                                  child: Text(
+                                    '${(progress * 100).toStringAsFixed(0)}%',
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 11,
+                                          color:
+                                              isCompleted ? completedGreen : style.iconColor,
+                                        ),
+                                    maxLines: 1,
+                                  ),
                                 ),
                               ],
                             ),
