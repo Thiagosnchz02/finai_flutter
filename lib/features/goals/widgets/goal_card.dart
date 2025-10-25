@@ -194,30 +194,35 @@ class GoalCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: badgeBackgroundColor,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: badgeBorderColor, width: 1),
-              ),
-              child: Text(
-                goal.type,
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: style.iconColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: badgeBackgroundColor,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: badgeBorderColor, width: 1),
+                  ),
+                  child: Text(
+                    goal.type,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: style.iconColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+                if (goal.targetDate != null) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    'Hasta ${DateFormat('dd/MM/yyyy').format(goal.targetDate!)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: style.subtitleColor,
+                        ),
+                  ),
+                ],
+              ],
             ),
-            if (goal.targetDate != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                'Hasta ${DateFormat.yMMMMd('es_ES').format(goal.targetDate!)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: style.subtitleColor,
-                    ),
-              ),
-            ],
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) {
