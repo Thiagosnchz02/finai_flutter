@@ -148,7 +148,10 @@ class GoalCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 24,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -223,16 +226,18 @@ class GoalCard extends StatelessWidget {
                 ],
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             LayoutBuilder(
               builder: (context, constraints) {
-                final barHeight = 14.0;
-                final pigSize = 48.0;
-                final availableWidth = (constraints.maxWidth - pigSize).clamp(0.0, double.infinity);
+                final barHeight = 16.0;
+                final pigSize = 54.0;
+                final availableWidth =
+                    (constraints.maxWidth - pigSize).clamp(0.0, double.infinity);
                 final pigLeft = (availableWidth * progress).clamp(0.0, availableWidth);
+                final stackHeight = pigSize + 12;
 
                 return SizedBox(
-                  height: pigSize * 0.85,
+                  height: stackHeight,
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -258,7 +263,7 @@ class GoalCard extends StatelessWidget {
                       ),
                       Positioned(
                         left: pigLeft,
-                        top: -(pigSize / 2 - barHeight / 2),
+                        top: -(pigSize / 2 - barHeight / 2) + 6,
                         child: Container(
                           width: pigSize,
                           height: pigSize,
