@@ -16,7 +16,7 @@ class PlanParticipant {
     return PlanParticipant(
       id: map['id'],
       planId: map['plan_id'],
-      name: map['name'],
+      name: map['participant_name'], // <-- CORRECCIÓN AQUÍ
       balance: (map['balance'] as num? ?? 0.0).toDouble(),
     );
   }

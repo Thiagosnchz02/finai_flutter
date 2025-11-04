@@ -1,7 +1,7 @@
 // lib/features/fincount/services/fincount_service.dart
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/split_plan_model.dart';
-import '../models/plan_participant_model.dart'; // <-- IMPORTACIÓN AÑADIDA
+import '../models/plan_participant_model.dart';
 
 class FincountService {
   final _supabase = Supabase.instance.client;
@@ -26,30 +26,72 @@ class FincountService {
   Future<SplitPlan> createPlan(String name) async {
     final response = await _supabase
         .from('split_plans')
-        .insert({'name': name, 'creator_user_id': _supabase.auth.currentUser!.id})
+        .insert({'name': name, 'creator_user_id': _supabase.auth.currentUser!.id}) // Corregido
         .select()
         .single();
     return SplitPlan.fromMap(response);
   }
-
+  
   /// Obtiene los detalles y saldos de un plan específico.
   Future<List<PlanParticipant>> getPlanDetails(String planId) async {
     try {
-      // Llama a la RPC que calcula los saldos
       final response = await _supabase.rpc(
         'resolve_split_plan',
         params: {'p_plan_id': planId},
       );
 
-      // Convierte la respuesta (que es una lista de mapas) en una lista de modelos
-      final participants = (response as List)
+      if (response is! List) {
+        print('Respuesta inesperada de RPC (probablemente RLS o sin datos): $response');
+        return <PlanParticipant>[]; // Devuelve una lista vacía
+      }
+
+      final participants = response
           .map((item) => PlanParticipant.fromMap(item as Map<String, dynamic>))
           .toList();
           
       return participants;
     } catch (e) {
-      // Manejar el error, por ejemplo, si la RPC falla
       print('Error en getPlanDetails: $e');
+      rethrow;
+    }
+  }
+
+  /// Añade un nuevo participante a un plan.
+  Future<void> addParticipant(String planId, String name) async {
+    try {
+      await _supabase.from('plan_participants').insert({
+        'plan_id': planId,
+        'participant_name': name, // <-- CORRECCIÓN AQUÍ
+      });
+    } catch (e) {
+      print('Error en addParticipant: $e');
+      rethrow;
+    }
+  }
+
+  /// Llama a la RPC para añadir un nuevo gasto y sus divisiones.
+  Future<void> addExpense({
+    required String planId,
+    required String paidByParticipantId,
+    required double amount,
+    required String description,
+    required String splitType, // 'equal', 'percentage', 'exact'
+    required List<Map<String, dynamic>> shares,
+  }) async {
+    try {
+      await _supabase.rpc(
+        'add_split_expense',
+        params: {
+          'p_plan_id': planId,
+          'p_paid_by_participant_id': paidByParticipantId,
+          'p_amount': amount,
+          'p_description': description,
+          'p_split_type': splitType,
+          'p_shares': shares,
+        },
+      );
+    } catch (e) {
+      print('Error en addExpense: $e');
       rethrow;
     }
   }
