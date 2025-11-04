@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:finai_flutter/features/fincount/models/plan_participant_model.dart';
 import 'package:finai_flutter/features/fincount/services/fincount_service.dart';
-import 'add_participant_screen.dart'; // <-- IMPORTACIÓN AÑADIDA
+import 'add_participant_screen.dart';
+import 'add_expense_screen.dart'; // <-- IMPORTACIÓN AÑADIDA
 
 class PlanDetailsScreen extends StatefulWidget {
   final String planId;
@@ -27,6 +28,9 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
       NumberFormat.currency(locale: 'es_ES', symbol: '€');
 
   late TabController _tabController;
+  
+  // --- VARIABLE AÑADIDA ---
+  List<PlanParticipant> _participants = []; // Para pasarla al formulario de gasto
 
   @override
   void initState() {
@@ -47,21 +51,46 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
     });
   }
 
-  // --- INICIO DE LA MODIFICACIÓN ---
-  /// Navega a la pantalla de añadir participante y recarga si es necesario
   Future<void> _navigateAndReloadParticipants() async {
     final result = await Navigator.of(context).push<bool>(
       MaterialPageRoute(
         builder: (context) => AddParticipantScreen(planId: widget.planId),
       ),
     );
-
-    // Si la pantalla devolvió 'true', recargamos los detalles (saldos)
     if (result == true && mounted) {
       _loadDetails();
     }
   }
-  // --- FIN DE LA MODIFICACIÓN ---
+
+  // --- INICIO DEL NUEVO MÉTODO ---
+  /// Navega a la pantalla de añadir gasto y recarga si es necesario
+  Future<void> _navigateAndAddExpense() async {
+    // Comprobar si hay participantes antes de añadir un gasto
+    if (_participants.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Debes añadir participantes al plan antes de crear un gasto.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => AddExpenseScreen(
+          planId: widget.planId,
+          participants: _participants, // Pasamos la lista de participantes
+        ),
+      ),
+    );
+    
+    // Si se añadió un gasto, recargamos los detalles (saldos)
+    if (result == true && mounted) {
+      _loadDetails();
+    }
+  }
+  // --- FIN DEL NUEVO MÉTODO ---
 
   @override
   Widget build(BuildContext context) {
@@ -74,14 +103,11 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
             onPressed: _loadDetails,
             tooltip: 'Recargar Saldos',
           ),
-          // --- INICIO DE LA MODIFICACIÓN ---
-          // Se cambia el botón de editar por "Añadir Participante"
           IconButton(
-            icon: const Icon(Icons.person_add_alt_1), // Icono cambiado
-            onPressed: _navigateAndReloadParticipants, // Lógica añadida
-            tooltip: 'Añadir Participante', // Tooltip cambiado
+            icon: const Icon(Icons.person_add_alt_1),
+            onPressed: _navigateAndReloadParticipants,
+            tooltip: 'Añadir Participante',
           ),
-          // --- FIN DE LA MODIFICACIÓN ---
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -98,13 +124,13 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
           _buildBalancesTab(),
         ],
       ),
+      // --- INICIO DE LA MODIFICACIÓN ---
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Navegar a la pantalla de añadir gasto
-        },
+        onPressed: _navigateAndAddExpense, // Se conecta el nuevo método
         icon: const Icon(Icons.add),
         label: const Text('Añadir Gasto'),
       ),
+      // --- FIN DE LA MODIFICACIÓN ---
     );
   }
 
@@ -119,7 +145,6 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
   }
 
   Widget _buildBalancesTab() {
-    // ... (sin cambios)
     return FutureBuilder<List<PlanParticipant>>(
       future: _detailsFuture,
       builder: (context, snapshot) {
@@ -131,21 +156,32 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
               child: Text('Error al cargar los saldos: ${snapshot.error}'));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          // --- INICIO DE LA MODIFICACIÓN ---
+          // Limpiamos la lista de participantes si está vacía
+          _participants = [];
+          // --- FIN DE LA MODIFICACIÓN ---
           return const Center(
               child: Text('Aún no hay participantes en este plan.'));
         }
 
         final participants = snapshot.data!;
-        // ... (resto del ListView sin cambios)
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // Guardamos la lista de participantes para usarla en el FAB
+        _participants = participants;
+        // --- FIN DE LA MODIFICACIÓN ---
+        
         return ListView.builder(
           itemCount: participants.length,
           itemBuilder: (context, index) {
+            // ... (ListTile sin cambios)
             final participant = participants[index];
             final balance = participant.balance;
             final Color balanceColor = _getBalanceColor(balance);
 
             return ListTile(
               leading: CircleAvatar(
+                backgroundColor: Colors.white.withOpacity(0.1),
+                foregroundColor: Colors.white,
                 child: Text(participant.name.substring(0, 1).toUpperCase()),
               ),
               title: Text(participant.name),
@@ -173,8 +209,8 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
   }
 
   String _getBalanceLabel(double balance) {
-    if (balance < 0) return 'Debe';
-    if (balance > 0) return 'Le deben';
+    if (balance < 0) return 'Debes';
+    if (balance > 0) return 'Te deben';
     return 'En paz';
   }
 }
