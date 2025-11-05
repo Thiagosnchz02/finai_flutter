@@ -40,7 +40,7 @@ GoalStyle paletteFor(Goal goal) {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
-      pigAsset: 'assets/icons/piggy_purple.svg',
+      pigAsset: 'assets/icons/piggy_fill.svg',
       borderColor: Color(0xFF875CF6),
     );
   }
@@ -56,7 +56,7 @@ GoalStyle paletteFor(Goal goal) {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
-      pigAsset: 'assets/icons/piggy_purple.svg',
+      pigAsset: 'assets/icons/piggy_fill.svg',
       borderColor: Color(0xFF5B21B6),
     );
   }
@@ -72,7 +72,7 @@ GoalStyle paletteFor(Goal goal) {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
       ),
-      pigAsset: 'assets/icons/piggy_blue.svg',
+      pigAsset: 'assets/icons/piggy_fill.svg',
       borderColor: Color(0xFF2971FF),
     );
   }
@@ -87,7 +87,7 @@ GoalStyle paletteFor(Goal goal) {
       begin: Alignment.centerLeft,
       end: Alignment.centerRight,
     ),
-    pigAsset: 'assets/icons/piggy_pink.svg',
+    pigAsset: 'assets/icons/piggy_fill.svg',
     borderColor: Color(0xFFFF0088),
   );
 }
