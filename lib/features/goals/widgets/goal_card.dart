@@ -230,7 +230,7 @@ class GoalCard extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 final barHeight = 16.0;
-                final pigSize = 68.0;
+                final pigSize = 70.0;
                 final availableWidth =
                     (constraints.maxWidth - pigSize).clamp(0.0, double.infinity);
                 final pigLeft = (availableWidth * progress).clamp(0.0, availableWidth);
@@ -264,58 +264,49 @@ class GoalCard extends StatelessWidget {
                       Positioned(
                         left: pigLeft,
                         top: -(pigSize / 2 - barHeight / 2) + 6,
-                        child: Container(
+                        child: SizedBox(
                           width: pigSize,
                           height: pigSize,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(pigSize / 2),
-                            color: Colors.white,
-                            border: Border.all(
-                              color: (isCompleted ? completedGreen : style.iconColor)
-                                  .withOpacity(0.2),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                style.pigAsset,
+                                width: pigSize,
+                                height: pigSize,
+                                fit: BoxFit.contain,
+                                colorFilter: ColorFilter.mode(
+                                  isCompleted ? completedGreen : style.iconColor,
+                                  BlendMode.srcIn,
+                                ),
                               ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Flexible(
-                                  flex: 2,
-                                  child: SvgPicture.asset(
-                                    style.pigAsset,
-                                    fit: BoxFit.contain,
-                                    colorFilter: ColorFilter.mode(
-                                      isCompleted ? completedGreen : style.iconColor,
-                                      BlendMode.srcIn,
+                              Positioned(
+                                bottom: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1F0142).withOpacity(0.85),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: (isCompleted ? completedGreen : style.iconColor)
+                                          .withOpacity(0.4),
+                                      width: 1,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 3),
-                                Flexible(
-                                  flex: 1,
                                   child: Text(
                                     '${(progress * 100).toStringAsFixed(0)}%',
                                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                           fontWeight: FontWeight.w700,
-                                          fontSize: 11,
-                                          color:
-                                              isCompleted ? completedGreen : style.iconColor,
+                                          fontSize: 12,
+                                          color: isCompleted ? completedGreen : Colors.white,
                                         ),
-                                    maxLines: 1,
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
