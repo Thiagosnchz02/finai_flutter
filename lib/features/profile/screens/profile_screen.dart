@@ -141,8 +141,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// Cierra la sesión del usuario actual.
   Future<void> _signOut() async {
     try {
-      await _supabase.auth.signOut();
+      print('🚪 [LOGOUT] Cerrando sesión (navegando al login)...');
+      final currentUser = _supabase.auth.currentUser;
+      final currentSession = _supabase.auth.currentSession;
+      
+      print('  - currentUser antes: ${currentUser != null ? currentUser.email : "NULL"}');
+      print('  - currentSession antes: ${currentSession != null ? "EXISTE" : "NULL"}');
+      
+      // En lugar de cerrar sesión completamente, solo navegamos al login
+      // Esto permite que la sesión persista para autenticación biométrica
+      if (mounted) {
+        print('  ➡️ Navegando a /login (sin cerrar sesión de Supabase)');
+        Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      }
     } on AuthException catch (e) {
+      print('  ❌ Error en logout: ${e.message}');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

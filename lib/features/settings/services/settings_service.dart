@@ -1,13 +1,17 @@
 // lib/features/settings/services/settings_service.dart
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:finai_flutter/core/events/app_events.dart';
 import 'package:finai_flutter/core/services/event_logger_service.dart';
+import 'package:finai_flutter/core/services/biometric_auth_service.dart';
 import '../models/profile_model.dart';
 
 class SettingsService {
   final _supabase = Supabase.instance.client;
   final _eventLogger = EventLoggerService();
+  final _localAuth = LocalAuthentication();
+  final _biometricAuthService = BiometricAuthService();
 
   Future<Profile> getProfileSettings() async {
     final userId = _supabase.auth.currentUser!.id;
@@ -26,7 +30,58 @@ class SettingsService {
         'notification_type': key,
         'enabled': value,
       });
+    } else if (key == 'biometric_auth_enabled') {
+      await _eventLogger.log(AppEvent.settingsBiometricToggled, details: {'enabled': value});
     }
+  }
+
+  /// Verifica si el dispositivo soporta autenticación biométrica
+  Future<bool> canUseBiometrics() async {
+    try {
+      final canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      final isDeviceSupported = await _localAuth.isDeviceSupported();
+      return canCheckBiometrics && isDeviceSupported;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Intenta autenticar con biometría para configurar
+  Future<bool> authenticateBiometric() async {
+    try {
+      return await _localAuth.authenticate(
+        localizedReason: 'Confirma tu identidad para habilitar el inicio de sesión con huella',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          biometricOnly: true,
+        ),
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Habilita la autenticación biométrica
+  Future<bool> enableBiometricAuth() async {
+    final canUse = await canUseBiometrics();
+    if (!canUse) {
+      throw Exception('Este dispositivo no soporta autenticación biométrica');
+    }
+
+    final authenticated = await authenticateBiometric();
+    if (!authenticated) {
+      return false;
+    }
+
+    await updateProfileSetting('biometric_auth_enabled', true);
+    return true;
+  }
+
+  /// Deshabilita la autenticación biométrica
+  Future<void> disableBiometricAuth() async {
+    await updateProfileSetting('biometric_auth_enabled', false);
+    // Limpiar la marca local cuando se deshabilita
+    await _biometricAuthService.setBiometricEnabled(false);
   }
 
   Future<String> enrollMfa() async {

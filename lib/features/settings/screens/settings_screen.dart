@@ -49,6 +49,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'notify_goal_reached':
         updatedProfile = previousProfile.copyWith(notifyGoalReached: value as bool);
         break;
+      case 'biometric_auth_enabled':
+        updatedProfile = previousProfile.copyWith(biometricAuthEnabled: value as bool);
+        break;
     }
 
     setState(() {
@@ -83,6 +86,121 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     if (success) {
       _loadProfile();
+    }
+  }
+
+  Future<void> _onBiometricToggleChanged(bool currentValue) async {
+    if (!currentValue) {
+      // El usuario quiere habilitar la autenticación biométrica
+      final canUseBiometric = await _service.canUseBiometrics();
+      
+      if (!canUseBiometric) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Tu dispositivo no soporta autenticación biométrica'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Mostrar diálogo explicativo
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Habilitar Inicio de Sesión con Huella'),
+          content: const Text(
+            'Para habilitar el inicio de sesión con huella, necesitas confirmar tu identidad. '
+            'Una vez habilitado, podrás acceder rápidamente a tu cuenta usando tu huella digital.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Continuar'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm != true) return;
+
+      // Intentar habilitar la autenticación biométrica
+      try {
+        final success = await _service.enableBiometricAuth();
+        
+        if (success) {
+          _loadProfile();
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Inicio de sesión con huella habilitado correctamente'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No se pudo verificar tu identidad'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } else {
+      // El usuario quiere deshabilitar la autenticación biométrica
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Deshabilitar Huella Digital'),
+          content: const Text(
+            '¿Estás seguro de que deseas deshabilitar el inicio de sesión con huella?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Deshabilitar'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await _service.disableBiometricAuth();
+        _loadProfile();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Inicio de sesión con huella deshabilitado'),
+              backgroundColor: Colors.grey,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -217,6 +335,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       );
                     },
+                  ),
+                  SettingsToggleRow(
+                    label: 'Inicio de Sesión con Huella',
+                    value: profile.biometricAuthEnabled,
+                    onChanged: (value) => _onBiometricToggleChanged(profile.biometricAuthEnabled),
                   ),
                   // --- CORRECCIÓN AQUÍ ---
                   // Conectamos el interruptor con el método que ya habíamos creado.

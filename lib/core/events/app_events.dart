@@ -45,6 +45,7 @@ enum AppEvent {
   // Eventos del Módulo de Configuración
   settingsThemeChanged,
   settings2faToggled,
+  settingsBiometricToggled,
   settingsNotificationToggled,
   userDataExported,
   userAccountDeleted,

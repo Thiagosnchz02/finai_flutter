@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:finai_flutter/presentation/widgets/finai_aurora_background.dart';
+import 'package:finai_flutter/core/services/biometric_auth_service.dart';
 import 'package:flutter/gestures.dart';
 import 'dart:ui';
 
@@ -24,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _supabase = Supabase.instance.client;
   final _localAuth = LocalAuthentication();
+  final _biometricService = BiometricAuthService();
 
   bool _isLoading = false;
   bool _isBiometricAvailable = false;
@@ -33,6 +35,37 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _checkBiometricSupport();
+    _checkExistingSession();
+  }
+  
+  /// Verifica si ya existe una sesión activa y redirige al dashboard si es así.
+  Future<void> _checkExistingSession() async {
+    final currentSession = _supabase.auth.currentSession;
+    final currentUser = _supabase.auth.currentUser;
+    
+    print('🔍 [LOGIN] Verificando sesión existente...');
+    print('  - currentSession: ${currentSession != null ? "EXISTE" : "NULL"}');
+    print('  - currentUser: ${currentUser != null ? currentUser.email : "NULL"}');
+    
+    if (currentSession != null && mounted) {
+      // Si hay sesión activa, verificar si tiene biometría habilitada
+      final isBiometricEnabled = await _biometricService.isBiometricEnabledInDB();
+      
+      print('  - Biometría habilitada en BD: $isBiometricEnabled');
+      
+      if (isBiometricEnabled) {
+        // Si tiene biometría habilitada, requerir autenticación biométrica
+        // El usuario verá la pantalla de login con el botón de huella
+        print('  ✅ Usuario debe autenticarse con huella');
+        return;
+      } else {
+        // Si no tiene biometría, ir directamente al dashboard
+        print('  ➡️ Redirigiendo a dashboard (sin biometría)');
+        Navigator.of(context).pushReplacementNamed('/dashboard');
+      }
+    } else {
+      print('  ❌ No hay sesión activa');
+    }
   }
 
   @override
@@ -65,33 +98,83 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _authenticateWithBiometrics() async {
     if (!_isBiometricAvailable) return;
 
-    try {
-      final didAuthenticate = await _localAuth.authenticate(
-        localizedReason: 'Por favor, autentícate para acceder a FinAi',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
-      );
+    setState(() {
+      _isLoading = true;
+    });
 
-      if (didAuthenticate && mounted) {
-        // La navegación se maneja automáticamente por el AuthState listener
-        // si la sesión ya existe.
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Autenticación biométrica correcta.'),
-            backgroundColor: Colors.green,
-          ),
-        );
+    try {
+      print('🔐 [BIOMETRIC] Iniciando autenticación biométrica...');
+      
+      // Verificar si tiene habilitada la biometría en la BD
+      // Primero intentamos obtener el user actual (puede estar en sesión o recuperado)
+      final currentUser = _supabase.auth.currentUser;
+      final currentSession = _supabase.auth.currentSession;
+      
+      print('  - currentUser: ${currentUser != null ? currentUser.email : "NULL"}');
+      print('  - currentSession: ${currentSession != null ? "EXISTE" : "NULL"}');
+      
+      if (currentUser == null) {
+        // No hay usuario, necesita login con email/password
+        print('  ❌ No hay usuario - requiere login con email/password');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Primero debes iniciar sesión con tu email y contraseña',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Verificar si tiene habilitada la biometría en la BD
+      final isBiometricEnabled = await _biometricService.isBiometricEnabledInDB();
+      
+      print('  - Biometría habilitada en BD: $isBiometricEnabled');
+      
+      if (!isBiometricEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Para usar esta función, habilítala en Configuración → Seguridad',
+              ),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+
+      // Solicitar autenticación biométrica
+      print('  🔓 Solicitando huella...');
+      final authenticated = await _biometricService.authenticateWithBiometrics();
+      
+      print('  - Autenticado: $authenticated');
+      
+      if (authenticated && mounted) {
+        print('  ✅ Autenticación exitosa - navegando a dashboard');
+        // Navegar al dashboard - la sesión ya está activa
+        Navigator.of(context).pushReplacementNamed('/dashboard');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error de biometría: $e'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -107,10 +190,15 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text.trim();
+      
       await _supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+        email: email,
+        password: password,
       );
+      
+      // Supabase persiste la sesión automáticamente
       // No necesitamos navegar aquí. El listener en main.dart lo hará.
     } on AuthException catch (e) {
       if (mounted) {
@@ -175,65 +263,65 @@ class _LoginScreenState extends State<LoginScreen> {
 @override
 Widget build(BuildContext context) {
   return Scaffold(
+    resizeToAvoidBottomInset: true,
     body: Stack(
       alignment: Alignment.center,
       children: [
         // 1) Fondo 100% código (nítido, sin banding)
         const Positioned.fill(child: FinAiAuroraBackground()),
 
-        // 2) Contenido
+        // 2) Contenido con scroll
         Positioned.fill(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                // Forzamos a que el contenido tenga como mínimo la altura de la pantalla
-                minHeight: MediaQuery.of(context).size.height,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Hemos quitado el SizedBox de 40 de aquí para un centrado perfecto
-                  _buildHeader(),
-                  const SizedBox(height: 40),
-                  Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildEmailField(),
-                        const SizedBox(height: 16),
-                        _buildPasswordHeader(),
-                        const SizedBox(height: 8),
-                        _buildPasswordField(),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height - 
+                             MediaQuery.of(context).padding.top - 
+                             MediaQuery.of(context).padding.bottom,
+                ),
+                child: IntrinsicHeight(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildHeader(),
+                      const SizedBox(height: 40),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildEmailField(),
+                            const SizedBox(height: 16),
+                            _buildPasswordHeader(),
+                            const SizedBox(height: 8),
+                            _buildPasswordField(),
+                            const SizedBox(height: 24),
+                            _buildSignInButton(),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      if (_isBiometricAvailable) ...[
+                        _buildBiometricButton(),
                         const SizedBox(height: 24),
-                        _buildSignInButton(),
                       ],
-                    ),
+                      _buildDivider(),
+                      const SizedBox(height: 24),
+                      _buildSocialButtons(),
+                      const SizedBox(height: 40),
+                      _buildSignUpButton(),
+                      const SizedBox(height: 40),
+                    ],
                   ),
-                  const SizedBox(height: 24),
-                  _buildDivider(),
-                  const SizedBox(height: 24),
-                  _buildSocialButtons(),
-                  const SizedBox(height: 40),
-                  _buildSignUpButton(),
-                  // Añade un pequeño padding inferior para que no quede pegado al borde
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
             ),
           ),
         ),
-
-        if (_isBiometricAvailable)
-          Positioned(
-            bottom: 20,
-            child: IconButton(
-              icon: const Icon(Icons.fingerprint, color: Colors.white70, size: 48),
-              onPressed: _authenticateWithBiometrics,
-              tooltip: 'Iniciar sesión con huella',
-            ),
-          ),
       ],
     ),
   );
@@ -383,6 +471,53 @@ Widget build(BuildContext context) {
     ),
   );
 }
+
+  Widget _buildBiometricButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16.0),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          child: InkWell(
+            onTap: _isLoading ? null : _authenticateWithBiometrics,
+            borderRadius: BorderRadius.circular(16.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16.0),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.4),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.fingerprint,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Iniciar sesión con huella',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildDivider() {
     return const Row(

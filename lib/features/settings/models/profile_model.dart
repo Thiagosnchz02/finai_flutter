@@ -5,6 +5,7 @@ class Profile {
   final String? fullName;
   final String? avatarUrl;
   final bool dobleFactorEnabled;
+  final bool biometricAuthEnabled;
   final String theme;
   final String language;
   final bool notifyFixedExpense;
@@ -18,6 +19,7 @@ class Profile {
     this.fullName,
     this.avatarUrl,
     required this.dobleFactorEnabled,
+    required this.biometricAuthEnabled,
     required this.theme,
     required this.language,
     required this.notifyFixedExpense,
@@ -33,6 +35,7 @@ class Profile {
       fullName: map['full_name'],
       avatarUrl: map['avatar_url'],
       dobleFactorEnabled: map['doble_factor_enabled'] ?? false,
+      biometricAuthEnabled: map['biometric_auth_enabled'] ?? false,
       theme: map['theme'] ?? 'system',
       language: map['language'] ?? 'es',
       notifyFixedExpense: map['notify_fixed_expense'] ?? true,
@@ -48,6 +51,7 @@ class Profile {
     String? fullName,
     String? avatarUrl,
     bool? dobleFactorEnabled,
+    bool? biometricAuthEnabled,
     String? theme,
     String? language,
     bool? notifyFixedExpense,
@@ -61,6 +65,7 @@ class Profile {
       fullName: fullName ?? this.fullName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       dobleFactorEnabled: dobleFactorEnabled ?? this.dobleFactorEnabled,
+      biometricAuthEnabled: biometricAuthEnabled ?? this.biometricAuthEnabled,
       theme: theme ?? this.theme,
       language: language ?? this.language,
       notifyFixedExpense: notifyFixedExpense ?? this.notifyFixedExpense,
