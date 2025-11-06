@@ -281,7 +281,29 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Tipo de transacción
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.filter_list,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Tipo de transacción',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
                     value: _type,
                     items: [
@@ -312,7 +334,13 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         _handleTypeChanged(value);
                       }
                     },
-                    decoration: buildInputDecoration('Tipo'),
+                    decoration: buildInputDecoration('Tipo').copyWith(
+                      prefixIcon: Icon(
+                        Icons.swap_horiz,
+                        size: 20,
+                        color: Color(0xFFA0AEC0),
+                      ),
+                    ),
                     style: const TextStyle(
                       fontFamily: 'Inter',
                       color: Colors.white,
@@ -322,7 +350,29 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     iconEnabledColor: _purpleAccent,
                     isExpanded: true,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Rango de importes
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.euro_symbol,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Rango de importes',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       Expanded(
@@ -331,11 +381,10 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                           keyboardType:
                               const TextInputType.numberWithOptions(decimal: true),
                           decoration: buildInputDecoration('Mínimo').copyWith(
-                            prefixText: '€ ',
-                            prefixStyle: const TextStyle(
-                              fontFamily: 'Inter',
+                            prefixIcon: Icon(
+                              Icons.arrow_downward,
+                              size: 18,
                               color: Color(0xFFA0AEC0),
-                              fontSize: 14,
                             ),
                           ),
                           style: const TextStyle(
@@ -353,11 +402,10 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                           keyboardType:
                               const TextInputType.numberWithOptions(decimal: true),
                           decoration: buildInputDecoration('Máximo').copyWith(
-                            prefixText: '€ ',
-                            prefixStyle: const TextStyle(
-                              fontFamily: 'Inter',
+                            prefixIcon: Icon(
+                              Icons.arrow_upward,
+                              size: 18,
                               color: Color(0xFFA0AEC0),
-                              fontSize: 14,
                             ),
                           ),
                           style: const TextStyle(
@@ -370,7 +418,29 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Categoría
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.bookmark_border,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Categoría',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   if (_isLoadingCategories)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -381,7 +451,13 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                   else
                     DropdownButtonFormField<String?>(
                       value: _selectedCategoryId,
-                      decoration: buildInputDecoration('Categoría'),
+                      decoration: buildInputDecoration('Seleccionar categoría').copyWith(
+                        prefixIcon: Icon(
+                          Icons.label_outline,
+                          size: 20,
+                          color: Color(0xFFA0AEC0),
+                        ),
+                      ),
                       items: [
                         DropdownMenuItem<String?>(
                           value: null,
@@ -436,20 +512,32 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         ),
                       ),
                     ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Periodo
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.event_outlined,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Periodo',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Rango de fechas',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          color: Color(0xFFA0AEC0), // Gris Neutro
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Expanded(
@@ -470,7 +558,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                                 ),
                               ),
                               onPressed: () => _pickDateRange(),
-                              icon: const Icon(Icons.calendar_today_outlined),
+                              icon: const Icon(Icons.date_range, size: 20),
                               label: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(
@@ -485,7 +573,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                             IconButton(
                               tooltip: 'Limpiar fechas',
                               onPressed: _clearDateRange,
-                              icon: const Icon(Icons.clear),
+                              icon: const Icon(Icons.clear, size: 20),
                               color: Colors.white70,
                               splashRadius: 24,
                             ),
@@ -493,10 +581,39 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                  // Header: Búsqueda por concepto
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Búsqueda por concepto',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   TextField(
                     controller: _conceptController,
-                    decoration: buildInputDecoration('Concepto (opcional)'),
+                    decoration: buildInputDecoration('Buscar por concepto...').copyWith(
+                      prefixIcon: Icon(
+                        Icons.text_fields,
+                        size: 20,
+                        color: Color(0xFFA0AEC0),
+                      ),
+                    ),
                     style: const TextStyle(
                       fontFamily: 'Inter',
                       color: Colors.white,
@@ -504,11 +621,11 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     ),
                     cursorColor: _purpleAccent,
                   ),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 32),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      // Botón Limpiar con estilo similar a "Guardar transacción"
+                      // Botón Limpiar con icono
                       Container(
                         decoration: BoxDecoration(
                           color: _blueButton.withOpacity(0.2),
@@ -528,29 +645,54 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                                 horizontal: 20,
                                 vertical: 12,
                               ),
-                              child: const Text(
-                                'Limpiar',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFFFFFFF),
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.refresh,
+                                    size: 18,
+                                    color: Color(0xFFFFFFFF),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Limpiar',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFFFFFFFF),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      // Botón Aplicar con estilo similar a "Guardar transacción"
+                      // Botón Aplicar con icono
                       Container(
                         decoration: BoxDecoration(
-                          color: _blueButton.withOpacity(0.2),
+                          gradient: LinearGradient(
+                            colors: [
+                              _purpleAccent.withOpacity(0.3),
+                              _purpleAccent.withOpacity(0.2),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: _blueButton.withOpacity(0.4),
+                            color: _purpleAccent.withOpacity(0.5),
                             width: 0.8,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _purpleAccent.withOpacity(0.15),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
                         child: Material(
                           color: Colors.transparent,
@@ -562,14 +704,25 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                                 horizontal: 24,
                                 vertical: 12,
                               ),
-                              child: const Text(
-                                'Aplicar',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFFFFFFFF),
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: const [
+                                  Icon(
+                                    Icons.check_circle_outline,
+                                    size: 18,
+                                    color: Color(0xFFFFFFFF),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Aplicar',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFFFFFFFF),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

@@ -146,6 +146,44 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
       initialDate: _selectedDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      // Tema personalizado estilo iOS moderno
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: _purpleAccent, // Color de selección
+              onPrimary: Colors.white, // Texto sobre color primario
+              surface: const Color(0xFF0A0A0A), // Fondo del calendario (negro brillante)
+              onSurface: Colors.white, // Texto sobre superficie
+              secondary: _purpleAccent.withOpacity(0.3), // Color secundario
+            ),
+            dialogBackgroundColor: const Color(0xFF0A0A0A), // Fondo del diálogo (negro brillante)
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: _purpleAccent, // Color de los botones
+                textStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            // Estilo del encabezado del calendario
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: const Color(0xFF0A0A0A), // Fondo negro brillante
+              elevation: 8,
+            ),
+            // Color del icono de editar en azul oscuro
+            iconTheme: const IconThemeData(
+              color: Color(0xFF1E3A8A), // Azul oscuro para el icono de editar
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -604,18 +642,74 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Descripción
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.description_outlined,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Descripción',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _descriptionController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration('Descripción'),
+                    decoration: buildInputDecoration('Ej: Compra supermercado').copyWith(
+                      prefixIcon: Icon(
+                        Icons.text_fields,
+                        size: 20,
+                        color: Color(0xFFA0AEC0),
+                      ),
+                    ),
                     validator: (value) => value == null || value.isEmpty ? 'Introduce una descripción' : null,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Cantidad
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.euro_symbol,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Cantidad',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   TextFormField(
                     controller: _amountController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration('Cantidad (€)'),
+                    decoration: buildInputDecoration('0.00').copyWith(
+                      prefixIcon: Icon(
+                        Icons.payments_outlined,
+                        size: 20,
+                        color: Color(0xFFA0AEC0),
+                      ),
+                    ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
                       if (value == null || value.isEmpty) return 'Introduce una cantidad';
@@ -623,7 +717,29 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       return null;
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Cuenta
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet_outlined,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Cuenta',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _accountsFuture,
                     builder: (context, snapshot) {
@@ -663,20 +779,46 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       final accounts = snapshot.data!;
                       return DropdownButtonFormField<String>(
                         value: _selectedAccountId,
-                        decoration: buildInputDecoration('Cuenta'),
+                        decoration: buildInputDecoration('Seleccionar cuenta').copyWith(
+                          prefixIcon: Icon(
+                            Icons.credit_card,
+                            size: 20,
+                            color: Color(0xFFA0AEC0),
+                          ),
+                        ),
                         style: const TextStyle(
                           fontFamily: 'Inter',
                           color: Colors.white,
                           fontSize: 14,
                         ),
-                        dropdownColor: const Color(0xFF1A1A1A),
+                        dropdownColor: const Color(0xFF0A0A0A),
                         iconEnabledColor: _purpleAccent,
+                        // Radio personalizado para dropdown
+                        menuMaxHeight: 300,
+                        borderRadius: BorderRadius.circular(14),
                         items: accounts.map((account) {
                           return DropdownMenuItem<String>(
                             value: account['id'] as String,
-                            child: Text(
-                              account['name'] as String,
-                              style: const TextStyle(color: Colors.white),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: _purpleAccent.withOpacity(0.6),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  account['name'] as String,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }).toList(),
@@ -685,7 +827,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Gasto fijo (condicional)
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _fixedExpensesFuture,
                     builder: (context, snapshot) {
@@ -707,31 +850,104 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                           }
                         });
                       }
-                      return DropdownButtonFormField<String>(
-                        value: _selectedFixedExpenseId,
-                        decoration: buildInputDecoration('Gasto fijo (opcional)'),
-                        style: const TextStyle(
-                          fontFamily: 'Inter',
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                        dropdownColor: const Color(0xFF1A1A1A),
-                        iconEnabledColor: _purpleAccent,
-                        items: expenses.map((exp) {
-                          return DropdownMenuItem<String>(
-                            value: exp['id'] as String,
-                            child: Text(
-                              exp['description'] as String,
-                              style: const TextStyle(color: Colors.white),
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                                color: _purpleAccent.withOpacity(0.8),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Gasto fijo (opcional)',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Color(0xFFE0E0E0),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _selectedFixedExpenseId,
+                            decoration: buildInputDecoration('Ninguno').copyWith(
+                              prefixIcon: Icon(
+                                Icons.repeat,
+                                size: 20,
+                                color: Color(0xFFA0AEC0),
+                              ),
                             ),
-                          );
-                        }).toList(),
-                        onChanged: (value) =>
-                            setState(() => _selectedFixedExpenseId = value),
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              color: Colors.white,
+                              fontSize: 14,
+                            ),
+                            dropdownColor: const Color(0xFF0A0A0A),
+                            iconEnabledColor: _purpleAccent,
+                            menuMaxHeight: 300,
+                            borderRadius: BorderRadius.circular(14),
+                            items: expenses.map((exp) {
+                              return DropdownMenuItem<String>(
+                                value: exp['id'] as String,
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: _purpleAccent.withOpacity(0.6),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      exp['description'] as String,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontFamily: 'Inter',
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) =>
+                                setState(() => _selectedFixedExpenseId = value),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  // Header: Categoría
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.bookmark_border,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Categoría',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _categoriesFuture,
                     builder: (context, snapshot) {
@@ -799,20 +1015,45 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       }
                       return DropdownButtonFormField<String>(
                         value: _selectedCategoryId,
-                        decoration: buildInputDecoration('Categoría'),
+                        decoration: buildInputDecoration('Seleccionar categoría').copyWith(
+                          prefixIcon: Icon(
+                            Icons.label_outline,
+                            size: 20,
+                            color: Color(0xFFA0AEC0),
+                          ),
+                        ),
                         style: const TextStyle(
                           fontFamily: 'Inter',
                           color: Colors.white,
                           fontSize: 14,
                         ),
-                        dropdownColor: const Color(0xFF1A1A1A),
+                        dropdownColor: const Color(0xFF0A0A0A),
                         iconEnabledColor: _purpleAccent,
+                        menuMaxHeight: 300,
+                        borderRadius: BorderRadius.circular(14),
                         items: categories.map((category) {
                           return DropdownMenuItem<String>(
                             value: category['id'] as String,
-                            child: Text(
-                              category['name'] as String,
-                              style: const TextStyle(color: Colors.white),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: _purpleAccent.withOpacity(0.6),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  category['name'] as String,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }).toList(),
@@ -821,7 +1062,29 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+                  // Header: Fecha
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.event_outlined,
+                        size: 18,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Fecha',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   InkWell(
                     borderRadius: BorderRadius.circular(14),
                     onTap: () => _selectDate(context),
@@ -843,21 +1106,28 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         ),
                       ),
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Fecha: ${DateFormat.yMMMd('es_ES').format(_selectedDate)}',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                          Icon(
+                            Icons.date_range,
+                            color: Color(0xFFA0AEC0),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              DateFormat.yMMMd('es_ES').format(_selectedDate),
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
                           Icon(
-                            Icons.calendar_today,
+                            Icons.arrow_forward_ios,
                             color: _purpleAccent,
-                            size: 18,
+                            size: 16,
                           ),
                         ],
                       ),
