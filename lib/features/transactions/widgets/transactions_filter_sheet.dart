@@ -1,13 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:finai_flutter/core/utils/icon_utils.dart';
 
-const Color _backgroundColor = Color.fromARGB(255, 46, 12, 56);
-const Color _highlightColor = Color(0xFFEA00FF);
-const Color _borderColor = Color(0x66EA00FF);
-const Color _inputFillColor = Color(0x1FFFFFFF);
-const Color _primaryTextColor = Color(0xFFE0E0E0);
+// Colores actualizados para consistencia
+const Color _purpleAccent = Color(0xFF4a0873);
+const Color _blueButton = Color(0xFF1a266b);
+const Color _inputFillColor = Color(0x0FFFFFFF);
 
 class TransactionsFilterSheet extends StatefulWidget {
   final String type;
@@ -196,22 +196,38 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
         labelText: label,
         filled: true,
         fillColor: _inputFillColor,
-        labelStyle: const TextStyle(color: _primaryTextColor),
-        floatingLabelStyle: const TextStyle(
-          color: _highlightColor,
+        labelStyle: const TextStyle(
+          fontFamily: 'Inter',
+          color: Color(0xFFA0AEC0), // Gris Neutro
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        floatingLabelStyle: TextStyle(
+          fontFamily: 'Inter',
+          color: _purpleAccent,
+          fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _borderColor),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.25),
+            width: 0.8,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _borderColor),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.25),
+            width: 0.8,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _highlightColor, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.6),
+            width: 0.8,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       );
@@ -227,14 +243,26 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) {
-          return Material(
-            color: _backgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-            clipBehavior: Clip.antiAlias,
-            child: SingleChildScrollView(
-              controller: scrollController,
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-              child: Column(
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF000000),
+                  const Color(0xFF0A0A0A).withOpacity(0.98),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                  child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
@@ -285,9 +313,13 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       }
                     },
                     decoration: buildInputDecoration('Tipo'),
-                    style: const TextStyle(color: Colors.white),
-                    dropdownColor: const Color(0xFF2A1237),
-                    iconEnabledColor: _highlightColor,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    dropdownColor: const Color(0xFF1A1A1A),
+                    iconEnabledColor: _purpleAccent,
                     isExpanded: true,
                   ),
                   const SizedBox(height: 20),
@@ -296,8 +328,12 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: buildInputDecoration('Importe mínimo'),
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: _highlightColor,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    cursorColor: _purpleAccent,
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -305,15 +341,19 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: buildInputDecoration('Importe máximo'),
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: _highlightColor,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    cursorColor: _purpleAccent,
                   ),
                   const SizedBox(height: 20),
                   if (_isLoadingCategories)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Center(
-                        child: CircularProgressIndicator(color: _highlightColor),
+                        child: CircularProgressIndicator(color: _purpleAccent),
                       ),
                     )
                   else
@@ -354,9 +394,13 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                           _selectedCategoryId = value;
                         });
                       },
-                      style: const TextStyle(color: Colors.white),
-                      dropdownColor: const Color(0xFF2A1237),
-                      iconEnabledColor: _highlightColor,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
+                      dropdownColor: const Color(0xFF1A1A1A),
+                      iconEnabledColor: _purpleAccent,
                       isExpanded: true,
                     ),
                   if (!_isLoadingCategories && _categories.isEmpty)
@@ -377,7 +421,9 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       const Text(
                         'Rango de fechas',
                         style: TextStyle(
-                          color: _primaryTextColor,
+                          fontFamily: 'Inter',
+                          color: Color(0xFFA0AEC0), // Gris Neutro
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -393,9 +439,12 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                                   horizontal: 16,
                                   vertical: 18,
                                 ),
-                                side: const BorderSide(color: _borderColor),
+                                side: BorderSide(
+                                  color: _purpleAccent.withOpacity(0.25),
+                                  width: 0.8,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
                               onPressed: () => _pickDateRange(),
@@ -426,43 +475,92 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                   TextField(
                     controller: _conceptController,
                     decoration: buildInputDecoration('Concepto (opcional)'),
-                    style: const TextStyle(color: Colors.white),
-                    cursorColor: _highlightColor,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    cursorColor: _purpleAccent,
                   ),
                   const SizedBox(height: 28),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: () => _clear(),
-                        style: TextButton.styleFrom(
-                          foregroundColor: _highlightColor,
-                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      // Botón Limpiar con estilo similar a "Guardar transacción"
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _blueButton.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: _blueButton.withOpacity(0.4),
+                            width: 0.8,
+                          ),
                         ),
-                        child: const Text('Limpiar'),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => _clear(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              child: const Text(
+                                'Limpiar',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFFFFFFF),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 12),
-                      ElevatedButton(
-                        onPressed: _apply,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _highlightColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      // Botón Aplicar con estilo similar a "Guardar transacción"
+                      Container(
+                        decoration: BoxDecoration(
+                          color: _blueButton.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: _blueButton.withOpacity(0.4),
+                            width: 0.8,
                           ),
                         ),
-                        child: const Text('Aplicar'),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: _apply,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              child: const Text(
+                                'Aplicar',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFFFFFFF),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ],
               ),
             ),
-          );
+          ),
+        ),
+        );
         },
       ),
     );

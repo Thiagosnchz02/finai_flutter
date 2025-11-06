@@ -52,6 +52,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case 'biometric_auth_enabled':
         updatedProfile = previousProfile.copyWith(biometricAuthEnabled: value as bool);
         break;
+      case 'swipe_month_navigation':
+        updatedProfile = previousProfile.copyWith(swipeMonthNavigation: value as bool);
+        break;
+      case 'show_transfers_card':
+        updatedProfile = previousProfile.copyWith(showTransfersCard: value as String);
+        break;
     }
 
     setState(() {
@@ -204,6 +210,125 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _onSwipeMonthNavigationChanged(bool currentValue) async {
+    if (!currentValue) {
+      // El usuario quiere habilitar la navegación por swipe
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Navegación por Meses'),
+          content: const Text(
+            'Al activar esta función podrás navegar entre meses en la pantalla de transacciones '
+            'deslizando la pantalla:\n\n'
+            '• Desliza hacia la derecha para ver meses anteriores\n'
+            '• Desliza hacia la izquierda para avanzar\n'
+            '• No podrás navegar a meses futuros\n\n'
+            '¿Deseas activar esta función?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Activar'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await _updateSetting('swipe_month_navigation', true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Navegación por meses activada'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } else {
+      // Desactivar sin confirmación
+      await _updateSetting('swipe_month_navigation', false);
+    }
+  }
+
+  Future<void> _onShowTransfersCardChanged(String currentValue, String newValue) async {
+    if (newValue != 'never' && currentValue == 'never') {
+      // Mostrar diálogo de confirmación al activar por primera vez
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Mostrar Tarjeta de Traspasos'),
+          content: Text(
+            newValue == 'auto'
+                ? 'La tarjeta de traspasos se mostrará automáticamente cuando haya traspasos entre cuentas en el mes seleccionado.\n\n'
+                  'Muestra el balance neto de traspasos y el desglose de entradas y salidas.'
+                : 'La tarjeta de traspasos se mostrará siempre, incluso si no hay traspasos en el mes.\n\n'
+                  'Muestra el balance neto de traspasos y el desglose de entradas y salidas.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Activar'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        await _updateSetting('show_transfers_card', newValue);
+        _loadProfile();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                newValue == 'auto' 
+                  ? 'Tarjeta de traspasos: automática' 
+                  : 'Tarjeta de traspasos: siempre visible'
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } else {
+      // Cambiar sin confirmación
+      await _updateSetting('show_transfers_card', newValue);
+      _loadProfile();
+    }
+  }
+
+  void _showSwipeNavigationInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Navegación por Meses'),
+        content: const Text(
+          'Cuando actives esta función podrás:\n\n'
+          '• Ver transacciones mes a mes de forma organizada\n'
+          '• Navegar deslizando la pantalla horizontalmente\n'
+          '• Deslizar a la derecha para meses anteriores\n'
+          '• Deslizar a la izquierda para meses recientes\n'
+          '• Ver un botón para volver al mes actual\n\n'
+          'Nota: No podrás navegar a meses futuros.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Entendido'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _exportData() async {
     if (_isExporting) return;
     setState(() => _isExporting = true);
@@ -309,6 +434,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           );
                         },
                       );
+                    },
+                  ),
+                ],
+              ),
+              SettingsCard(
+                title: 'Preferencias',
+                children: [
+                  SettingsToggleRow(
+                    label: 'Deslizar para cambiar de mes',
+                    value: profile.swipeMonthNavigation,
+                    onChanged: (value) => _onSwipeMonthNavigationChanged(profile.swipeMonthNavigation),
+                  ),
+                  SettingsDropdownRow<String>(
+                    label: 'Mostrar tarjeta de traspasos',
+                    value: profile.showTransfersCard,
+                    items: const [
+                      DropdownMenuItem(value: 'never', child: Text('Nunca')),
+                      DropdownMenuItem(value: 'auto', child: Text('Automático')),
+                      DropdownMenuItem(value: 'always', child: Text('Siempre')),
+                    ],
+                    onChanged: (newValue) {
+                      if (newValue != null) {
+                        _onShowTransfersCardChanged(profile.showTransfersCard, newValue);
+                      }
                     },
                   ),
                 ],

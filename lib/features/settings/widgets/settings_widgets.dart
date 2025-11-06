@@ -79,6 +79,46 @@ class SettingsNavigationRow extends StatelessWidget {
   }
 }
 
+/// Una fila para configuraciones con dropdown/selector.
+class SettingsDropdownRow<T> extends StatelessWidget {
+  final String label;
+  final T value;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
+
+  const SettingsDropdownRow({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 16),
+            ),
+          ),
+          DropdownButton<T>(
+            value: value,
+            items: items,
+            onChanged: onChanged,
+            underline: Container(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Una fila para acciones que ejecutan una función, a menudo con un color distintivo.
 class SettingsActionRow extends StatelessWidget {
   final String label;

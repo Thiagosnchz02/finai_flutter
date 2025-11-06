@@ -166,4 +166,32 @@ class TransactionsService {
         await _supabase.rpc('register_fixed_expense_payment', params: params);
     return response as String;
   }
+
+  /// Obtiene la suma de gastos fijos pendientes del mes actual
+  /// (aquellos que aún no se han pagado este mes)
+  Future<double> getPendingFixedExpensesForCurrentMonth() async {
+    try {
+      final userId = _supabase.auth.currentUser!.id;
+      final now = DateTime.now();
+      final firstDayOfMonth = DateTime(now.year, now.month, 1);
+      final lastDayOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+      final response = await _supabase
+          .from('scheduled_fixed_expenses')
+          .select('amount')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .lte('next_due_date', lastDayOfMonth.toIso8601String())
+          .or('last_payment_processed_on.is.null,last_payment_processed_on.lt.${firstDayOfMonth.toIso8601String()}');
+
+      final expenses = response as List<dynamic>;
+      return expenses.fold<double>(
+        0.0,
+        (sum, expense) => sum + (expense['amount'] as num).toDouble(),
+      );
+    } catch (e) {
+      // En caso de error, devolvemos 0 para no bloquear la UI
+      return 0.0;
+    }
+  }
 }

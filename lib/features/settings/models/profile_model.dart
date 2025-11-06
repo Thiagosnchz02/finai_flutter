@@ -12,6 +12,8 @@ class Profile {
   final bool notifyBudgetAlert;
   final bool notifyGoalReached;
   final bool enableBudgetRollover;
+  final bool swipeMonthNavigation; // Nuevo campo
+  final String showTransfersCard; // 'never', 'auto', 'always'
   final String planType;
 
   Profile({
@@ -26,6 +28,8 @@ class Profile {
     required this.notifyBudgetAlert,
     required this.notifyGoalReached,
     required this.enableBudgetRollover,
+    required this.swipeMonthNavigation, // Nuevo campo
+    required this.showTransfersCard,
     required this.planType,
   });
 
@@ -42,6 +46,8 @@ class Profile {
       notifyBudgetAlert: map['notify_budget_alert'] ?? true,
       notifyGoalReached: map['notify_goal_reached'] ?? true,
       enableBudgetRollover: map['enable_budget_rollover'] ?? true,
+      swipeMonthNavigation: map['swipe_month_navigation'] ?? false, // Nuevo campo
+      showTransfersCard: map['show_transfers_card'] ?? 'never',
       planType: map['plan_type'] ?? 'free',
     );
   }
@@ -58,6 +64,8 @@ class Profile {
     bool? notifyBudgetAlert,
     bool? notifyGoalReached,
     bool? enableBudgetRollover,
+    bool? swipeMonthNavigation, // Nuevo campo
+    String? showTransfersCard,
     String? planType,
   }) {
     return Profile(
@@ -72,6 +80,8 @@ class Profile {
       notifyBudgetAlert: notifyBudgetAlert ?? this.notifyBudgetAlert,
       notifyGoalReached: notifyGoalReached ?? this.notifyGoalReached,
       enableBudgetRollover: enableBudgetRollover ?? this.enableBudgetRollover,
+      swipeMonthNavigation: swipeMonthNavigation ?? this.swipeMonthNavigation, // Nuevo campo
+      showTransfersCard: showTransfersCard ?? this.showTransfersCard,
       planType: planType ?? this.planType,
     );
   }

@@ -12,6 +12,7 @@ import 'package:finai_flutter/features/transactions/screens/add_edit_transaction
 import 'package:finai_flutter/features/transactions/services/transactions_service.dart';
 import 'package:finai_flutter/features/transactions/widgets/transaction_tile.dart';
 import 'package:finai_flutter/features/transactions/widgets/transactions_filter_sheet.dart';
+import 'package:finai_flutter/features/settings/services/settings_service.dart';
 
 class TransactionsViewData {
   TransactionsViewData({
@@ -19,12 +20,20 @@ class TransactionsViewData {
     required this.totalIncome,
     required this.totalExpenses,
     required this.currentBalance,
+    required this.totalTransfersIn,
+    required this.totalTransfersOut,
+    required this.availableToSpend,
+    required this.isCurrentMonth,
   });
 
   final List<Transaction> transactions;
-  final double totalIncome;
-  final double totalExpenses;
-  final double? currentBalance;
+  final double totalIncome; // Solo ingresos reales (sin transferencias)
+  final double totalExpenses; // Solo gastos reales (sin transferencias)
+  final double? currentBalance; // Saldo actual de la cuenta
+  final double totalTransfersIn; // Transferencias entrantes a esta cuenta
+  final double totalTransfersOut; // Transferencias salientes de esta cuenta
+  final double? availableToSpend; // Disponible para gastar (solo mes actual)
+  final bool isCurrentMonth; // Si estamos viendo el mes actual
 }
 
 class TransactionsScreen extends StatefulWidget {
@@ -34,9 +43,10 @@ class TransactionsScreen extends StatefulWidget {
   State<TransactionsScreen> createState() => _TransactionsScreenState();
 }
 
-class _TransactionsScreenState extends State<TransactionsScreen> {
+class _TransactionsScreenState extends State<TransactionsScreen> with SingleTickerProviderStateMixin {
   final _service = TransactionsService();
   final _accountsService = AccountsService();
+  final _settingsService = SettingsService();
   late Future<TransactionsViewData> _transactionsFuture;
 
   String _filterType = 'todos';
@@ -47,6 +57,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   DateTime? _endDate;
   String? _concept;
   final Map<String, List<Map<String, dynamic>>> _filterCategoriesCache = {};
+
+  // Navegación por meses
+  late DateTime _selectedMonth; // Mes actualmente seleccionado
+  bool _swipeMonthNavigationEnabled = false; // Si el usuario tiene habilitado el swipe
+  String _showTransfersCard = 'never'; // Configuración de visualización de traspasos
+  TransactionsViewData? _cachedViewData; // Para mantener datos mientras se navega
+  
+  // Animación para el efecto de rebote cuando se intenta ir a mes futuro
+  late AnimationController _bounceController;
+  late Animation<Offset> _bounceAnimation;
 
   String get _currentFilterSegment {
     switch (_filterType) {
@@ -69,13 +89,66 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         (_concept != null && _concept!.isNotEmpty);
   }
 
+  // Detecta si el usuario ha establecido filtros de fecha personalizados (no por navegación de mes)
+  bool get _hasCustomDateFilter {
+    return _startDate != null || _endDate != null;
+  }
+
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    _selectedMonth = DateTime(now.year, now.month, 1);
+    
+    // Inicializar controlador de animación para efecto rebote
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _bounceAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(-0.05, 0), // Pequeño desplazamiento a la izquierda y regresa
+    ).animate(CurvedAnimation(
+      parent: _bounceController,
+      curve: Curves.easeOutBack, // Curva más suave sin pausas
+    ));
+    
+    _loadUserPreferences();
     _loadTransactions();
   }
 
+  @override
+  void dispose() {
+    _bounceController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadUserPreferences() async {
+    try {
+      final profile = await _settingsService.getProfileSettings();
+      setState(() {
+        _swipeMonthNavigationEnabled = profile.swipeMonthNavigation;
+        _showTransfersCard = profile.showTransfersCard;
+      });
+    } catch (e) {
+      // Si falla, mantenemos los valores por defecto
+    }
+  }
+
   void _loadTransactions() {
+    // Cuando hay navegación por mes, establecemos los filtros de fecha
+    final useMonthFilter = _swipeMonthNavigationEnabled && !_hasCustomDateFilter;
+    final DateTime? effectiveStartDate;
+    final DateTime? effectiveEndDate;
+
+    if (useMonthFilter) {
+      effectiveStartDate = DateTime(_selectedMonth.year, _selectedMonth.month, 1);
+      effectiveEndDate = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 0, 23, 59, 59);
+    } else {
+      effectiveStartDate = _startDate;
+      effectiveEndDate = _endDate;
+    }
+
     setState(() {
       _transactionsFuture = () async {
         final maps = await _service.fetchTransactions(
@@ -83,32 +156,128 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           minAmount: _minAmount,
           maxAmount: _maxAmount,
           categoryId: _categoryId,
-          startDate: _startDate,
-          endDate: _endDate,
+          startDate: effectiveStartDate,
+          endDate: effectiveEndDate,
           concept: _concept,
         );
 
         final transactions =
             maps.map((map) => Transaction.fromMap(map)).toList();
 
+        // Solo ingresos reales (sin transferencias)
         final totalIncome = transactions
             .where((tx) => tx.type == 'ingreso')
             .fold<double>(0.0, (sum, tx) => sum + tx.amount);
 
+        // Solo gastos reales (sin transferencias)
         final totalExpenses = transactions
             .where((tx) => tx.type == 'gasto')
             .fold<double>(0.0, (sum, tx) => sum + tx.amount);
 
+        // Transferencias entrantes (positivas)
+        final totalTransfersIn = transactions
+            .where((tx) => tx.type == 'transferencia' && tx.amount > 0)
+            .fold<double>(0.0, (sum, tx) => sum + tx.amount);
+
+        // Transferencias salientes (negativas, convertimos a positivo para mostrar)
+        final totalTransfersOut = transactions
+            .where((tx) => tx.type == 'transferencia' && tx.amount < 0)
+            .fold<double>(0.0, (sum, tx) => sum + tx.amount.abs());
+
         final balance = await _accountsService.getParaGastarBalance();
+
+        // Calcular disponible para gastar (solo mes actual)
+        // Disponible = Saldo actual − Gastos fijos pendientes del mes
+        final now = DateTime.now();
+        final useMonthFilter = _swipeMonthNavigationEnabled && !_hasCustomDateFilter;
+        
+        final bool isCurrentMonth;
+        if (useMonthFilter) {
+          // Si estamos usando navegación por mes, comprobamos si el mes seleccionado es el actual
+          isCurrentMonth = _selectedMonth.year == now.year && _selectedMonth.month == now.month;
+        } else {
+          // Si no, comprobamos los filtros de fecha normales
+          isCurrentMonth = (effectiveStartDate == null && effectiveEndDate == null) ||
+              (effectiveStartDate != null &&
+                  effectiveEndDate != null &&
+                  effectiveStartDate.year == now.year &&
+                  effectiveStartDate.month == now.month);
+        }
+
+        double? availableToSpend;
+        if (isCurrentMonth && balance != null) {
+          final pendingFixedExpenses =
+              await _service.getPendingFixedExpensesForCurrentMonth();
+          availableToSpend = balance - pendingFixedExpenses;
+        }
 
         return TransactionsViewData(
           transactions: transactions,
           totalIncome: totalIncome,
           totalExpenses: totalExpenses,
           currentBalance: balance,
+          totalTransfersIn: totalTransfersIn,
+          totalTransfersOut: totalTransfersOut,
+          availableToSpend: availableToSpend,
+          isCurrentMonth: isCurrentMonth,
         );
       }();
     });
+  }
+
+  // Cambia al mes anterior
+  void _navigateToPreviousMonth() {
+    setState(() {
+      _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1, 1);
+    });
+    _loadTransactions();
+  }
+
+  // Cambia al mes siguiente (solo si no es mes futuro)
+  void _navigateToNextMonth() {
+    final now = DateTime.now();
+    final nextMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1, 1);
+    
+    // No permitir navegar a meses futuros
+    if (nextMonth.year > now.year || 
+        (nextMonth.year == now.year && nextMonth.month > now.month)) {
+      return;
+    }
+
+    setState(() {
+      _selectedMonth = nextMonth;
+    });
+    _loadTransactions();
+  }
+
+  // Vuelve al mes actual
+  void _goToCurrentMonth() {
+    final now = DateTime.now();
+    setState(() {
+      _selectedMonth = DateTime(now.year, now.month, 1);
+    });
+    _loadTransactions();
+  }
+
+  // Detecta si el mes seleccionado es el actual
+  bool get _isViewingCurrentMonth {
+    final now = DateTime.now();
+    return _selectedMonth.year == now.year && _selectedMonth.month == now.month;
+  }
+
+  // Determina si mostrar la tarjeta de traspasos según configuración
+  bool _shouldShowTransfersCard(double transfersIn, double transfersOut) {
+    final hasTransfers = transfersIn > 0 || transfersOut > 0;
+    
+    switch (_showTransfersCard) {
+      case 'always':
+        return true;
+      case 'auto':
+        return hasTransfers;
+      case 'never':
+      default:
+        return false;
+    }
   }
 
   // Navega a la pantalla de añadir/editar y recarga los datos si es necesario.
@@ -396,52 +565,74 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
             child: FutureBuilder<TransactionsViewData>(
               future: _transactionsFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+                // Si tenemos datos cacheados y estamos esperando nuevos datos,
+                // mostramos los datos cacheados para evitar pantalla de carga
+                final viewData = snapshot.hasData 
+                    ? snapshot.data 
+                    : (snapshot.connectionState == ConnectionState.waiting && _cachedViewData != null)
+                        ? _cachedViewData
+                        : null;
+                
+                // Si tenemos nuevos datos, actualizamos el cache
+                if (snapshot.hasData) {
+                  _cachedViewData = snapshot.data;
+                }
+                
+                // Solo mostramos loading si no hay datos en cache
+                if (viewData == null && snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+                
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
-                final viewData = snapshot.data;
-                final transactions = viewData?.transactions ?? [];
-
-                Widget transactionsSliver;
-                if (transactions.isEmpty) {
-                  transactionsSliver = const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: Text('No hay transacciones todavía.')),
-                  );
-                } else {
-                  final groupedTransactions = _groupTransactionsByDate(transactions);
-                  final dateKeys =
-                      groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
-                  transactionsSliver = SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final date = dateKeys[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            bottom: index == dateKeys.length - 1 ? 0 : 24,
+                return _swipeMonthNavigationEnabled && !_hasCustomDateFilter
+                    ? GestureDetector(
+                        onHorizontalDragEnd: (details) {
+                          final velocity = details.primaryVelocity ?? 0;
+                          
+                          if (velocity > 500) {
+                            // Swipe derecha → mes anterior (siempre permitido)
+                            _navigateToPreviousMonth();
+                          } else if (velocity < -500) {
+                            // Swipe izquierda → mes siguiente (solo si no estamos en mes actual)
+                            if (!_isViewingCurrentMonth) {
+                              _navigateToNextMonth();
+                            } else {
+                              // Mostrar animación de rebote para indicar que está bloqueado
+                              _bounceController.forward().then((_) {
+                                _bounceController.reverse();
+                              });
+                            }
+                          }
+                        },
+                        child: SlideTransition(
+                          position: _bounceAnimation,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 400),
+                            switchInCurve: Curves.easeInOut,
+                            switchOutCurve: Curves.easeInOut,
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0.15, 0),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: KeyedSubtree(
+                              key: ValueKey(_selectedMonth.toString()),
+                              child: _buildMonthPage(viewData),
+                            ),
                           ),
-                          child: _buildTransactionGroup(
-                            _formatDateHeader(date),
-                            groupedTransactions[date]!,
-                          ),
-                        );
-                      },
-                      childCount: dateKeys.length,
-                    ),
-                  );
-                }
-
-                return CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(child: _buildHeader(viewData)),
-                    const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                    transactionsSliver,
-                  ],
-                );
+                        ),
+                      )
+                    : _buildMonthPage(viewData);
               },
             ),
           ),
@@ -450,16 +641,146 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
+  // Widget de página de mes (reutilizable para PageView o vista simple)
+  Widget _buildMonthPage(TransactionsViewData? viewData) {
+    final transactions = viewData?.transactions ?? [];
+
+    Widget transactionsSliver;
+    if (transactions.isEmpty) {
+      transactionsSliver = const SliverFillRemaining(
+        hasScrollBody: false,
+        child: Center(
+          child: Text(
+            'No hay transacciones en este período',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFFA0AEC0),
+            ),
+          ),
+        ),
+      );
+    } else {
+      final groupedTransactions = _groupTransactionsByDate(transactions);
+      final dateKeys = groupedTransactions.keys.toList()..sort((a, b) => b.compareTo(a));
+      transactionsSliver = SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final date = dateKeys[index];
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index == dateKeys.length - 1 ? 0 : 24,
+              ),
+              child: _buildTransactionGroup(
+                _formatDateHeader(date),
+                groupedTransactions[date]!,
+              ),
+            );
+          },
+          childCount: dateKeys.length,
+        ),
+      );
+    }
+
+    return CustomScrollView(
+      slivers: [
+        if (_swipeMonthNavigationEnabled && !_hasCustomDateFilter)
+          SliverToBoxAdapter(child: _buildMonthIndicator()),
+        SliverToBoxAdapter(child: _buildHeader(viewData)),
+        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        transactionsSliver,
+      ],
+    );
+  }
+
+  // Indicador del mes actual con navegación
+  Widget _buildMonthIndicator() {
+    final monthName = DateFormat.yMMMM('es_ES').format(_selectedMonth);
+    final isCurrentMonth = _isViewingCurrentMonth;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+      child: Column(
+        children: [
+          Text(
+            monthName,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFFFFFFF),
+              letterSpacing: 0,
+            ),
+          ),
+          if (!isCurrentMonth) ...[
+            const SizedBox(height: 12),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF4a0873).withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFF4a0873).withOpacity(0.4),
+                  width: 0.8,
+                ),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: _goToCurrentMonth,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Icon(
+                          Icons.today,
+                          size: 16,
+                          color: Color(0xFFFFFFFF),
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Volver a este mes',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFFFFFFFF),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   // Cabecera con resumen financiero y acciones
   Widget _buildHeader(TransactionsViewData? viewData) {
     final currencyFormat = NumberFormat.currency(locale: 'es_ES', symbol: '€');
-    final balance = viewData?.currentBalance;
     final income = viewData?.totalIncome ?? 0;
     final expenses = viewData?.totalExpenses ?? 0;
+    final transfersIn = viewData?.totalTransfersIn ?? 0;
+    final transfersOut = viewData?.totalTransfersOut ?? 0;
+    final transfersNet = transfersIn - transfersOut;
+    final availableToSpend = viewData?.availableToSpend;
+    final isCurrentMonth = viewData?.isCurrentMonth ?? true;
 
-    final balanceText = balance != null ? currencyFormat.format(balance) : '--';
     final incomeText = '+${currencyFormat.format(income.abs())}';
     final expensesText = '-${currencyFormat.format(expenses.abs())}';
+    final transfersNetText = transfersNet >= 0
+        ? '+${currencyFormat.format(transfersNet.abs())}'
+        : '-${currencyFormat.format(transfersNet.abs())}';
+    final availableText = availableToSpend != null
+        ? currencyFormat.format(availableToSpend)
+        : '--';
 
     return Padding(
       padding: const EdgeInsets.only(top: 20.0, bottom: 8.0),
@@ -467,79 +788,52 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
-          // Tarjeta con efecto glassmorphism
-          Container(
-            width: double.infinity,
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
-                  const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
-                  const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                stops: const [0.0, 0.5, 1.0],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF4a0873).withOpacity(0.25),
-                width: 0.8,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text(
-                  'Balance actual',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 0.01,
-                    color: Color(0xFFA0AEC0), // Gris Neutro
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  balanceText,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.01,
-                    color: Color(0xFFFFFFFF), // Blanco Puro
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
+          // Fila: Disponible, Positivo y Negativo (todas del mismo tamaño)
           Row(
             children: [
+              // Disponible (solo en mes actual)
+              if (isCurrentMonth) ...[
+                Expanded(
+                  child: _buildCompactCard(
+                    'Disponible',
+                    availableText,
+                    const Color(0xFF4a0873), // Morado
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              // Positivo
               Expanded(
-                child: _buildSummaryItem(
+                child: _buildCompactCard(
                   'Positivo',
                   incomeText,
-                  const Color(0xFF25C9A4), // Verde Digital
+                  const Color(0xFF25C9A4), // Verde
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
+              // Negativo
               Expanded(
-                child: _buildSummaryItem(
+                child: _buildCompactCard(
                   'Negativo',
                   expensesText,
-                  const Color(0xFFE5484D), // Rojo Sobrio
+                  const Color(0xFFE5484D), // Rojo
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          // Tarjeta de Traspasos (condicional)
+          if (_shouldShowTransfersCard(transfersIn, transfersOut))
+            _buildTransfersItem(
+              transfersNetText,
+              transfersNet,
+              currencyFormat.format(transfersIn.abs()),
+              currencyFormat.format(transfersOut.abs()),
+            ),
+          if (_shouldShowTransfersCard(transfersIn, transfersOut))
+            const SizedBox(height: 24)
+          else
+            const SizedBox(height: 8),
           _buildNewTransactionButton(),
           const SizedBox(height: 16),
           _buildFilterSegmentedButton(),
@@ -552,7 +846,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 icon: const Icon(Icons.filter_list, size: 18),
                 label: const Text('Editar filtros'),
                 style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF9927FD), // Púrpura Aurora
+                  foregroundColor: const Color(0xFF9927FD),
                   textStyle: const TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
@@ -567,54 +861,137 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, Color valueColor) {
+  // Tarjeta compacta para Disponible, Positivo y Negativo
+  Widget _buildCompactCard(String label, String value, Color accentColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
-            const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
-            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
+            const Color(0xFF4a0873).withOpacity(0.15),
+            const Color(0xFF5a0d8d).withOpacity(0.12),
+            const Color(0xFF4a0873).withOpacity(0.15),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           stops: const [0.0, 0.5, 1.0],
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: const Color(0xFF4a0873).withOpacity(0.25),
           width: 0.8,
         ),
       ),
       child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  letterSpacing: 0.01,
-                  color: Color(0xFFA0AEC0), // Gris Neutro
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: valueColor,
-                ),
-              ),
-            ],
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              letterSpacing: 0.01,
+              color: Color(0xFFA0AEC0),
+            ),
           ),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: accentColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Tarjeta especial para traspasos con desglose
+  Widget _buildTransfersItem(
+      String netValue, double netAmount, String inValue, String outValue) {
+    final Color netColor = netAmount >= 0
+        ? const Color(0xFF25C9A4) // Verde si es positivo
+        : const Color(0xFFE5484D); // Rojo si es negativo
+
+    return Opacity(
+      opacity: 0.8, // Más sutil
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 14.0), // 30% más pequeño
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF4a0873).withOpacity(0.10), // Menos intenso
+              const Color(0xFF5a0d8d).withOpacity(0.08),
+              const Color(0xFF4a0873).withOpacity(0.10),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: const [0.0, 0.5, 1.0],
+          ),
+          borderRadius: BorderRadius.circular(14), // Bordes menos redondeados
+          border: Border.all(
+            color: const Color(0xFF4a0873).withOpacity(0.15), // Borde más sutil
+            width: 0.6,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Traspasos',
+              textAlign: TextAlign.left,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13, // Más pequeño
+                fontWeight: FontWeight.w400,
+                letterSpacing: 0.01,
+                color: Color(0xFFA0AEC0),
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    netValue,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16, // Más pequeño
+                      fontWeight: FontWeight.w600,
+                      color: netColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Desglose pequeño: Entraron · Salieron
+                  Text(
+                    '↑$inValue · ↓$outValue',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 10, // Más pequeño
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFFA0AEC0).withOpacity(0.6),
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -654,7 +1031,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               borderRadius: BorderRadius.circular(14),
             ),
           ),
-          child: const Text('Nueva Transacción +'),
+          child: const Text('Nueva Transacción'),
         ),
       ),
     );
@@ -679,7 +1056,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
           final tx = transactions[index];
           final isLast = index == transactions.length - 1;
           return Padding(
-            padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+            padding: EdgeInsets.only(bottom: isLast ? 0 : 10),
             child: TransactionTile(
               transaction: tx,
               onTap: () => _navigateAndRefresh(transaction: tx),
@@ -697,62 +1074,67 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       ('gasto', 'Gasto'),
     ];
 
-    return SizedBox(
-      width: double.infinity,
-      child: Row(
-        children: [
-          for (int i = 0; i < filters.length; i++) ...[
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: _currentFilterSegment == filters[i].$1
-                      ? const Color(0xFF3a0560).withOpacity(0.6) // Morado oscuro solo un poco opaco (seleccionado)
-                      : null,
-                  gradient: _currentFilterSegment == filters[i].$1
-                      ? null
-                      : LinearGradient(
-                          colors: [
-                            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
-                            const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
-                            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          stops: const [0.0, 0.5, 1.0],
-                        ),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (int i = 0; i < filters.length; i++) ...[
+              SizedBox(
+                width: 80,
+                height: 32,
+                child: Container(
+                  decoration: BoxDecoration(
                     color: _currentFilterSegment == filters[i].$1
-                        ? const Color(0xFF3a0560).withOpacity(0.8)
-                        : const Color(0xFF4a0873).withOpacity(0.25),
-                    width: 0.8,
-                  ),
-                ),
-                child: TextButton(
-                  onPressed: () => _handleFilterSelection(filters[i].$1),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 6.0),
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: _currentFilterSegment == filters[i].$1
-                        ? const Color(0xFF9E9E9E) // Gris más oscuro cuando activo
-                        : const Color(0xFF6B6B6B), // Gris aún más oscuro cuando no activo
-                    textStyle: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0,
+                        ? const Color(0xFF3a0560).withOpacity(0.6) // Morado oscuro solo un poco opaco (seleccionado)
+                        : null,
+                    gradient: _currentFilterSegment == filters[i].$1
+                        ? null
+                        : LinearGradient(
+                            colors: [
+                              const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
+                              const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
+                              const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _currentFilterSegment == filters[i].$1
+                          ? const Color(0xFF3a0560).withOpacity(0.8)
+                          : const Color(0xFF4a0873).withOpacity(0.25),
+                      width: 0.6,
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
                   ),
-                  child: Text(filters[i].$2),
+                  child: TextButton(
+                    onPressed: () => _handleFilterSelection(filters[i].$1),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 2.0),
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: _currentFilterSegment == filters[i].$1
+                          ? const Color(0xFF9E9E9E) // Gris más oscuro cuando activo
+                          : const Color(0xFF6B6B6B), // Gris aún más oscuro cuando no activo
+                      textStyle: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(filters[i].$2),
+                  ),
                 ),
               ),
-            ),
-            if (i < filters.length - 1) const SizedBox(width: 10),
+              if (i < filters.length - 1) const SizedBox(width: 10),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

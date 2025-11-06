@@ -1,5 +1,6 @@
 // lib/features/transactions/screens/add_edit_transaction_screen.dart
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
@@ -9,10 +10,10 @@ import 'package:finai_flutter/core/services/event_logger_service.dart';
 import '../models/transaction_model.dart';
 import '../services/transactions_service.dart';
 
-const Color _highlightColor = Color(0xFFEA00FF);
-const Color _selectedBackgroundColor = Color(0x3DEA00FF);
-const Color _unselectedBackgroundColor = Color(0x1FEA00FF);
-const Color _inputFillColor = Color(0x1FFFFFFF);
+// Colores actualizados para consistencia con transactions_screen
+const Color _purpleAccent = Color(0xFF4a0873); // Morado de la pantalla principal
+const Color _purpleSelected = Color(0xFF3a0560); // Morado más oscuro para seleccionado
+const Color _inputFillColor = Color(0x12000000); // Negro brillante muy sutil (transparente)
 
 class AddEditTransactionScreen extends StatefulWidget {
   final Transaction? transaction;
@@ -388,34 +389,70 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
         labelText: label,
         filled: true,
         fillColor: _inputFillColor,
-        labelStyle: const TextStyle(color: Color(0xFFE0E0E0)),
-        floatingLabelStyle: const TextStyle(color: Color(0xFFEA00FF), fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(
+          fontFamily: 'Inter',
+          color: Color(0xFFA0AEC0), // Gris Neutro
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
+        floatingLabelStyle: const TextStyle(
+          fontFamily: 'Inter',
+          color: Color(0xFF4a0873), // Morado
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0x66EA00FF)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.25),
+            width: 0.8,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0x66EA00FF)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.25),
+            width: 0.8,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEA00FF), width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.6),
+            width: 0.8,
+          ),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 46, 12, 56),
+      backgroundColor: const Color(0xFF000000), // Negro puro brillante
       appBar: AppBar(
-        title: Text(widget.transaction == null ? 'Nueva Transacción' : 'Editar Transacción'),
-        backgroundColor: const Color.fromARGB(255, 46, 12, 56),
+        title: Text(
+          widget.transaction == null ? 'Nueva Transacción' : 'Editar Transacción',
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            color: Color(0xFFFFFFFF),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF000000),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFFFFFFFF)),
       ),
       body: Container(
-        color: const Color.fromARGB(255, 46, 12, 56),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF000000), // Negro puro
+              const Color(0xFF0A0A0A).withOpacity(0.98), // Negro ligeramente más claro
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SafeArea(
           child: Form(
             key: _formKey,
@@ -427,85 +464,141 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextButton(
-                          onPressed: () {
-                            if (_transactionType == 'gasto') return;
-                            setState(() {
-                              _transactionType = 'gasto';
-                              _categoriesFuture = _fetchCategories(_transactionType);
-                              _selectedCategoryId = null;
-                            });
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            backgroundColor: _transactionType == 'gasto'
-                                ? _selectedBackgroundColor
-                                : _unselectedBackgroundColor,
-                            foregroundColor: const Color(0xFFE0E0E0),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: _transactionType == 'gasto'
-                                    ? _highlightColor
-                                    : const Color(0x66EA00FF),
-                                width: 2,
-                              ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: _transactionType == 'gasto'
+                                ? LinearGradient(
+                                    colors: [
+                                      _purpleSelected.withOpacity(0.6),
+                                      _purpleSelected.withOpacity(0.5),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : LinearGradient(
+                                    colors: [
+                                      _purpleAccent.withOpacity(0.15),
+                                      _purpleAccent.withOpacity(0.12),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _transactionType == 'gasto'
+                                  ? _purpleSelected.withOpacity(0.8)
+                                  : _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(FontAwesomeIcons.arrowDown, size: 16),
-                              const SizedBox(width: 8),
-                              const Text('Gasto'),
-                            ],
+                          child: TextButton(
+                            onPressed: () {
+                              if (_transactionType == 'gasto') return;
+                              setState(() {
+                                _transactionType = 'gasto';
+                                _categoriesFuture = _fetchCategories(_transactionType);
+                                _selectedCategoryId = null;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12.0),
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: _transactionType == 'gasto'
+                                  ? const Color(0xFF9E9E9E)
+                                  : const Color(0xFF6B6B6B),
+                              textStyle: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  FontAwesomeIcons.arrowDown,
+                                  size: 14,
+                                  color: _transactionType == 'gasto'
+                                      ? const Color(0xFF9E9E9E)
+                                      : const Color(0xFF6B6B6B),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Gasto'),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: TextButton(
-                          onPressed: () {
-                            if (_transactionType == 'ingreso') return;
-                            setState(() {
-                              _transactionType = 'ingreso';
-                              _categoriesFuture = _fetchCategories(_transactionType);
-                              _selectedCategoryId = null;
-                            });
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            backgroundColor: _transactionType == 'ingreso'
-                                ? _selectedBackgroundColor
-                                : _unselectedBackgroundColor,
-                            foregroundColor: const Color(0xFFE0E0E0),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: _transactionType == 'ingreso'
-                                    ? _highlightColor
-                                    : const Color(0x66EA00FF),
-                                width: 2,
-                              ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: _transactionType == 'ingreso'
+                                ? LinearGradient(
+                                    colors: [
+                                      _purpleSelected.withOpacity(0.6),
+                                      _purpleSelected.withOpacity(0.5),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : LinearGradient(
+                                    colors: [
+                                      _purpleAccent.withOpacity(0.15),
+                                      _purpleAccent.withOpacity(0.12),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _transactionType == 'ingreso'
+                                  ? _purpleSelected.withOpacity(0.8)
+                                  : _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(FontAwesomeIcons.arrowUp, size: 16),
-                              const SizedBox(width: 8),
-                              const Text('Ingreso'),
-                            ],
+                          child: TextButton(
+                            onPressed: () {
+                              if (_transactionType == 'ingreso') return;
+                              setState(() {
+                                _transactionType = 'ingreso';
+                                _categoriesFuture = _fetchCategories(_transactionType);
+                                _selectedCategoryId = null;
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12.0),
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: _transactionType == 'ingreso'
+                                  ? const Color(0xFF9E9E9E)
+                                  : const Color(0xFF6B6B6B),
+                              textStyle: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  FontAwesomeIcons.arrowUp,
+                                  size: 14,
+                                  color: _transactionType == 'ingreso'
+                                      ? const Color(0xFF9E9E9E)
+                                      : const Color(0xFF6B6B6B),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Ingreso'),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -535,17 +628,27 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     future: _accountsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: CircularProgressIndicator(color: _highlightColor),
+                        return Center(
+                          child: CircularProgressIndicator(color: _purpleAccent),
                         );
                       }
                       if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                           decoration: BoxDecoration(
-                            color: _unselectedBackgroundColor,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                            gradient: LinearGradient(
+                              colors: [
+                                _purpleAccent.withOpacity(0.15),
+                                _purpleAccent.withOpacity(0.12),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
+                            ),
                           ),
                           child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,9 +664,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       return DropdownButtonFormField<String>(
                         value: _selectedAccountId,
                         decoration: buildInputDecoration('Cuenta'),
-                        style: const TextStyle(color: Colors.white),
-                        dropdownColor: const Color(0xFF2A1237),
-                        iconEnabledColor: _highlightColor,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        dropdownColor: const Color(0xFF1A1A1A),
+                        iconEnabledColor: _purpleAccent,
                         items: accounts.map((account) {
                           return DropdownMenuItem<String>(
                             value: account['id'] as String,
@@ -583,8 +690,8 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     future: _fixedExpensesFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: CircularProgressIndicator(color: _highlightColor),
+                        return Center(
+                          child: CircularProgressIndicator(color: _purpleAccent),
                         );
                       }
                       if (snapshot.hasError || !snapshot.hasData ||
@@ -603,9 +710,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       return DropdownButtonFormField<String>(
                         value: _selectedFixedExpenseId,
                         decoration: buildInputDecoration('Gasto fijo (opcional)'),
-                        style: const TextStyle(color: Colors.white),
-                        dropdownColor: const Color(0xFF2A1237),
-                        iconEnabledColor: _highlightColor,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        dropdownColor: const Color(0xFF1A1A1A),
+                        iconEnabledColor: _purpleAccent,
                         items: expenses.map((exp) {
                           return DropdownMenuItem<String>(
                             value: exp['id'] as String,
@@ -625,21 +736,35 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     future: _categoriesFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: CircularProgressIndicator(color: _highlightColor),
+                        return Center(
+                          child: CircularProgressIndicator(color: _purpleAccent),
                         );
                       }
                       if (snapshot.hasError) {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                           decoration: BoxDecoration(
-                            color: _unselectedBackgroundColor,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                            gradient: LinearGradient(
+                              colors: [
+                                _purpleAccent.withOpacity(0.15),
+                                _purpleAccent.withOpacity(0.12),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
+                            ),
                           ),
                           child: const Text(
                             'Error al cargar categorías',
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
                           ),
                         );
                       }
@@ -648,9 +773,19 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                           decoration: BoxDecoration(
-                            color: _unselectedBackgroundColor,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                            gradient: LinearGradient(
+                              colors: [
+                                _purpleAccent.withOpacity(0.15),
+                                _purpleAccent.withOpacity(0.12),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
+                            ),
                           ),
                           child: const Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -665,9 +800,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       return DropdownButtonFormField<String>(
                         value: _selectedCategoryId,
                         decoration: buildInputDecoration('Categoría'),
-                        style: const TextStyle(color: Colors.white),
-                        dropdownColor: const Color(0xFF2A1237),
-                        iconEnabledColor: _highlightColor,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                        dropdownColor: const Color(0xFF1A1A1A),
+                        iconEnabledColor: _purpleAccent,
                         items: categories.map((category) {
                           return DropdownMenuItem<String>(
                             value: category['id'] as String,
@@ -684,43 +823,86 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                   ),
                   const SizedBox(height: 20),
                   InkWell(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     onTap: () => _selectDate(context),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                       decoration: BoxDecoration(
-                        color: _unselectedBackgroundColor,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0x66EA00FF), width: 2),
+                        gradient: LinearGradient(
+                          colors: [
+                            _purpleAccent.withOpacity(0.15),
+                            _purpleAccent.withOpacity(0.12),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: _purpleAccent.withOpacity(0.25),
+                          width: 0.8,
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'Fecha: ${DateFormat.yMMMd('es_ES').format(_selectedDate)}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                              fontFamily: 'Inter',
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
-                          const Icon(Icons.calendar_today, color: Color(0xFFEA00FF)),
+                          Icon(
+                            Icons.calendar_today,
+                            color: _purpleAccent,
+                            size: 18,
+                          ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 32),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _saveTransaction,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: _highlightColor,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1a266b).withOpacity(0.2), // Azul casi transparente
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFF1a266b).withOpacity(0.4),
+                        width: 0.8,
+                      ),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text('Guardar Transacción'),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: _isLoading ? null : _saveTransaction,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          alignment: Alignment.center,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Color(0xFFFFFFFF),
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Guardar Transacción',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFFFFFFFF),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

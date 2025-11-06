@@ -90,48 +90,48 @@ class TransactionTile extends StatelessWidget {
     final bool canDelete = onDelete != null;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(18), // Reducido de 24 a 18
       onTap: onTap,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(18), // Reducido de 24 a 18
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20), // Reducido de 25 a 20
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(14), // Reducido de 20 a 14 (30% menos)
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF0D0D0D).withOpacity(0.95), // Negro brillante arriba
-                  const Color(0xFF000000).withOpacity(0.9), // Negro puro abajo
+                  const Color(0xFF0D0D0D).withOpacity(0.92), // Ligeramente más transparente
+                  const Color(0xFF000000).withOpacity(0.88),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(18), // Reducido de 24 a 18
               border: Border.all(
-                color: const Color(0x26FFFFFF), // Borde blanco más sutil
-                width: 0.8,
+                color: const Color(0x1FFFFFFF), // Borde más sutil (reducido de 0x26 a 0x1F)
+                width: 0.6, // Reducido de 0.8 a 0.6
               ),
               boxShadow: [
-                // Sombra exterior
+                // Sombra exterior más sutil
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 20,
+                  color: Colors.black.withOpacity(0.4), // Reducido de 0.5 a 0.4
+                  blurRadius: 15, // Reducido de 20 a 15
                   spreadRadius: 0,
-                  offset: const Offset(0, 8),
+                  offset: const Offset(0, 6), // Reducido de 8 a 6
                 ),
-                // Highlight superior (brillo)
+                // Highlight superior (brillo) más sutil
                 BoxShadow(
-                  color: const Color(0xFFFFFFFF).withOpacity(0.2),
-                  blurRadius: 10,
-                  spreadRadius: -5,
-                  offset: const Offset(0, -4),
+                  color: const Color(0xFFFFFFFF).withOpacity(0.15), // Reducido de 0.2 a 0.15
+                  blurRadius: 8, // Reducido de 10 a 8
+                  spreadRadius: -4, // Ajustado de -5 a -4
+                  offset: const Offset(0, -3), // Reducido de -4 a -3
                 ),
-                // Brillo interno púrpura
+                // Brillo interno púrpura más sutil
                 BoxShadow(
-                  color: const Color(0xFF700aa3).withOpacity(0.12),
-                  blurRadius: 30,
-                  spreadRadius: -8,
+                  color: const Color(0xFF700aa3).withOpacity(0.08), // Reducido de 0.12 a 0.08
+                  blurRadius: 20, // Reducido de 30 a 20
+                  spreadRadius: -6, // Ajustado de -8 a -6
                   offset: const Offset(0, 0),
                   blurStyle: BlurStyle.inner,
                 ),
@@ -141,8 +141,8 @@ class TransactionTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
             Container(
-              width: 52,
-              height: 52,
+              width: 48, // Reducido de 52 a 48
+              height: 48, // Reducido de 52 a 48
               decoration: BoxDecoration(
                 color: avatarColor,
                 shape: BoxShape.circle, // Forma circular
@@ -150,9 +150,10 @@ class TransactionTile extends StatelessWidget {
               child: Icon(
                 iconData,
                 color: amountColor,
+                size: 24, // Reducido de tamaño default (24) para que se vea proporcionado
               ),
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 12), // Reducido de 16 a 12
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,10 +171,10 @@ class TransactionTile extends StatelessWidget {
                       ),
                       if (transaction.relatedScheduledExpenseId != null)
                         const Padding(
-                          padding: EdgeInsets.only(left: 8.0),
+                          padding: EdgeInsets.only(left: 6.0), // Reducido de 8 a 6
                           child: Icon(
                             Icons.autorenew,
-                            size: 16,
+                            size: 14, // Reducido de 16 a 14
                             color: Colors.white54,
                           ),
                         ),
