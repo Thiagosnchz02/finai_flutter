@@ -1102,47 +1102,46 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
       ('gasto', 'Gasto'),
     ];
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (int i = 0; i < filters.length; i++) ...[
-              SizedBox(
-                width: 80,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (int i = 0; i < filters.length; i++) ...[
+            Expanded(
+              child: Container(
                 height: 32,
-                child: Container(
-                  decoration: BoxDecoration(
+                constraints: const BoxConstraints(minWidth: 70), // Ancho mínimo
+                decoration: BoxDecoration(
+                  color: _currentFilterSegment == filters[i].$1
+                      ? const Color(0xFF3a0560).withOpacity(0.6) // Morado oscuro solo un poco opaco (seleccionado)
+                      : null,
+                  gradient: _currentFilterSegment == filters[i].$1
+                      ? null
+                      : LinearGradient(
+                          colors: [
+                            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
+                            const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
+                            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          stops: const [0.0, 0.5, 1.0],
+                        ),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
                     color: _currentFilterSegment == filters[i].$1
-                        ? const Color(0xFF3a0560).withOpacity(0.6) // Morado oscuro solo un poco opaco (seleccionado)
-                        : null,
-                    gradient: _currentFilterSegment == filters[i].$1
-                        ? null
-                        : LinearGradient(
-                            colors: [
-                              const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
-                              const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
-                              const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            stops: const [0.0, 0.5, 1.0],
-                          ),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: _currentFilterSegment == filters[i].$1
-                          ? const Color(0xFF3a0560).withOpacity(0.8)
-                          : const Color(0xFF4a0873).withOpacity(0.25),
-                      width: 0.6,
-                    ),
+                        ? const Color(0xFF3a0560).withOpacity(0.8)
+                        : const Color(0xFF4a0873).withOpacity(0.25),
+                    width: 0.6,
                   ),
-                  child: TextButton(
-                    onPressed: () => _handleFilterSelection(filters[i].$1),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 2.0),
-                      backgroundColor: Colors.transparent,
-                      foregroundColor: _currentFilterSegment == filters[i].$1
+                ),
+                child: TextButton(
+                  onPressed: () => _handleFilterSelection(filters[i].$1),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 2.0, horizontal: 4.0),
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: _currentFilterSegment == filters[i].$1
                           ? const Color(0xFF9E9E9E) // Gris más oscuro cuando activo
                           : const Color(0xFF6B6B6B), // Gris aún más oscuro cuando no activo
                       textStyle: const TextStyle(
@@ -1159,10 +1158,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
                   ),
                 ),
               ),
-              if (i < filters.length - 1) const SizedBox(width: 10),
-            ],
+            if (i < filters.length - 1) const SizedBox(width: 10),
           ],
-        ),
+        ],
       ),
     );
   }
