@@ -1,5 +1,6 @@
 // lib/features/transactions/widgets/transaction_tile.dart
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:finai_flutter/core/utils/icon_utils.dart';
@@ -22,7 +23,11 @@ class TransactionTile extends StatelessWidget {
     final theme = Theme.of(context);
     final bool isIncome = transaction.type == 'ingreso';
     final bool isExpense = transaction.type == 'gasto';
-    final bool isTransfer = transaction.type == 'transferencia';
+    final bool isTransfer = transaction.type == 'traspaso';
+    
+    // Para transferencias, determinar si es entrada o salida según el signo del amount
+    final bool isTransferOut = isTransfer && transaction.amount < 0;
+    final bool isTransferIn = isTransfer && transaction.amount >= 0;
 
     final Color amountColor = isIncome
         ? Colors.greenAccent.shade400
@@ -36,35 +41,35 @@ class TransactionTile extends StatelessWidget {
         ? '+'
         : isExpense
             ? '-'
-            : '';
+            : isTransferIn
+                ? '+'
+                : isTransferOut
+                    ? '-'
+                    : '';
     final double amountForDisplay = amountPrefix.isEmpty
         ? transaction.amount
         : transaction.amount.abs();
     final String amountString =
         '$amountPrefix${currencyFormatter.format(amountForDisplay)}';
 
-    final IconData iconData = isTransfer
-        ? Icons.lock
-        : parseIconFromHex(
-            transaction.categoryIcon,
-            fallback: isIncome
-                ? Icons.trending_up
-                : Icons.trending_down,
-          );
+    final IconData iconData = isTransferOut
+        ? Icons.trending_down  // Transferencia salida: mismo icono que gastos
+        : isTransferIn
+            ? Icons.trending_up  // Transferencia entrada: mismo icono que ingresos
+            : isTransfer
+                ? Icons.swap_horiz  // Fallback para transferencias sin signo claro
+                : parseIconFromHex(
+                    transaction.categoryIcon,
+                    fallback: isIncome
+                        ? Icons.trending_up
+                        : Icons.trending_down,
+                  );
 
     final Color avatarColor = isIncome
         ? Colors.greenAccent.withOpacity(0.15)
         : isExpense
             ? Colors.redAccent.withOpacity(0.15)
             : Colors.white.withOpacity(0.1);
-
-    final bool isDark = theme.brightness == Brightness.dark;
-    final Color backgroundColor = isDark
-        ? Colors.white.withOpacity(0.12)
-        : const Color(0xFF1E1E1E);
-    final Color borderColor = isDark
-        ? Colors.white.withOpacity(0.18)
-        : Colors.black.withOpacity(0.05);
 
     final titleStyle = theme.textTheme.titleMedium?.copyWith(
       color: Colors.white,
@@ -74,8 +79,12 @@ class TransactionTile extends StatelessWidget {
       color: Colors.white70,
     );
 
-    final subtitleText =
-        '${transaction.category?.name ?? 'Sin Categoría'} · ${DateFormat.Hm().format(transaction.date)}';
+    // Para traspasos, mostrar "Entre Cuentas Propias" (retrocompatibilidad para traspasos antiguos sin categoría)
+    final String categoryName = isTransfer 
+        ? (transaction.category?.name ?? 'Entre Cuentas Propias')
+        : (transaction.category?.name ?? 'Sin Categoría');
+    
+    final subtitleText = '$categoryName · ${DateFormat.Hm().format(transaction.date)}';
 
     final Color deleteAccentColor = const Color(0xFFFF6B6B);
     final bool canDelete = onDelete != null;
@@ -83,19 +92,61 @@ class TransactionTile extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(24),
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: borderColor),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 26,
-              backgroundColor: avatarColor,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF0D0D0D).withOpacity(0.95), // Negro brillante arriba
+                  const Color(0xFF000000).withOpacity(0.9), // Negro puro abajo
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: const Color(0x26FFFFFF), // Borde blanco más sutil
+                width: 0.8,
+              ),
+              boxShadow: [
+                // Sombra exterior
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 20,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 8),
+                ),
+                // Highlight superior (brillo)
+                BoxShadow(
+                  color: const Color(0xFFFFFFFF).withOpacity(0.2),
+                  blurRadius: 10,
+                  spreadRadius: -5,
+                  offset: const Offset(0, -4),
+                ),
+                // Brillo interno púrpura
+                BoxShadow(
+                  color: const Color(0xFF700aa3).withOpacity(0.12),
+                  blurRadius: 30,
+                  spreadRadius: -8,
+                  offset: const Offset(0, 0),
+                  blurStyle: BlurStyle.inner,
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: avatarColor,
+                shape: BoxShape.circle, // Forma circular
+              ),
               child: Icon(
                 iconData,
                 color: amountColor,
@@ -169,6 +220,8 @@ class TransactionTile extends StatelessWidget {
               ],
             ),
           ],
+        ),
+          ),
         ),
       ),
     );

@@ -1,5 +1,6 @@
 // lib/features/transactions/screens/transactions_screen.dart
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:collection/collection.dart'; // Necesario para groupBy
@@ -124,66 +125,138 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
 
   // Elimina una transacción después de confirmar con el usuario.
   Future<void> _deleteTransaction(Transaction transaction) async {
+    final currencyFormat = NumberFormat.currency(locale: 'es_ES', symbol: '€');
+    final formattedAmount = currencyFormat.format(transaction.amount.abs());
+    
     final shouldDelete = await showDialog<bool>(
       context: context,
+      barrierColor: Colors.black.withOpacity(0.7), // Fondo más oscuro para resaltar el diálogo
       builder: (context) {
-        const backgroundColor = Color(0xFF31090D);
-        const borderColor = Color(0xFFFF4D4D);
-        const highlightColor = Color(0xFFFF6B6B);
-
-        return AlertDialog(
-          backgroundColor: backgroundColor,
-          surfaceTintColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(
-              color: borderColor,
-              width: 1.6,
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10), // Blur en el fondo
+          child: AlertDialog(
+            backgroundColor: const Color(0xFF000000).withOpacity(0.85), // Negro semi-transparente
+            surfaceTintColor: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: const BorderSide(
+                color: Color(0xFFE5484D), // Borde rojo
+                width: 0.8,
+              ),
             ),
-          ),
-          titleTextStyle: const TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-          contentTextStyle: const TextStyle(
-            color: Color(0xFFFFCDD2),
-            fontSize: 16,
-            height: 1.4,
-          ),
-          title: const Text('Eliminar transacción'),
-          content: const Text('¿Seguro que deseas eliminar esta transacción?'),
-          actionsAlignment: MainAxisAlignment.end,
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                foregroundColor: Colors.white70,
-                backgroundColor: Colors.white.withOpacity(0.08),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: BorderSide(
-                    color: Colors.white.withOpacity(0.18),
+            shadowColor: const Color(0xFFE5484D).withOpacity(0.5),
+            elevation: 40, // Elevación alta para efecto 3D
+            titleTextStyle: const TextStyle(
+              fontFamily: 'Inter',
+              color: Color(0xFFFFFFFF), // Blanco Puro
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.01,
+            ),
+            contentTextStyle: const TextStyle(
+              fontFamily: 'Inter',
+              color: Color(0xFFFFFFFF), // Texto blanco
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              height: 1.4,
+              letterSpacing: 0.005,
+            ),
+            title: const Text('Eliminar transacción'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Text('¿Seguro que deseas eliminar esta transacción?'),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1A1A).withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF4a0873).withOpacity(0.3),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        transaction.description,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFFFFFFF),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        formattedAmount,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: transaction.type == 'ingreso'
+                              ? const Color(0xFF25C9A4) // Verde Digital
+                              : const Color(0xFFE5484D), // Rojo Sobrio
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.01,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              child: const Text('Cancelar'),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                foregroundColor: Colors.white,
-                backgroundColor: highlightColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+            actionsAlignment: MainAxisAlignment.end,
+            actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            actions: [
+              // Botón Secundario (Cancelar)
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  foregroundColor: const Color(0xFFFFFFFF), // Texto blanco
+                  backgroundColor: const Color(0xFF000000), // Fondo negro brillante
+                  textStyle: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(
+                      color: Color(0x26FFFFFF), // Borde blanco sutil
+                      width: 0.8,
+                    ),
+                  ),
                 ),
+                child: const Text('Cancelar'),
               ),
-              child: const Text('Eliminar'),
-            ),
-          ],
+              // Botón Primario (Eliminar)
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  foregroundColor: const Color(0xFFFFFFFF), // Blanco Puro
+                  backgroundColor: const Color(0xFFE5484D), // Rojo Sobrio
+                  textStyle: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('Eliminar'),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -194,9 +267,8 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
       final message = transaction.type == 'transferencia'
           ? 'Transacción eliminada. Recuerda borrar la contraparte de la transferencia manualmente.'
           : 'Transacción eliminada.';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      
+      _showSuccessSnackBar(message);
       _loadTransactions();
     }
   }
@@ -204,6 +276,90 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   // Agrupa las transacciones por fecha.
   Map<DateTime, List<Transaction>> _groupTransactionsByDate(List<Transaction> transactions) {
     return groupBy(transactions, (Transaction t) => DateTime(t.date.year, t.date.month, t.date.day));
+  }
+  
+  // Muestra un SnackBar elegante con animación para mensajes de éxito
+  void _showSuccessSnackBar(String message) {
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: MediaQuery.of(context).padding.top + 16,
+        left: 16,
+        right: 16,
+        child: Material(
+          color: Colors.transparent,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutBack,
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, -50 * (1 - value)),
+                child: Opacity(
+                  opacity: value.clamp(0.0, 1.0),
+                  child: child,
+                ),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF000000).withOpacity(0.95),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: const Color(0xFF25C9A4).withOpacity(0.3),
+                  width: 0.8,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF25C9A4).withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: Color(0xFF25C9A4),
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFFFFFFFF),
+                        letterSpacing: 0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    overlay.insert(overlayEntry);
+
+    // Remover después de 3 segundos con animación de salida
+    Future.delayed(const Duration(seconds: 3), () {
+      overlayEntry.remove();
+    });
   }
   
   // Formatea el encabezado de cada grupo de fechas.
@@ -221,14 +377,14 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFF000000), // Negro puro brillante
       body: Container(
         constraints: const BoxConstraints.expand(),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Color(0xFF80008B),
-              Color(0xFF121212),
+              const Color(0xFF000000), // Negro puro
+              const Color(0xFF0A0A0A).withOpacity(0.98), // Negro ligeramente más claro
             ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -311,20 +467,27 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
+          // Tarjeta con efecto glassmorphism
           Container(
             width: double.infinity,
             alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 12.0),
-            decoration: const BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.transparent,
-                  blurRadius: 32,
-                  spreadRadius: -12,
-                  offset: Offset(0, 12),
-                  blurStyle: BlurStyle.inner,
-                ),
-              ],
+            padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 20.0),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
+                  const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
+                  const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                stops: const [0.0, 0.5, 1.0],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF4a0873).withOpacity(0.25),
+                width: 0.8,
+              ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -336,8 +499,9 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFE0E0E0),
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0.01,
+                    color: Color(0xFFA0AEC0), // Gris Neutro
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -346,9 +510,10 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFFB400C4),
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -0.01,
+                    color: Color(0xFFFFFFFF), // Blanco Puro
                   ),
                 ),
               ],
@@ -361,7 +526,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 child: _buildSummaryItem(
                   'Positivo',
                   incomeText,
-                  const Color(0xFF00FF00),
+                  const Color(0xFF25C9A4), // Verde Digital
                 ),
               ),
               const SizedBox(width: 16),
@@ -369,7 +534,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
                 child: _buildSummaryItem(
                   'Negativo',
                   expensesText,
-                  const Color(0xFFFF0000),
+                  const Color(0xFFE5484D), // Rojo Sobrio
                 ),
               ),
             ],
@@ -384,8 +549,16 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: _editActiveFilters,
-                icon: const Icon(Icons.filter_list),
+                icon: const Icon(Icons.filter_list, size: 18),
                 label: const Text('Editar filtros'),
+                style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF9927FD), // Púrpura Aurora
+                  textStyle: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
               ),
             ),
           ],
@@ -395,68 +568,106 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
   }
 
   Widget _buildSummaryItem(String label, String value, Color valueColor) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 16.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
+            const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
+            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          stops: const [0.0, 0.5, 1.0],
         ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: valueColor,
-          ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF4a0873).withOpacity(0.25),
+          width: 0.8,
         ),
-      ],
+      ),
+      child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.01,
+                  color: Color(0xFFA0AEC0), // Gris Neutro
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                value,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: valueColor,
+                ),
+              ),
+            ],
+          ),
     );
   }
 
   Widget _buildNewTransactionButton() {
     return SizedBox(
       width: double.infinity,
-      child: TextButton(
-        onPressed: () => _navigateAndRefresh(),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 14.0),
-          backgroundColor: const Color(0x1FEA00FF),
-          foregroundColor: const Color(0xFFE0E0E0),
-          textStyle: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF000000), // Negro brillante
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: const Color(0x26FFFFFF), // Borde blanco sutil como las tarjetas
+            width: 0.8,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(
-              color: Color(0xFFEA00FF),
-              width: 2,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.4),
+              blurRadius: 8,
+              spreadRadius: 0,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: TextButton(
+          onPressed: () => _navigateAndRefresh(),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 6.0),
+            backgroundColor: Colors.transparent,
+            foregroundColor: const Color(0xFF9E9E9E), // Gris más oscuro, menos brillante
+            textStyle: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
+          child: const Text('Nueva Transacción +'),
         ),
-        child: const Text('Nueva Transacción +'),
       ),
     );
   }
 
   // TU WIDGET DE GRUPO DE TRANSACCIONES (MODIFICADO PARA USAR EL NUEVO MODELO)
   Widget _buildTransactionGroup(String title, List<Transaction> transactions) {
-    final theme = Theme.of(context);
-    final headerStyle = theme.textTheme.titleSmall?.copyWith(
-      fontWeight: FontWeight.w700,
-      letterSpacing: 0.4,
-      color: theme.colorScheme.onSurface.withOpacity(0.7),
+    final headerStyle = const TextStyle(
+      fontFamily: 'Inter',
+      fontWeight: FontWeight.w600,
+      fontSize: 16,
+      letterSpacing: 0.004,
+      color: Color(0xFFA0AEC0), // Gris Neutro
     );
 
     return Column(
@@ -492,33 +703,54 @@ class _TransactionsScreenState extends State<TransactionsScreen> {
         children: [
           for (int i = 0; i < filters.length; i++) ...[
             Expanded(
-              child: TextButton(
-                onPressed: () => _handleFilterSelection(filters[i].$1),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  backgroundColor: _currentFilterSegment == filters[i].$1
-                      ? const Color(0x3DEA00FF)
-                      : const Color(0x1FEA00FF),
-                  foregroundColor: const Color(0xFFE0E0E0),
-                  textStyle: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                      color: _currentFilterSegment == filters[i].$1
-                          ? const Color(0xFFEA00FF)
-                          : const Color(0x66EA00FF),
-                      width: 2,
-                    ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _currentFilterSegment == filters[i].$1
+                      ? const Color(0xFF3a0560).withOpacity(0.6) // Morado oscuro solo un poco opaco (seleccionado)
+                      : null,
+                  gradient: _currentFilterSegment == filters[i].$1
+                      ? null
+                      : LinearGradient(
+                          colors: [
+                            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente (no seleccionado)
+                            const Color(0xFF5a0d8d).withOpacity(0.12), // Muy transparente
+                            const Color(0xFF4a0873).withOpacity(0.15), // Muy transparente
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          stops: const [0.0, 0.5, 1.0],
+                        ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _currentFilterSegment == filters[i].$1
+                        ? const Color(0xFF3a0560).withOpacity(0.8)
+                        : const Color(0xFF4a0873).withOpacity(0.25),
+                    width: 0.8,
                   ),
                 ),
-                child: Text(filters[i].$2),
+                child: TextButton(
+                  onPressed: () => _handleFilterSelection(filters[i].$1),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 6.0),
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: _currentFilterSegment == filters[i].$1
+                        ? const Color(0xFF9E9E9E) // Gris más oscuro cuando activo
+                        : const Color(0xFF6B6B6B), // Gris aún más oscuro cuando no activo
+                    textStyle: const TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      letterSpacing: 0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(filters[i].$2),
+                ),
               ),
             ),
-            if (i < filters.length - 1) const SizedBox(width: 12),
+            if (i < filters.length - 1) const SizedBox(width: 10),
           ],
         ],
       ),
