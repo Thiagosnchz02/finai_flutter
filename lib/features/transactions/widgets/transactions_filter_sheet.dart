@@ -7,7 +7,7 @@ import 'package:finai_flutter/core/utils/icon_utils.dart';
 // Colores actualizados para consistencia
 const Color _purpleAccent = Color(0xFF4a0873);
 const Color _blueButton = Color(0xFF1a266b);
-const Color _inputFillColor = Color(0x0FFFFFFF);
+const Color _inputFillColor = Color(0x12000000); // Negro brillante muy sutil (transparente)
 
 class TransactionsFilterSheet extends StatefulWidget {
   final String type;
@@ -323,30 +323,52 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     isExpanded: true,
                   ),
                   const SizedBox(height: 20),
-                  TextField(
-                    controller: _minAmountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: buildInputDecoration('Importe mínimo'),
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
-                    cursorColor: _purpleAccent,
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: _maxAmountController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: buildInputDecoration('Importe máximo'),
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
-                    cursorColor: _purpleAccent,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _minAmountController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          decoration: buildInputDecoration('Mínimo').copyWith(
+                            prefixText: '€ ',
+                            prefixStyle: const TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0xFFA0AEC0),
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          cursorColor: _purpleAccent,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _maxAmountController,
+                          keyboardType:
+                              const TextInputType.numberWithOptions(decimal: true),
+                          decoration: buildInputDecoration('Máximo').copyWith(
+                            prefixText: '€ ',
+                            prefixStyle: const TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0xFFA0AEC0),
+                              fontSize: 14,
+                            ),
+                          ),
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          cursorColor: _purpleAccent,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                   if (_isLoadingCategories)

@@ -998,40 +998,68 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
   Widget _buildNewTransactionButton() {
     return SizedBox(
       width: double.infinity,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF000000), // Negro brillante
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: const Color(0x26FFFFFF), // Borde blanco sutil como las tarjetas
-            width: 0.8,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF000000).withOpacity(0.88), // Izquierda oscuro
+                  const Color(0xFF0D0D0D).withOpacity(0.92), // Centro claro
+                  const Color(0xFF000000).withOpacity(0.88), // Derecha oscuro
+                ],
+                stops: const [0.0, 0.5, 1.0], // Izquierda, Centro, Derecha
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: const Color(0x1FFFFFFF),
+                width: 0.6,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 15,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 6),
+                ),
+                BoxShadow(
+                  color: const Color(0xFFFFFFFF).withOpacity(0.15),
+                  blurRadius: 8,
+                  spreadRadius: -4,
+                  offset: const Offset(0, -3),
+                ),
+                BoxShadow(
+                  color: const Color(0xFF700aa3).withOpacity(0.08),
+                  blurRadius: 20,
+                  spreadRadius: -6,
+                  offset: const Offset(0, 0),
+                  blurStyle: BlurStyle.inner,
+                ),
+              ],
+            ),
+            child: TextButton(
+              onPressed: () => _navigateAndRefresh(),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0),
+                backgroundColor: Colors.transparent,
+                foregroundColor: const Color(0xFF9E9E9E),
+                textStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: const Text('Nueva Transacción'),
+            ),
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.4),
-              blurRadius: 8,
-              spreadRadius: 0,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: TextButton(
-          onPressed: () => _navigateAndRefresh(),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 6.0),
-            backgroundColor: Colors.transparent,
-            foregroundColor: const Color(0xFF9E9E9E), // Gris más oscuro, menos brillante
-            textStyle: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
-          ),
-          child: const Text('Nueva Transacción'),
         ),
       ),
     );
