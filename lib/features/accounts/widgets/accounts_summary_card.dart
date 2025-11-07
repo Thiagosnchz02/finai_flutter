@@ -29,21 +29,21 @@ class AccountsSummaryCard extends StatelessWidget {
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        Color(0xFF952D65),
-        Color(0xFF3D0020),
+        Color(0xFF4a0873), // Morado consistente
+        Color(0xFF3a0560), // Morado oscuro
       ],
-      stops: [0, 0.7071],
+      stops: [0.3, 1.0],
     ),
-    this.borderColor = const Color(0x57FF0088),
+    this.borderColor = const Color(0x404a0873), // Borde morado sutil
     this.boxShadows = const [
       BoxShadow(
-        color: Color(0x40000000),
-        offset: Offset(0, 25),
-        blurRadius: 50,
+        color: Color(0x30000000),
+        offset: Offset(0, 15),
+        blurRadius: 30,
         spreadRadius: 0,
       ),
     ],
-    this.iconBackgroundColor = const Color(0xFFFF0088),
+    this.iconBackgroundColor = const Color(0xFF4a0873),
     this.iconBorderColor = Colors.transparent,
     this.iconColor = Colors.white,
     this.headerActions = const [],
@@ -54,13 +54,31 @@ class AccountsSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final formattedTotal = NumberFormat.currency(locale: 'es_ES', symbol: '€').format(totalAmount);
     
-    return GlassCard(
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(kCardBorderRadius),
       child: Container(
         decoration: BoxDecoration(
-          gradient: gradient,
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF0A0A0A).withOpacity(0.9), // Negro brillante
+              const Color(0xFF0D0D0D).withOpacity(0.85),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(kCardBorderRadius),
-          border: Border.all(color: borderColor, width: 1.5),
-          boxShadow: boxShadows,
+          border: Border.all(
+            color: const Color(0x1FFFFFFF), // Borde igual que transacciones
+            width: 0.6,
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x20000000),
+              offset: Offset(0, 10),
+              blurRadius: 20,
+              spreadRadius: 0,
+            ),
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -76,9 +94,11 @@ class AccountsSummaryCard extends StatelessWidget {
                         child: Text(
                           headerTitle!,
                           style: const TextStyle(
+                            fontFamily: 'Inter',
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ),
@@ -108,10 +128,12 @@ class AccountsSummaryCard extends StatelessWidget {
                     child: Text(
                       title,
                       style: TextStyle(
-                        fontSize: 18,
+                        fontFamily: 'Inter',
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
                         height: 1.0,
-                        color: Colors.white.withOpacity(0.85),
+                        color: Colors.white.withOpacity(0.9),
+                        letterSpacing: 0.2,
                       ),
                     ),
                   ),
@@ -123,10 +145,12 @@ class AccountsSummaryCard extends StatelessWidget {
                   formattedTotal,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
+                    fontFamily: 'Inter',
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                     height: 1.0,
                     color: Colors.white,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),

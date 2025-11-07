@@ -6,14 +6,14 @@ class AccountButtonStyles {
   AccountButtonStyles._();
 
   static final ButtonStyle maroon = _base(
-    backgroundColor: const Color(0xFF2E0019),
-    borderColor: const Color(0xFFFF0088),
+    backgroundColor: const Color(0xFF1a266b).withOpacity(0.2), // Azul casi transparente como "Guardar Transacción"
+    borderColor: const Color(0xFF1a266b).withOpacity(0.4),
     foregroundColor: Colors.white,
   );
 
   static final ButtonStyle pink = _base(
-    backgroundColor: const Color(0xFFFF0088),
-    borderColor: const Color(0xFFFF0088),
+    backgroundColor: const Color(0xFF1a266b).withOpacity(0.2), // Mismo estilo azul
+    borderColor: const Color(0xFF1a266b).withOpacity(0.4),
     foregroundColor: Colors.white,
   );
 
@@ -31,10 +31,15 @@ class AccountButtonStyles {
       foregroundColor: foregroundColor,
       padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 14.0),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14), // Consistente con "Guardar Transacción"
       ),
-      side: BorderSide(color: borderColor, width: 1.4),
-      textStyle: const TextStyle(fontWeight: FontWeight.w700),
+      side: BorderSide(color: borderColor, width: 0.8), // Width consistente
+      textStyle: const TextStyle(
+        fontFamily: 'Inter',
+        fontWeight: FontWeight.bold,
+        fontSize: 15,
+        letterSpacing: 0.5,
+      ),
     ).copyWith(
       backgroundColor: MaterialStateProperty.resolveWith((states) {
         if (states.contains(MaterialState.disabled)) {
@@ -62,9 +67,9 @@ class AccountButtonStyles {
       }),
       side: MaterialStateProperty.resolveWith((states) {
         if (states.contains(MaterialState.disabled)) {
-          return BorderSide(color: disabledBorder, width: 1.4);
+          return BorderSide(color: disabledBorder, width: 0.8);
         }
-        return BorderSide(color: borderColor, width: 1.4);
+        return BorderSide(color: borderColor, width: 0.8);
       }),
     );
   }

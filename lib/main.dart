@@ -24,6 +24,7 @@ import 'features/goals/screens/goals_screen.dart';
 import 'features/budgets/screens/budget_screen.dart';
 import 'features/reports/screens/reports_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
+import 'features/settings/screens/preferences_screen.dart';
 import 'features/categories/screens/category_management_screen.dart';
 import 'features/fincount/screens/fincount_screen.dart';
 import 'features/accounts/models/account_model.dart';
@@ -159,6 +160,7 @@ class _MyAppState extends State<MyApp> {
         '/budgets': (context) => const BudgetScreen(),
         '/reports': (context) => const ReportsScreen(),
         '/settings': (context) => const SettingsScreen(),
+        '/preferences': (context) => const PreferencesScreen(),
         '/categories': (context) => const CategoryManagementScreen(),
         '/fincount': (context) => const FincountScreen(),
       },

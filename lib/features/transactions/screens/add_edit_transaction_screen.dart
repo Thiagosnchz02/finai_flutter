@@ -160,7 +160,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
             dialogBackgroundColor: const Color(0xFF0A0A0A), // Fondo del diálogo (negro brillante)
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: _purpleAccent, // Color de los botones
+                foregroundColor: const Color.fromARGB(255, 255, 255, 255), // blanco para botones Cancel y OK
                 textStyle: const TextStyle(
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w600,

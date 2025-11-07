@@ -31,16 +31,27 @@ class AccountsActionButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             child: Ink(
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(isEnabled ? 0.1 : 0.05),
+                gradient: isEnabled
+                    ? LinearGradient(
+                        colors: [
+                          const Color(0xFF4a0873).withOpacity(0.2),
+                          const Color(0xFF4a0873).withOpacity(0.15),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      )
+                    : null,
+                color: isEnabled ? null : Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.12),
+                  color: const Color(0xFF4a0873).withOpacity(isEnabled ? 0.3 : 0.1),
+                  width: 0.8,
                 ),
               ),
               child: Icon(
                 icon,
                 size: 20,
-                color: Colors.white.withOpacity(isEnabled ? 0.95 : 0.55),
+                color: isEnabled ? const Color(0xFF4a0873) : Colors.white.withOpacity(0.3),
               ),
             ),
           ),

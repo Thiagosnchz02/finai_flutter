@@ -94,6 +94,48 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
             start: _startDate ?? _endDate ?? now,
             end: _endDate ?? _startDate ?? now,
           ),
+      // Tema personalizado estilo iOS moderno
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: _purpleAccent, // Color de selección
+              onPrimary: Colors.white, // Texto sobre color primario
+              surface: const Color(0xFF0A0A0A), // Fondo del calendario (negro brillante)
+              onSurface: Colors.white, // Texto sobre superficie
+              background: const Color(0xFF0A0A0A), // Fondo general (negro brillante)
+              onBackground: Colors.white, // Texto sobre fondo
+              secondary: _purpleAccent.withOpacity(0.3), // Color secundario
+            ),
+            dialogBackgroundColor: const Color(0xFF0A0A0A), // Fondo del diálogo (negro brillante)
+            scaffoldBackgroundColor: const Color(0xFF0A0A0A), // Fondo del scaffold (negro brillante)
+            canvasColor: const Color(0xFF0A0A0A), // Color del canvas (negro brillante)
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF1E3A8A), // Azul oscuro para botones Cancel y OK
+                textStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            // Estilo del encabezado del calendario
+            dialogTheme: DialogThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              backgroundColor: const Color(0xFF0A0A0A), // Fondo negro brillante
+              elevation: 8,
+            ),
+            // Color del icono de editar en azul oscuro
+            iconTheme: const IconThemeData(
+              color: Color(0xFF1E3A8A), // Azul oscuro para el icono de editar
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (result != null) {
@@ -346,7 +388,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       color: Colors.white,
                       fontSize: 14,
                     ),
-                    dropdownColor: const Color(0xFF1A1A1A),
+                    dropdownColor: const Color(0xFF0A0A0A),
                     iconEnabledColor: _purpleAccent,
                     isExpanded: true,
                   ),
@@ -497,7 +539,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         color: Colors.white,
                         fontSize: 14,
                       ),
-                      dropdownColor: const Color(0xFF1A1A1A),
+                      dropdownColor: const Color(0xFF0A0A0A),
                       iconEnabledColor: _purpleAccent,
                       isExpanded: true,
                     ),

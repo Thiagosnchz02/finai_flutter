@@ -788,20 +788,22 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 24),
-          // Fila: Disponible, Positivo y Negativo (todas del mismo tamaño)
+          // Tarjeta de Disponible (solo en mes actual, ocupa todo el ancho)
+          if (isCurrentMonth) ...[
+            SizedBox(
+              width: double.infinity,
+              child: _buildCompactCard(
+                'Disponible',
+                availableText,
+                const Color(0xFF4a0873), // Morado
+                isLarge: true,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          // Fila: Positivo y Negativo (mismo tamaño)
           Row(
             children: [
-              // Disponible (solo en mes actual)
-              if (isCurrentMonth) ...[
-                Expanded(
-                  child: _buildCompactCard(
-                    'Disponible',
-                    availableText,
-                    const Color(0xFF4a0873), // Morado
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
               // Positivo
               Expanded(
                 child: _buildCompactCard(
@@ -862,9 +864,12 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
   }
 
   // Tarjeta compacta para Disponible, Positivo y Negativo
-  Widget _buildCompactCard(String label, String value, Color accentColor) {
+  Widget _buildCompactCard(String label, String value, Color accentColor, {bool isLarge = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 12.0),
+      padding: EdgeInsets.symmetric(
+        vertical: isLarge ? 20.0 : 14.0, 
+        horizontal: 12.0,
+      ),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -889,15 +894,15 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'Inter',
-              fontSize: 12,
+              fontSize: isLarge ? 14 : 12,
               fontWeight: FontWeight.w400,
               letterSpacing: 0.01,
-              color: Color(0xFFA0AEC0),
+              color: const Color(0xFFA0AEC0),
             ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: isLarge ? 10 : 6),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
@@ -905,7 +910,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontSize: 16,
+                fontSize: isLarge ? 22 : 16,
                 fontWeight: FontWeight.w700,
                 color: accentColor,
               ),
