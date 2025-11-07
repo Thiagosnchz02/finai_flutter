@@ -795,7 +795,7 @@ class _TransactionsScreenState extends State<TransactionsScreen> with SingleTick
               child: _buildCompactCard(
                 'Disponible',
                 availableText,
-                const Color(0xFF4a0873), // Morado
+                const Color.fromARGB(255, 197, 197, 197), // Morado
                 isLarge: true,
               ),
             ),
