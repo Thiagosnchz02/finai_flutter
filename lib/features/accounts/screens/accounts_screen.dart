@@ -307,7 +307,7 @@ class _AccountsContentState extends State<_AccountsContent> {
   List<Widget> _buildAccountHeaderActions(Account account) {
     return [
       IconButton(
-        icon: const Icon(Icons.edit, color: Color(0xFF4a0873), size: 18),
+        icon: const Icon(Icons.edit, color: Color(0xFF1E3A8A), size: 18),
         tooltip: 'Editar cuenta',
         onPressed: () => widget.onEditAccount(account),
       ),
@@ -351,16 +351,6 @@ class _AccountsContentState extends State<_AccountsContent> {
                     label: 'Añadir cuenta',
                     icon: Icons.add,
                     onPressed: widget.onAddAccount,
-                  ),
-                  const SizedBox(width: 12),
-                  AccountsActionButton(
-                    label: 'Transferencia entre cuentas',
-                    icon: Icons.sync_alt_rounded,
-                    onPressed:
-                        (widget.summary.spendingAccounts.isEmpty ||
-                            widget.summary.savingsAccount == null)
-                        ? null
-                        : () => widget.onInternalTransfer(widget.summary),
                   ),
                 ],
               ),
