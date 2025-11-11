@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
+import 'dart:ui';
 import '../models/account_model.dart';
 import '../models/accounts_preferences.dart';
 import 'account_button_styles.dart';
@@ -284,217 +285,266 @@ class _AccountCardState extends State<AccountCard>
                 child: InkWell(
                   onTap: null, // El tap lo maneja el GestureDetector
                   borderRadius: BorderRadius.circular(24),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0A0A0A), // Fondo negro opaco
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 18,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header con nombre + chevron
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  widget.account.name,
-                                  style: titleTextStyle,
-                                ),
-                              ),
-                              RotationTransition(
-                                turns: _iconRotation,
-                                child: Icon(
-                                  Icons.keyboard_arrow_down,
-                                  color: const Color(0xFF4a0873),
-                                  size: 28,
-                                ),
-                              ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF000000).withOpacity(0.88),
+                              const Color(0xFF0D0D0D).withOpacity(0.92),
+                              const Color(0xFF000000).withOpacity(0.88),
                             ],
+                            stops: const [0.0, 0.5, 1.0],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
-                          const SizedBox(height: 10),
-
-                          // Contenido según ViewMode
-                          if (widget.viewMode == AccountsViewMode.context)
-                            // MODO CONTEXTO: Siempre visible
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _AccountInfoRow(
-                                  label: 'Banco',
-                                  value:
-                                      (widget.account.bankName?.isNotEmpty ??
-                                          false)
-                                      ? widget.account.bankName!
-                                      : 'Sin banco asociado',
-                                  valueStyle: infoTextStyle,
-                                ),
-                                const SizedBox(height: 10),
-                                _AccountInfoRow(
-                                  label: 'Tipo de cuenta',
-                                  value: _prettyConceptualType(
-                                    widget.account.conceptualType,
-                                    widget.account.type,
-                                  ),
-                                  valueStyle: infoTextStyle,
-                                ),
-                                const SizedBox(height: 12),
-                                const Divider(
-                                  color: Color(0x33FFFFFF),
-                                  thickness: 1,
-                                  height: 1,
-                                ),
-                                const SizedBox(height: 12),
-                                _AccountInfoRow(
-                                  label: 'Saldo',
-                                  value: formattedBalance,
-                                  valueStyle: balanceTextStyle,
-                                ),
-                                // Sparkline si está habilitado
-                                if (widget.showSparkline)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 12),
-                                    child: SparklineChart(
-                                      data: _generateMockSparklineData(),
-                                      lineColor: const Color(0xFF4a0873),
-                                      fillColor: const Color(
-                                        0xFF4a0873,
-                                      ).withOpacity(0.1),
-                                      height: 60,
-                                      width: 120,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: const Color(0x1FFFFFFF),
+                            width: 0.6,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.4),
+                              blurRadius: 15,
+                              spreadRadius: 0,
+                              offset: const Offset(0, 6),
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFFFFFFFF).withOpacity(0.15),
+                              blurRadius: 8,
+                              spreadRadius: -4,
+                              offset: const Offset(0, -3),
+                            ),
+                            BoxShadow(
+                              color: const Color(0xFF700aa3).withOpacity(0.08),
+                              blurRadius: 20,
+                              spreadRadius: -6,
+                              offset: const Offset(0, 0),
+                              blurStyle: BlurStyle.inner,
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 18,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header con nombre + chevron
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      widget.account.name,
+                                      style: titleTextStyle,
                                     ),
                                   ),
-                                if (widget.isExpanded &&
-                                    (shouldShowAddMoneyButton ||
-                                        shouldShowManageSavingsButton))
-                                  const SizedBox(height: 18),
-                                if (widget.isExpanded &&
-                                    (shouldShowAddMoneyButton ||
-                                        shouldShowManageSavingsButton))
-                                  Wrap(
-                                    spacing: 12,
-                                    runSpacing: 12,
-                                    children: [
-                                      if (shouldShowAddMoneyButton)
-                                        _AccountActionButton(
-                                          label: 'Añadir dinero',
-                                          onPressed: widget.onAddMoney,
-                                          style: AccountButtonStyles.maroon,
-                                        ),
-                                      if (shouldShowManageSavingsButton)
-                                        _AccountActionButton(
-                                          label: 'Gestionar mis huchas',
-                                          onPressed: widget.onManageSavings,
-                                          style: AccountButtonStyles.pink,
-                                        ),
-                                    ],
+                                  RotationTransition(
+                                    turns: _iconRotation,
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: const Color(0xFF4a0873),
+                                      size: 28,
+                                    ),
                                   ),
-                              ],
-                            )
-                          else
-                            // MODO COMPACTO: Expandible con acordeón
-                            ClipRect(
-                              child: SizeTransition(
-                                sizeFactor: CurvedAnimation(
-                                  parent: _expandController,
-                                  curve: widget.enableAdvancedAnimations
-                                      ? Curves.easeOutBack
-                                      : Curves.easeOut,
-                                ),
-                                axisAlignment: -1.0, // Animar desde arriba
-                                child: SlideTransition(
-                                  position: _slideAnimation,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      _AccountInfoRow(
-                                        label: 'Banco',
-                                        value:
-                                            (widget
-                                                    .account
-                                                    .bankName
-                                                    ?.isNotEmpty ??
-                                                false)
-                                            ? widget.account.bankName!
-                                            : 'Sin banco asociado',
-                                        valueStyle: infoTextStyle,
-                                      ),
-                                      const SizedBox(height: 10),
-                                      _AccountInfoRow(
-                                        label: 'Tipo de cuenta',
-                                        value: _prettyConceptualType(
-                                          widget.account.conceptualType,
-                                          widget.account.type,
-                                        ),
-                                        valueStyle: infoTextStyle,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      const Divider(
-                                        color: Color(0x33FFFFFF),
-                                        thickness: 1,
-                                        height: 1,
-                                      ),
-                                      const SizedBox(height: 12),
-                                      _AccountInfoRow(
-                                        label: 'Saldo',
-                                        value: formattedBalance,
-                                        valueStyle: balanceTextStyle,
-                                      ),
-                                      // Sparkline si está habilitado
-                                      if (widget.showSparkline)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 12,
-                                          ),
-                                          child: SparklineChart(
-                                            data: _generateMockSparklineData(),
-                                            lineColor: const Color(0xFF4a0873),
-                                            fillColor: const Color(
-                                              0xFF4a0873,
-                                            ).withOpacity(0.1),
-                                            height: 60,
-                                            width: 120,
-                                          ),
-                                        ),
-                                      if (shouldShowAddMoneyButton ||
-                                          shouldShowManageSavingsButton)
-                                        const SizedBox(height: 18),
-                                      if (shouldShowAddMoneyButton ||
-                                          shouldShowManageSavingsButton)
-                                        Wrap(
-                                          spacing: 12,
-                                          runSpacing: 12,
-                                          children: [
-                                            if (shouldShowAddMoneyButton)
-                                              _AccountActionButton(
-                                                label: 'Añadir dinero',
-                                                onPressed: widget.onAddMoney,
-                                                style:
-                                                    AccountButtonStyles.maroon,
-                                              ),
-                                            if (shouldShowManageSavingsButton)
-                                              _AccountActionButton(
-                                                label: 'Gestionar mis huchas',
-                                                onPressed:
-                                                    widget.onManageSavings,
-                                                style: AccountButtonStyles.pink,
-                                              ),
-                                          ],
-                                        ),
-                                    ],
-                                  ),
-                                ),
+                                ],
                               ),
-                            ),
-                        ], // Cierra children de Column
-                      ), // Cierra Column
-                    ), // Cierra Padding
-                  ), // Cierra Container
+                              const SizedBox(height: 10),
+
+                              // Contenido según ViewMode
+                              if (widget.viewMode == AccountsViewMode.context)
+                                // MODO CONTEXTO: Siempre visible
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _AccountInfoRow(
+                                      label: 'Banco',
+                                      value:
+                                          (widget
+                                                  .account
+                                                  .bankName
+                                                  ?.isNotEmpty ??
+                                              false)
+                                          ? widget.account.bankName!
+                                          : 'Sin banco asociado',
+                                      valueStyle: infoTextStyle,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    _AccountInfoRow(
+                                      label: 'Tipo de cuenta',
+                                      value: _prettyConceptualType(
+                                        widget.account.conceptualType,
+                                        widget.account.type,
+                                      ),
+                                      valueStyle: infoTextStyle,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    const Divider(
+                                      color: Color(0x33FFFFFF),
+                                      thickness: 1,
+                                      height: 1,
+                                    ),
+                                    const SizedBox(height: 12),
+                                    _AccountInfoRow(
+                                      label: 'Saldo',
+                                      value: formattedBalance,
+                                      valueStyle: balanceTextStyle,
+                                    ),
+                                    // Sparkline si está habilitado
+                                    if (widget.showSparkline)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 12),
+                                        child: SparklineChart(
+                                          data: _generateMockSparklineData(),
+                                          lineColor: const Color(0xFF4a0873),
+                                          fillColor: const Color(
+                                            0xFF4a0873,
+                                          ).withOpacity(0.1),
+                                          height: 60,
+                                          width: 120,
+                                        ),
+                                      ),
+                                    if (widget.isExpanded &&
+                                        (shouldShowAddMoneyButton ||
+                                            shouldShowManageSavingsButton))
+                                      const SizedBox(height: 18),
+                                    if (widget.isExpanded &&
+                                        (shouldShowAddMoneyButton ||
+                                            shouldShowManageSavingsButton))
+                                      Wrap(
+                                        spacing: 12,
+                                        runSpacing: 12,
+                                        children: [
+                                          if (shouldShowAddMoneyButton)
+                                            _AccountActionButton(
+                                              label: 'Añadir dinero',
+                                              onPressed: widget.onAddMoney,
+                                              style: AccountButtonStyles.maroon,
+                                            ),
+                                          if (shouldShowManageSavingsButton)
+                                            _AccountActionButton(
+                                              label: 'Gestionar mis huchas',
+                                              onPressed: widget.onManageSavings,
+                                              style: AccountButtonStyles.pink,
+                                            ),
+                                        ],
+                                      ),
+                                  ],
+                                )
+                              else
+                                // MODO COMPACTO: Expandible con acordeón
+                                ClipRect(
+                                  child: SizeTransition(
+                                    sizeFactor: CurvedAnimation(
+                                      parent: _expandController,
+                                      curve: widget.enableAdvancedAnimations
+                                          ? Curves.easeOutBack
+                                          : Curves.easeOut,
+                                    ),
+                                    axisAlignment: -1.0, // Animar desde arriba
+                                    child: SlideTransition(
+                                      position: _slideAnimation,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _AccountInfoRow(
+                                            label: 'Banco',
+                                            value:
+                                                (widget
+                                                        .account
+                                                        .bankName
+                                                        ?.isNotEmpty ??
+                                                    false)
+                                                ? widget.account.bankName!
+                                                : 'Sin banco asociado',
+                                            valueStyle: infoTextStyle,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          _AccountInfoRow(
+                                            label: 'Tipo de cuenta',
+                                            value: _prettyConceptualType(
+                                              widget.account.conceptualType,
+                                              widget.account.type,
+                                            ),
+                                            valueStyle: infoTextStyle,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          const Divider(
+                                            color: Color(0x33FFFFFF),
+                                            thickness: 1,
+                                            height: 1,
+                                          ),
+                                          const SizedBox(height: 12),
+                                          _AccountInfoRow(
+                                            label: 'Saldo',
+                                            value: formattedBalance,
+                                            valueStyle: balanceTextStyle,
+                                          ),
+                                          // Sparkline si está habilitado
+                                          if (widget.showSparkline)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 12,
+                                              ),
+                                              child: SparklineChart(
+                                                data:
+                                                    _generateMockSparklineData(),
+                                                lineColor: const Color(
+                                                  0xFF4a0873,
+                                                ),
+                                                fillColor: const Color(
+                                                  0xFF4a0873,
+                                                ).withOpacity(0.1),
+                                                height: 60,
+                                                width: 120,
+                                              ),
+                                            ),
+                                          if (shouldShowAddMoneyButton ||
+                                              shouldShowManageSavingsButton)
+                                            const SizedBox(height: 18),
+                                          if (shouldShowAddMoneyButton ||
+                                              shouldShowManageSavingsButton)
+                                            Wrap(
+                                              spacing: 12,
+                                              runSpacing: 12,
+                                              children: [
+                                                if (shouldShowAddMoneyButton)
+                                                  _AccountActionButton(
+                                                    label: 'Añadir dinero',
+                                                    onPressed:
+                                                        widget.onAddMoney,
+                                                    style: AccountButtonStyles
+                                                        .maroon,
+                                                  ),
+                                                if (shouldShowManageSavingsButton)
+                                                  _AccountActionButton(
+                                                    label:
+                                                        'Gestionar mis huchas',
+                                                    onPressed:
+                                                        widget.onManageSavings,
+                                                    style: AccountButtonStyles
+                                                        .pink,
+                                                  ),
+                                              ],
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ], // Cierra children de Column
+                          ), // Cierra Column
+                        ), // Cierra Padding
+                      ), // Cierra Container
+                    ), // Cierra BackdropFilter
+                  ), // Cierra ClipRRect
                 ), // Cierra InkWell
               ), // Cierra AnimatedBuilder (Transform)
             ), // Cierra GestureDetector

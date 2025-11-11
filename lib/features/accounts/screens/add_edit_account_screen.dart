@@ -1,5 +1,6 @@
 // lib/features/accounts/screens/add_edit_account_screen.dart
 
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,11 +8,10 @@ import 'package:finai_flutter/core/events/app_events.dart';
 import 'package:finai_flutter/core/services/event_logger_service.dart';
 import '../models/account_model.dart';
 
-// Colores consistentes con la pantalla de "Mis Cuentas"
-const Color _highlightColor = Color(0xFFFF0088);
-const Color _selectedBackgroundColor = Color(0x3DFF0088);
-const Color _unselectedBackgroundColor = Color(0x1FFF0088);
-const Color _inputFillColor = Color(0x1FFFFFFF);
+// Colores consistentes con transactions_screen
+const Color _purpleAccent = Color(0xFF4a0873);
+const Color _purpleSelected = Color(0xFF3a0560);
+const Color _inputFillColor = Color(0x12000000);
 
 class AddEditAccountScreen extends StatefulWidget {
   final Account? account;
@@ -81,7 +81,9 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
           .select();
 
       if (response.isEmpty) {
-        throw Exception('No se pudo guardar la cuenta. La base de datos no devolvió datos.');
+        throw Exception(
+          'No se pudo guardar la cuenta. La base de datos no devolvió datos.',
+        );
       }
 
       final savedAccount = response.first;
@@ -89,9 +91,15 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
 
       try {
         if (isEditing) {
-          await _eventLogger.log(AppEvent.accountEdited, details: {'account_id': savedAccountId});
+          await _eventLogger.log(
+            AppEvent.accountEdited,
+            details: {'account_id': savedAccountId},
+          );
         } else {
-          await _eventLogger.log(AppEvent.accountCreated, details: {'account_id': savedAccountId});
+          await _eventLogger.log(
+            AppEvent.accountCreated,
+            details: {'account_id': savedAccountId},
+          );
         }
       } catch (e) {
         debugPrint('Error al registrar evento: $e');
@@ -99,13 +107,16 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
 
       if (_conceptualType == 'ahorro') {
         try {
-          await _supabase.rpc('set_primary_savings_account', params: {
-            'p_user_id': userId,
-            'p_account_id': savedAccountId,
-          });
+          await _supabase.rpc(
+            'set_primary_savings_account',
+            params: {'p_user_id': userId, 'p_account_id': savedAccountId},
+          );
 
           try {
-            await _eventLogger.log(AppEvent.savingsAccountDesignated, details: {'account_id': savedAccountId});
+            await _eventLogger.log(
+              AppEvent.savingsAccountDesignated,
+              details: {'account_id': savedAccountId},
+            );
           } catch (e) {
             debugPrint('Error al registrar evento de ahorro: $e');
           }
@@ -113,7 +124,9 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Advertencia: No se pudo establecer como cuenta principal de ahorro: $e'),
+                content: Text(
+                  'Advertencia: No se pudo establecer como cuenta principal de ahorro: $e',
+                ),
                 backgroundColor: Colors.orange,
                 duration: const Duration(seconds: 4),
               ),
@@ -122,7 +135,11 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
         }
       }
 
-      final initialBalance = double.tryParse(_initialBalanceController.text.replaceAll(',', '.')) ?? 0.0;
+      final initialBalance =
+          double.tryParse(
+            _initialBalanceController.text.replaceAll(',', '.'),
+          ) ??
+          0.0;
       if (!isEditing && initialBalance != 0.0) {
         await _supabase.from('transactions').insert({
           'user_id': userId,
@@ -136,14 +153,20 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cuenta guardada con éxito'), backgroundColor: Colors.green),
+          const SnackBar(
+            content: Text('Cuenta guardada con éxito'),
+            backgroundColor: Colors.green,
+          ),
         );
         Navigator.of(context).pop(true);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar la cuenta: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error al guardar la cuenta: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -162,39 +185,64 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
         labelText: label,
         filled: true,
         fillColor: _inputFillColor,
-        labelStyle: const TextStyle(color: Color(0xFFE0E0E0)),
-        floatingLabelStyle: const TextStyle(color: _highlightColor, fontWeight: FontWeight.w600),
+        labelStyle: const TextStyle(
+          color: Color(0xFF9E9E9E),
+          fontFamily: 'Inter',
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        floatingLabelStyle: TextStyle(
+          color: _purpleAccent.withOpacity(0.9),
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w600,
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0x66FF0088)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.25),
+            width: 0.8,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0x66FF0088)),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.25),
+            width: 0.8,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: _highlightColor, width: 2),
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.6),
+            width: 0.8,
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: const Color(0xFF000000),
       appBar: AppBar(
-        title: Text(isEditing ? 'Editar Cuenta' : 'Nueva Cuenta'),
-        backgroundColor: const Color(0xFF4D0029),
+        title: Text(
+          isEditing ? 'Editar Cuenta' : 'Nueva Cuenta',
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            color: Color(0xFFFFFFFF),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF000000),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFFFFFFFF)),
       ),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF4D0029), Color(0xFF121212)],
-          ),
+          color: Color(0xFF000000),
         ),
         child: SafeArea(
           child: Form(
@@ -209,14 +257,17 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
                     controller: _nameController,
                     style: const TextStyle(color: Colors.white),
                     decoration: buildInputDecoration('Nombre de la Cuenta'),
-                    validator: (value) =>
-                        value == null || value.isEmpty ? 'El nombre es obligatorio' : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'El nombre es obligatorio'
+                        : null,
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _bankNameController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration('Nombre del Banco (Opcional)'),
+                    decoration: buildInputDecoration(
+                      'Nombre del Banco (Opcional)',
+                    ),
                   ),
                   if (!isEditing) ...[
                     const SizedBox(height: 20),
@@ -224,11 +275,14 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
                       controller: _initialBalanceController,
                       style: const TextStyle(color: Colors.white),
                       decoration: buildInputDecoration('Saldo Inicial (€)'),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       validator: (value) {
                         if (value != null &&
                             value.isNotEmpty &&
-                            double.tryParse(value.replaceAll(',', '.')) == null) {
+                            double.tryParse(value.replaceAll(',', '.')) ==
+                                null) {
                           return 'Introduce un número válido';
                         }
                         return null;
@@ -249,77 +303,128 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: TextButton(
-                          onPressed: () {
-                            if (_conceptualType == 'nomina') return;
-                            setState(() => _conceptualType = 'nomina');
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14.0),
-                            backgroundColor: _conceptualType == 'nomina'
-                                ? _selectedBackgroundColor
-                                : _unselectedBackgroundColor,
-                            foregroundColor: const Color(0xFFE0E0E0),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: _conceptualType == 'nomina'
-                                    ? _highlightColor
-                                    : const Color(0x66FF0088),
-                                width: 2,
-                              ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: _conceptualType == 'nomina'
+                                ? LinearGradient(
+                                    colors: [
+                                      _purpleSelected.withOpacity(0.6),
+                                      _purpleSelected.withOpacity(0.5),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : LinearGradient(
+                                    colors: [
+                                      _purpleAccent.withOpacity(0.15),
+                                      _purpleAccent.withOpacity(0.12),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _conceptualType == 'nomina'
+                                  ? _purpleSelected.withOpacity(0.8)
+                                  : _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(FontAwesomeIcons.wallet, size: 16),
-                              const SizedBox(width: 8),
-                              const Text('Para Gastar'),
-                            ],
+                          child: TextButton(
+                            onPressed: () {
+                              if (_conceptualType == 'nomina') return;
+                              setState(() => _conceptualType = 'nomina');
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12.0,
+                              ),
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: _conceptualType == 'nomina'
+                                  ? const Color(0xFF9E9E9E)
+                                  : const Color(0xFF6B6B6B),
+                              textStyle: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(FontAwesomeIcons.wallet, size: 16),
+                                const SizedBox(width: 8),
+                                const Text('Para Gastar'),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: TextButton(
-                          onPressed: () {
-                            if (_conceptualType == 'ahorro') return;
-                            setState(() => _conceptualType = 'ahorro');
-                          },
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14.0),
-                            backgroundColor: _conceptualType == 'ahorro'
-                                ? _selectedBackgroundColor
-                                : _unselectedBackgroundColor,
-                            foregroundColor: const Color(0xFFE0E0E0),
-                            textStyle: const TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: _conceptualType == 'ahorro'
-                                    ? _highlightColor
-                                    : const Color(0x66FF0088),
-                                width: 2,
-                              ),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: _conceptualType == 'ahorro'
+                                ? LinearGradient(
+                                    colors: [
+                                      _purpleSelected.withOpacity(0.6),
+                                      _purpleSelected.withOpacity(0.5),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  )
+                                : LinearGradient(
+                                    colors: [
+                                      _purpleAccent.withOpacity(0.15),
+                                      _purpleAccent.withOpacity(0.12),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _conceptualType == 'ahorro'
+                                  ? _purpleSelected.withOpacity(0.8)
+                                  : _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
                             ),
                           ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(FontAwesomeIcons.piggyBank, size: 16),
-                              const SizedBox(width: 8),
-                              const Text('Para Ahorrar'),
-                            ],
+                          child: TextButton(
+                            onPressed: () {
+                              if (_conceptualType == 'ahorro') return;
+                              setState(() => _conceptualType = 'ahorro');
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 12.0,
+                              ),
+                              backgroundColor: Colors.transparent,
+                              foregroundColor: _conceptualType == 'ahorro'
+                                  ? const Color(0xFF9E9E9E)
+                                  : const Color(0xFF6B6B6B),
+                              textStyle: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  FontAwesomeIcons.piggyBank,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text('Para Ahorrar'),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -327,21 +432,47 @@ class _AddEditAccountScreenState extends State<AddEditAccountScreen> {
                   ),
                   const SizedBox(height: 32),
                   // Botón de guardar
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _saveAccount,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: _highlightColor,
-                      foregroundColor: Colors.white,
-                      textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1a266b).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: const Color(0xFF1a266b).withOpacity(0.4),
+                        width: 1,
+                      ),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text('Guardar Cuenta'),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: _isLoading ? null : _saveAccount,
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFFFFFFFF),
+                                      strokeWidth: 2.5,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Guardar Cuenta',
+                                    style: TextStyle(
+                                      color: Color(0xFFFFFFFF),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Inter',
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
