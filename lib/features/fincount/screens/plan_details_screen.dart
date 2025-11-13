@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:finai_flutter/features/fincount/models/plan_participant_model.dart';
 import 'package:finai_flutter/features/fincount/services/fincount_service.dart';
+import 'package:finai_flutter/features/fincount/models/plan_expense_model.dart';
 import 'add_participant_screen.dart';
-import 'add_expense_screen.dart'; // <-- IMPORTACIÓN AÑADIDA
+import 'add_expense_screen.dart';
 
 class PlanDetailsScreen extends StatefulWidget {
   final String planId;
@@ -23,14 +24,13 @@ class PlanDetailsScreen extends StatefulWidget {
 class _PlanDetailsScreenState extends State<PlanDetailsScreen>
     with SingleTickerProviderStateMixin {
   final FincountService _service = FincountService();
-  late Future<List<PlanParticipant>> _detailsFuture;
   final NumberFormat _currencyFormatter =
       NumberFormat.currency(locale: 'es_ES', symbol: '€');
 
   late TabController _tabController;
-  
-  // --- VARIABLE AÑADIDA ---
-  List<PlanParticipant> _participants = []; // Para pasarla al formulario de gasto
+  late Future<List<PlanParticipant>> _detailsFuture;
+  late Future<List<PlanExpense>> _expensesFuture; // Future para gastos
+  List<PlanParticipant> _participants = []; 
 
   @override
   void initState() {
@@ -48,6 +48,7 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
   void _loadDetails() {
     setState(() {
       _detailsFuture = _service.getPlanDetails(widget.planId);
+      _expensesFuture = _service.getPlanExpenses(widget.planId); // Cargamos gastos
     });
   }
 
@@ -62,10 +63,7 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
     }
   }
 
-  // --- INICIO DEL NUEVO MÉTODO ---
-  /// Navega a la pantalla de añadir gasto y recarga si es necesario
   Future<void> _navigateAndAddExpense() async {
-    // Comprobar si hay participantes antes de añadir un gasto
     if (_participants.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -80,17 +78,15 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
       MaterialPageRoute(
         builder: (context) => AddExpenseScreen(
           planId: widget.planId,
-          participants: _participants, // Pasamos la lista de participantes
+          participants: _participants,
         ),
       ),
     );
     
-    // Si se añadió un gasto, recargamos los detalles (saldos)
     if (result == true && mounted) {
       _loadDetails();
     }
   }
-  // --- FIN DEL NUEVO MÉTODO ---
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +97,7 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadDetails,
-            tooltip: 'Recargar Saldos',
+            tooltip: 'Recargar',
           ),
           IconButton(
             icon: const Icon(Icons.person_add_alt_1),
@@ -120,30 +116,73 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildExpensesTab(),
-          _buildBalancesTab(),
+          _buildExpensesTab(), // <-- Pestaña de Gastos REAL
+          _buildBalancesTab(), // <-- Pestaña de Saldos REAL
         ],
       ),
-      // --- INICIO DE LA MODIFICACIÓN ---
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateAndAddExpense, // Se conecta el nuevo método
+        onPressed: _navigateAndAddExpense,
         icon: const Icon(Icons.add),
         label: const Text('Añadir Gasto'),
       ),
-      // --- FIN DE LA MODIFICACIÓN ---
     );
   }
 
+  // --- PESTAÑA DE GASTOS (Código Nuevo) ---
   Widget _buildExpensesTab() {
-    // ... (sin cambios)
-    return const Center(
-      child: Text(
-        'Aquí se mostrará la lista de gastos.',
-        style: TextStyle(color: Colors.white70),
-      ),
+    return FutureBuilder<List<PlanExpense>>(
+      future: _expensesFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+              child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+              child: Text('Aún no se han añadido gastos.', style: TextStyle(color: Colors.white70)));
+        }
+
+        final expenses = snapshot.data!;
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: expenses.length,
+          itemBuilder: (context, index) {
+            final expense = expenses[index];
+            
+            return Card(
+              color: Colors.white.withOpacity(0.05),
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Colors.white10,
+                  child: Icon(Icons.shopping_cart, color: Colors.white),
+                ),
+                title: Text(expense.description, style: const TextStyle(color: Colors.white)),
+                subtitle: Text(
+                  'Pagado por: ${_getParticipantName(expense.paidByParticipantId)}',
+                  style: TextStyle(color: Colors.grey.shade400),
+                ),
+                trailing: Text(
+                  _currencyFormatter.format(expense.amount),
+                  style: const TextStyle(
+                    color: Color(0xFF39FF14), // Verde neón
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
+  // --- PESTAÑA DE SALDOS (Código Existente) ---
   Widget _buildBalancesTab() {
     return FutureBuilder<List<PlanParticipant>>(
       future: _detailsFuture,
@@ -153,48 +192,46 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
         }
         if (snapshot.hasError) {
           return Center(
-              child: Text('Error al cargar los saldos: ${snapshot.error}'));
+              child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          // --- INICIO DE LA MODIFICACIÓN ---
-          // Limpiamos la lista de participantes si está vacía
           _participants = [];
-          // --- FIN DE LA MODIFICACIÓN ---
           return const Center(
-              child: Text('Aún no hay participantes en este plan.'));
+              child: Text('Aún no hay participantes en este plan.', style: TextStyle(color: Colors.white70)));
         }
 
         final participants = snapshot.data!;
-        // --- INICIO DE LA MODIFICACIÓN ---
-        // Guardamos la lista de participantes para usarla en el FAB
         _participants = participants;
-        // --- FIN DE LA MODIFICACIÓN ---
         
         return ListView.builder(
+          padding: const EdgeInsets.all(16),
           itemCount: participants.length,
           itemBuilder: (context, index) {
-            // ... (ListTile sin cambios)
             final participant = participants[index];
             final balance = participant.balance;
             final Color balanceColor = _getBalanceColor(balance);
 
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.white.withOpacity(0.1),
-                foregroundColor: Colors.white,
-                child: Text(participant.name.substring(0, 1).toUpperCase()),
-              ),
-              title: Text(participant.name),
-              trailing: Text(
-                _currencyFormatter.format(balance),
-                style: TextStyle(
-                  color: balanceColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+            return Card(
+              color: Colors.white.withOpacity(0.05),
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  foregroundColor: Colors.white,
+                  child: Text(participant.name.substring(0, 1).toUpperCase()),
                 ),
+                title: Text(participant.name, style: const TextStyle(color: Colors.white)),
+                trailing: Text(
+                  _currencyFormatter.format(balance),
+                  style: TextStyle(
+                    color: balanceColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                subtitle: Text(_getBalanceLabel(balance),
+                    style: TextStyle(color: balanceColor)),
               ),
-              subtitle: Text(_getBalanceLabel(balance),
-                  style: TextStyle(color: balanceColor)),
             );
           },
         );
@@ -202,15 +239,23 @@ class _PlanDetailsScreenState extends State<PlanDetailsScreen>
     );
   }
 
+  String _getParticipantName(String participantId) {
+    try {
+      return _participants.firstWhere((p) => p.id == participantId).name;
+    } catch (e) {
+      return '...';
+    }
+  }
+
   Color _getBalanceColor(double balance) {
-    if (balance < 0) return const Color(0xFFFF6F61); // Rojo coral
-    if (balance > 0) return const Color(0xFF39FF14); // Verde neón
-    return Colors.grey.shade400;
+    if (balance < -0.01) return const Color(0xFFFF6F61); // Deuda (Rojo)
+    if (balance > 0.01) return const Color(0xFF39FF14); // A favor (Verde)
+    return Colors.grey.shade400; // En paz
   }
 
   String _getBalanceLabel(double balance) {
-    if (balance < 0) return 'Debes';
-    if (balance > 0) return 'Te deben';
+    if (balance < -0.01) return 'Debe';
+    if (balance > 0.01) return 'Le deben';
     return 'En paz';
   }
 }
