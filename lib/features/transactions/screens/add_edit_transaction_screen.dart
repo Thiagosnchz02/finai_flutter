@@ -433,24 +433,18 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
-        floatingLabelStyle: const TextStyle(
-          fontFamily: 'Inter',
-          color: Color(0xFF4a0873), // Morado
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: _purpleAccent.withOpacity(0.25),
-            width: 0.8,
+          borderSide: const BorderSide(
+            color: Color(0x1FFFFFFF),
+            width: 0.6,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: _purpleAccent.withOpacity(0.25),
-            width: 0.8,
+          borderSide: const BorderSide(
+            color: Color(0x1FFFFFFF),
+            width: 0.6,
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -648,7 +642,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     children: [
                       Icon(
                         Icons.description_outlined,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -657,7 +651,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -668,13 +662,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                   TextFormField(
                     controller: _descriptionController,
                     style: const TextStyle(color: Colors.white),
-                    decoration: buildInputDecoration('Ej: Compra supermercado').copyWith(
-                      prefixIcon: Icon(
-                        Icons.text_fields,
-                        size: 20,
-                        color: Color(0xFFA0AEC0),
-                      ),
-                    ),
+                    decoration: buildInputDecoration('Ej: Compra supermercado'),
                     validator: (value) => value == null || value.isEmpty ? 'Introduce una descripción' : null,
                   ),
                   const SizedBox(height: 24),
@@ -683,7 +671,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     children: [
                       Icon(
                         Icons.euro_symbol,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -692,7 +680,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -704,11 +692,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     controller: _amountController,
                     style: const TextStyle(color: Colors.white),
                     decoration: buildInputDecoration('0.00').copyWith(
-                      prefixIcon: Icon(
-                        Icons.payments_outlined,
-                        size: 20,
-                        color: Color(0xFFA0AEC0),
-                      ),
+                      
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
@@ -723,7 +707,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     children: [
                       Icon(
                         Icons.account_balance_wallet_outlined,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -732,7 +716,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -779,13 +763,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       final accounts = snapshot.data!;
                       return DropdownButtonFormField<String>(
                         value: _selectedAccountId,
-                        decoration: buildInputDecoration('Seleccionar cuenta').copyWith(
-                          prefixIcon: Icon(
-                            Icons.credit_card,
-                            size: 20,
-                            color: Color(0xFFA0AEC0),
-                          ),
-                        ),
+                        decoration: buildInputDecoration('Seleccionar cuenta'),
                         style: const TextStyle(
                           fontFamily: 'Inter',
                           color: Colors.white,
@@ -799,26 +777,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         items: accounts.map((account) {
                           return DropdownMenuItem<String>(
                             value: account['id'] as String,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: _purpleAccent.withOpacity(0.6),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  account['name'] as String,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: 'Inter',
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              account['name'] as String,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -857,7 +822,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                             children: [
                               Icon(
                                 Icons.calendar_today_outlined,
-                                size: 18,
+                                size: 22,
                                 color: _purpleAccent.withOpacity(0.8),
                               ),
                               const SizedBox(width: 8),
@@ -866,7 +831,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                                 style: TextStyle(
                                   fontFamily: 'Inter',
                                   color: Color(0xFFE0E0E0),
-                                  fontSize: 13,
+                                  fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.2,
                                 ),
@@ -876,13 +841,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
                             value: _selectedFixedExpenseId,
-                            decoration: buildInputDecoration('Ninguno').copyWith(
-                              prefixIcon: Icon(
-                                Icons.repeat,
-                                size: 20,
-                                color: Color(0xFFA0AEC0),
-                              ),
-                            ),
+                            decoration: buildInputDecoration('Ninguno'),
                             style: const TextStyle(
                               fontFamily: 'Inter',
                               color: Colors.white,
@@ -895,26 +854,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                             items: expenses.map((exp) {
                               return DropdownMenuItem<String>(
                                 value: exp['id'] as String,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        color: _purpleAccent.withOpacity(0.6),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      exp['description'] as String,
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontFamily: 'Inter',
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  exp['description'] as String,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: 'Inter',
+                                    fontSize: 14,
+                                  ),
                                 ),
                               );
                             }).toList(),
@@ -931,7 +877,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     children: [
                       Icon(
                         Icons.bookmark_border,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -940,7 +886,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -1015,13 +961,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                       }
                       return DropdownButtonFormField<String>(
                         value: _selectedCategoryId,
-                        decoration: buildInputDecoration('Seleccionar categoría').copyWith(
-                          prefixIcon: Icon(
-                            Icons.label_outline,
-                            size: 20,
-                            color: Color(0xFFA0AEC0),
-                          ),
-                        ),
+                        decoration: buildInputDecoration('Seleccionar categoría'),
                         style: const TextStyle(
                           fontFamily: 'Inter',
                           color: Colors.white,
@@ -1034,26 +974,13 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         items: categories.map((category) {
                           return DropdownMenuItem<String>(
                             value: category['id'] as String,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: _purpleAccent.withOpacity(0.6),
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  category['name'] as String,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: 'Inter',
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              category['name'] as String,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -1068,7 +995,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     children: [
                       Icon(
                         Icons.event_outlined,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -1077,7 +1004,7 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -1134,42 +1061,52 @@ class _AddEditTransactionScreenState extends State<AddEditTransactionScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1a266b).withOpacity(0.2), // Azul casi transparente
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: const Color(0xFF1a266b).withOpacity(0.4),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
+                  SizedBox(
+                    width: double.infinity,
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color.fromRGBO(1, 51, 102, 0.12),
+                            Color.fromRGBO(74, 144, 226, 0.15),
+                            Color.fromRGBO(1, 51, 102, 0.12),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
                         borderRadius: BorderRadius.circular(14),
-                        onTap: _isLoading ? null : _saveTransaction,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          alignment: Alignment.center,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Color(0xFFFFFFFF),
-                                    strokeWidth: 2,
+                        border: Border.all(
+                          color: const Color(0xFF4A90E2).withOpacity(0.25),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _isLoading ? null : _saveTransaction,
+                          borderRadius: BorderRadius.circular(14),
+                          child: Center(
+                            child: _isLoading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Guardar Transacción',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
-                                )
-                              : const Text(
-                                  'Guardar Transacción',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFFFFFFFF),
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
+                          ),
                         ),
                       ),
                     ),

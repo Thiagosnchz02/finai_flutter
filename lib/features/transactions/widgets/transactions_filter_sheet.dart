@@ -6,7 +6,6 @@ import 'package:finai_flutter/core/utils/icon_utils.dart';
 
 // Colores actualizados para consistencia
 const Color _purpleAccent = Color(0xFF4a0873);
-const Color _blueButton = Color(0xFF1a266b);
 const Color _inputFillColor = Color(0x12000000); // Negro brillante muy sutil (transparente)
 
 class TransactionsFilterSheet extends StatefulWidget {
@@ -252,16 +251,16 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: _purpleAccent.withOpacity(0.25),
-            width: 0.8,
+          borderSide: const BorderSide(
+            color: Color(0x1FFFFFFF),
+            width: 0.6,
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(
-            color: _purpleAccent.withOpacity(0.25),
-            width: 0.8,
+          borderSide: const BorderSide(
+            color: Color(0x1FFFFFFF),
+            width: 0.6,
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -329,7 +328,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     children: [
                       Icon(
                         Icons.filter_list,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -338,7 +337,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -376,13 +375,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         _handleTypeChanged(value);
                       }
                     },
-                    decoration: buildInputDecoration('Tipo').copyWith(
-                      prefixIcon: Icon(
-                        Icons.swap_horiz,
-                        size: 20,
-                        color: Color(0xFFA0AEC0),
-                      ),
-                    ),
+                    decoration: buildInputDecoration('Tipo'),
                     style: const TextStyle(
                       fontFamily: 'Inter',
                       color: Colors.white,
@@ -398,7 +391,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     children: [
                       Icon(
                         Icons.euro_symbol,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -407,7 +400,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -422,13 +415,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                           controller: _minAmountController,
                           keyboardType:
                               const TextInputType.numberWithOptions(decimal: true),
-                          decoration: buildInputDecoration('Mínimo').copyWith(
-                            prefixIcon: Icon(
-                              Icons.arrow_downward,
-                              size: 18,
-                              color: Color(0xFFA0AEC0),
-                            ),
-                          ),
+                          decoration: buildInputDecoration('Mínimo'),
                           style: const TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.white,
@@ -443,13 +430,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                           controller: _maxAmountController,
                           keyboardType:
                               const TextInputType.numberWithOptions(decimal: true),
-                          decoration: buildInputDecoration('Máximo').copyWith(
-                            prefixIcon: Icon(
-                              Icons.arrow_upward,
-                              size: 18,
-                              color: Color(0xFFA0AEC0),
-                            ),
-                          ),
+                          decoration: buildInputDecoration('Máximo'),
                           style: const TextStyle(
                             fontFamily: 'Inter',
                             color: Colors.white,
@@ -466,7 +447,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     children: [
                       Icon(
                         Icons.bookmark_border,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -475,7 +456,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -493,13 +474,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                   else
                     DropdownButtonFormField<String?>(
                       value: _selectedCategoryId,
-                      decoration: buildInputDecoration('Seleccionar categoría').copyWith(
-                        prefixIcon: Icon(
-                          Icons.label_outline,
-                          size: 20,
-                          color: Color(0xFFA0AEC0),
-                        ),
-                      ),
+                      decoration: buildInputDecoration('Seleccionar categoría'),
                       items: [
                         DropdownMenuItem<String?>(
                           value: null,
@@ -560,7 +535,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     children: [
                       Icon(
                         Icons.event_outlined,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -569,7 +544,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -630,7 +605,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                     children: [
                       Icon(
                         Icons.search,
-                        size: 18,
+                        size: 22,
                         color: _purpleAccent.withOpacity(0.8),
                       ),
                       const SizedBox(width: 8),
@@ -639,7 +614,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                         style: TextStyle(
                           fontFamily: 'Inter',
                           color: Color(0xFFE0E0E0),
-                          fontSize: 13,
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.2,
                         ),
@@ -649,13 +624,7 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _conceptController,
-                    decoration: buildInputDecoration('Buscar por concepto...').copyWith(
-                      prefixIcon: Icon(
-                        Icons.text_fields,
-                        size: 20,
-                        color: Color(0xFFA0AEC0),
-                      ),
-                    ),
+                    decoration: buildInputDecoration('Buscar por concepto...'),
                     style: const TextStyle(
                       fontFamily: 'Inter',
                       color: Colors.white,
@@ -670,11 +639,18 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       // Botón Limpiar con icono
                       Container(
                         decoration: BoxDecoration(
-                          color: _blueButton.withOpacity(0.2),
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF000000).withOpacity(0.88),
+                              const Color(0xFF0D0D0D).withOpacity(0.92),
+                              const Color(0xFF000000).withOpacity(0.88),
+                            ],
+                            stops: const [0.0, 0.5, 1.0],
+                          ),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: _blueButton.withOpacity(0.4),
-                            width: 0.8,
+                            color: const Color(0x1FFFFFFF),
+                            width: 0.6,
                           ),
                         ),
                         child: Material(
@@ -715,26 +691,20 @@ class _TransactionsFilterSheetState extends State<TransactionsFilterSheet> {
                       // Botón Aplicar con icono
                       Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
+                          gradient: const LinearGradient(
                             colors: [
-                              _purpleAccent.withOpacity(0.3),
-                              _purpleAccent.withOpacity(0.2),
+                              Color.fromRGBO(1, 51, 102, 0.12),
+                              Color.fromRGBO(74, 144, 226, 0.15),
+                              Color.fromRGBO(1, 51, 102, 0.12),
                             ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
                           ),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: _purpleAccent.withOpacity(0.5),
-                            width: 0.8,
+                            color: const Color(0xFF4A90E2).withOpacity(0.25),
+                            width: 1.0,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _purpleAccent.withOpacity(0.15),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
                         ),
                         child: Material(
                           color: Colors.transparent,

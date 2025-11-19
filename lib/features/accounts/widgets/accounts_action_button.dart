@@ -21,9 +21,28 @@ class AccountsActionButton extends StatelessWidget {
     return Tooltip(
       message: label,
       waitDuration: const Duration(milliseconds: 400),
-      child: SizedBox(
-        width: 48,
-        height: 48,
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: isEnabled
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF7b2cb8).withOpacity(0.25),
+                    blurRadius: 12,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF7b2cb8).withOpacity(0.15),
+                    blurRadius: 20,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 0),
+                  ),
+                ]
+              : null,
+        ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
@@ -34,24 +53,29 @@ class AccountsActionButton extends StatelessWidget {
                 gradient: isEnabled
                     ? LinearGradient(
                         colors: [
-                          const Color(0xFF4a0873).withOpacity(0.2),
-                          const Color(0xFF4a0873).withOpacity(0.15),
+                          const Color(0xFF7b2cb8).withOpacity(0.25),
+                          const Color(0xFF5a1a8a).withOpacity(0.20),
                         ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                       )
                     : null,
                 color: isEnabled ? null : Colors.white.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFF4a0873).withOpacity(isEnabled ? 0.3 : 0.1),
-                  width: 0.8,
+                  color: isEnabled
+                      ? const Color(0xFF8847b8).withOpacity(0.4)
+                      : Colors.white.withOpacity(0.1),
+                  width: 1.2,
                 ),
               ),
               child: Icon(
                 icon,
                 size: 20,
-                color: isEnabled ? const Color(0xFF4a0873) : Colors.white.withOpacity(0.3),
+                weight: 300,
+                color: isEnabled
+                    ? const Color(0xFFFFFFFF)
+                    : Colors.white.withOpacity(0.3),
               ),
             ),
           ),

@@ -7,6 +7,10 @@ import 'package:finai_flutter/features/accounts/services/accounts_service.dart';
 // Enum para definir la dirección del traspaso
 enum TransferDirection { toSavings, fromSavings }
 
+// Constantes de color para mantener consistencia
+const Color _purpleAccent = Color(0xFF4a0873);
+const Color _inputFillColor = Color(0x12000000);
+
 class InternalTransferDialog extends StatefulWidget {
   final List<Account> spendingAccounts;
   final Account savingsAccount;
@@ -28,7 +32,6 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
 
   // Estado para la nueva lógica
   TransferDirection _direction = TransferDirection.toSavings;
-  String? _selectedAccountId; // El ID de la cuenta de gastos seleccionada
   bool _isLoading = false;
 
   @override
@@ -44,8 +47,22 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
         final amount = double.parse(_amountController.text.replaceAll(',', '.'));
 
         // Determinamos origen y destino según la dirección
-        final fromId = _direction == TransferDirection.toSavings ? _selectedAccountId! : widget.savingsAccount.id;
-        final toId = _direction == TransferDirection.toSavings ? widget.savingsAccount.id : _selectedAccountId!;
+        // Ya no necesitamos _selectedAccountId, usamos la primera cuenta disponible
+        String fromId, toId;
+        
+        if (_direction == TransferDirection.toSavings) {
+          // De gasto a ahorro: usar la primera cuenta de gasto con suficiente saldo
+          final sourceAccount = widget.spendingAccounts.firstWhere(
+            (acc) => acc.balance >= amount,
+            orElse: () => widget.spendingAccounts.first,
+          );
+          fromId = sourceAccount.id;
+          toId = widget.savingsAccount.id;
+        } else {
+          // De ahorro a gasto: usar la primera cuenta de gasto disponible
+          fromId = widget.savingsAccount.id;
+          toId = widget.spendingAccounts.first.id;
+        }
 
         await _service.executeInternalTransfer(
           fromAccountId: fromId,
@@ -82,7 +99,8 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFF4D0029), Color(0xFF121212)],
+          colors: [Color(0xFF000000), Color(0xFF0A0A0A)],
+          stops: [0.0, 0.98],
         ),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -115,9 +133,10 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
                 Text(
                   'Realizar Traspaso',
                   style: textTheme.titleLarge?.copyWith(
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
+                    fontFamily: 'Inter',
+                    color: const Color(0xFFE0E0E0),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 22,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -128,93 +147,127 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Dirección del traspaso',
-                        style: textTheme.labelLarge?.copyWith(color: Colors.white70),
-                      ),
-                      const SizedBox(height: 12),
                       Row(
                         children: [
-                          for (int i = 0; i < TransferDirection.values.length; i++) ...[
-                            if (i > 0) const SizedBox(width: 12),
-                            Expanded(
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: Builder(
-                                  builder: (context) {
-                                    final direction = TransferDirection.values[i];
-                                    final isSelected = _direction == direction;
-                                    return ChoiceChip(
-                                      label: Center(
-                                        child: Text(
-                                          direction == TransferDirection.toSavings
-                                              ? 'A Ahorro'
-                                              : 'Desde Ahorro',
-                                          style: textTheme.labelLarge?.copyWith(
-                                            color: isSelected ? Colors.white : Colors.white70,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: _direction == TransferDirection.toSavings
+                                    ? LinearGradient(
+                                        colors: [
+                                          const Color(0xFF7d0ab8).withOpacity(0.6),
+                                          const Color(0xFF7d0ab8).withOpacity(0.5),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : LinearGradient(
+                                        colors: [
+                                          _purpleAccent.withOpacity(0.15),
+                                          _purpleAccent.withOpacity(0.12),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
                                       ),
-                                      selected: isSelected,
-                                      onSelected: (selected) {
-                                        if (selected) {
-                                          setState(() {
-                                            _direction = direction;
-                                            _selectedAccountId = null;
-                                          });
-                                        }
-                                      },
-                                      showCheckmark: false,
-                                      backgroundColor: Colors.white.withOpacity(0.1),
-                                      selectedColor: const Color(0xFFFF0088),
-                                      shape: StadiumBorder(
-                                        side: BorderSide(
-                                          color: isSelected
-                                              ? const Color(0xFFFF0088)
-                                              : Colors.white.withOpacity(0.2),
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    );
-                                  },
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: _direction == TransferDirection.toSavings
+                                      ? const Color(0xFF7d0ab8).withOpacity(0.8)
+                                      : _purpleAccent.withOpacity(0.25),
+                                  width: 0.8,
                                 ),
                               ),
+                              child: TextButton(
+                                onPressed: () {
+                                  if (_direction == TransferDirection.toSavings) return;
+                                  setState(() {
+                                    _direction = TransferDirection.toSavings;
+                                  });
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: _direction == TransferDirection.toSavings
+                                      ? const Color(0xFF9E9E9E)
+                                      : const Color(0xFF6B6B6B),
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: const Text('A Ahorro'),
+                              ),
                             ),
-                          ],
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: _direction == TransferDirection.fromSavings
+                                    ? LinearGradient(
+                                        colors: [
+                                          const Color(0xFF7d0ab8).withOpacity(0.6),
+                                          const Color(0xFF7d0ab8).withOpacity(0.5),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                    : LinearGradient(
+                                        colors: [
+                                          _purpleAccent.withOpacity(0.15),
+                                          _purpleAccent.withOpacity(0.12),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: _direction == TransferDirection.fromSavings
+                                      ? const Color(0xFF7d0ab8).withOpacity(0.8)
+                                      : _purpleAccent.withOpacity(0.25),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: TextButton(
+                                onPressed: () {
+                                  if (_direction == TransferDirection.fromSavings) return;
+                                  setState(() {
+                                    _direction = TransferDirection.fromSavings;
+                                  });
+                                },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12.0),
+                                  backgroundColor: Colors.transparent,
+                                  foregroundColor: _direction == TransferDirection.fromSavings
+                                      ? const Color(0xFF9E9E9E)
+                                      : const Color(0xFF6B6B6B),
+                                  textStyle: const TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                child: const Text('Desde Ahorro'),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      DropdownButtonFormField<String>(
-                        value: _selectedAccountId,
-                        dropdownColor: const Color(0xFF4D0029),
-                        style: textTheme.bodyMedium?.copyWith(color: Colors.white),
-                        decoration: _inputDecoration(
-                          labelText: _direction == TransferDirection.toSavings
-                              ? 'Desde Cuenta de Gastos'
-                              : 'Hacia Cuenta de Gastos',
-                        ),
-                        items: widget.spendingAccounts.map((acc) {
-                          final balanceText =
-                              _direction == TransferDirection.toSavings ? '(${acc.balance.toStringAsFixed(2)} €)' : '';
-                          return DropdownMenuItem(
-                            value: acc.id,
-                            child: Text(
-                              '${acc.name} $balanceText',
-                              style: textTheme.bodyMedium?.copyWith(color: Colors.white),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) => setState(() => _selectedAccountId = value),
-                        validator: (value) => value == null ? 'Selecciona una cuenta' : null,
-                      ),
-                      const SizedBox(height: 20),
                       TextFormField(
                         controller: _amountController,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                         decoration: _inputDecoration(labelText: 'Cantidad a traspasar (€)'),
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         validator: (value) {
@@ -223,15 +276,18 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
                           if (amount == null || amount <= 0) return 'Cantidad no válida';
 
                           // Validación de saldo
-                          if (_selectedAccountId != null) {
-                            Account sourceAccount;
-                            if (_direction == TransferDirection.toSavings) {
-                              sourceAccount = widget.spendingAccounts.firstWhere((acc) => acc.id == _selectedAccountId);
-                            } else {
-                              sourceAccount = widget.savingsAccount;
+                          Account sourceAccount;
+                          if (_direction == TransferDirection.toSavings) {
+                            // De gasto a ahorro: verificar que haya alguna cuenta de gasto con saldo
+                            final accountsWithBalance = widget.spendingAccounts.where((acc) => acc.balance >= amount).toList();
+                            if (accountsWithBalance.isEmpty) {
+                              return 'Saldo insuficiente en las cuentas de gasto';
                             }
+                          } else {
+                            // De ahorro a gasto: verificar cuenta de ahorro
+                            sourceAccount = widget.savingsAccount;
                             if (amount > sourceAccount.balance) {
-                              return 'Saldo insuficiente en la cuenta de origen';
+                              return 'Saldo insuficiente en la cuenta de ahorro';
                             }
                           }
                           return null;
@@ -272,28 +328,57 @@ class _InternalTransferDialogState extends State<InternalTransferDialog> {
 InputDecoration _inputDecoration({required String labelText}) {
   return InputDecoration(
     labelText: labelText,
-    labelStyle: const TextStyle(color: Colors.white70),
-    floatingLabelStyle: const TextStyle(color: Color(0xFFFF0088)),
     filled: true,
-    fillColor: Colors.white.withOpacity(0.08),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    fillColor: _inputFillColor,
+    labelStyle: const TextStyle(
+      fontFamily: 'Inter',
+      color: Color(0xFFA0AEC0),
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+    ),
+    floatingLabelStyle: TextStyle(
+      color: _purpleAccent.withOpacity(0.9),
+      fontFamily: 'Inter',
+      fontWeight: FontWeight.w600,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: const BorderSide(
+        color: Color(0x1FFFFFFF),
+        width: 0.6,
+      ),
+    ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: BorderSide(color: Colors.white.withOpacity(0.2), width: 1.5),
+      borderSide: const BorderSide(
+        color: Color(0x1FFFFFFF),
+        width: 0.6,
+      ),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Color(0xFFFF0088), width: 2),
+      borderSide: BorderSide(
+        color: _purpleAccent.withOpacity(0.6),
+        width: 0.8,
+      ),
     ),
     errorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
+      borderSide: const BorderSide(color: Colors.redAccent, width: 0.6),
     ),
     focusedErrorBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+      borderSide: const BorderSide(color: Colors.redAccent, width: 0.8),
     ),
-    errorStyle: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w500),
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 18,
+    ),
+    errorStyle: const TextStyle(
+      color: Colors.redAccent,
+      fontWeight: FontWeight.w500,
+      fontFamily: 'Inter',
+    ),
   );
 }
 
@@ -312,8 +397,8 @@ class _SheetElevatedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final buttonChild = isLoading
         ? const SizedBox(
-            height: 20,
-            width: 20,
+            height: 24,
+            width: 24,
             child: CircularProgressIndicator(
               strokeWidth: 2.5,
               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -321,24 +406,41 @@ class _SheetElevatedButton extends StatelessWidget {
           )
         : Text(
             label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.5,
+            ),
           );
 
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: onPressed == null ? Colors.white.withOpacity(0.1) : const Color(0xFFFF0088),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        shadowColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color.fromRGBO(1, 51, 102, 0.12),
+            Color.fromRGBO(74, 144, 226, 0.15),
+            Color.fromRGBO(1, 51, 102, 0.12),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFF4A90E2).withOpacity(0.25),
+          width: 1.0,
+        ),
       ),
-      child: buttonChild,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(14),
+          child: Center(child: buttonChild),
+        ),
+      ),
     );
   }
 }
@@ -351,25 +453,63 @@ class _SheetOutlinedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white70,
-        side: BorderSide(
-          color: onPressed == null ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.3),
-          width: 1.5,
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF000000).withOpacity(0.88),
+            const Color(0xFF0D0D0D).withOpacity(0.92),
+            const Color(0xFF000000).withOpacity(0.88),
+          ],
+          stops: const [0.0, 0.5, 1.0],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-        backgroundColor: Colors.white.withOpacity(0.05),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0x1FFFFFFF),
+          width: 0.6,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 15,
+            spreadRadius: 0,
+            offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: const Color(0xFFFFFFFF).withOpacity(0.15),
+            blurRadius: 8,
+            spreadRadius: -4,
+            offset: const Offset(0, -3),
+          ),
+          BoxShadow(
+            color: const Color(0xFF700aa3).withOpacity(0.08),
+            blurRadius: 20,
+            spreadRadius: -6,
+            offset: const Offset(0, 0),
+            blurStyle: BlurStyle.inner,
+          ),
+        ],
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: onPressed == null ? Colors.white.withOpacity(0.3) : Colors.white70,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0),
+          backgroundColor: Colors.transparent,
+          foregroundColor: const Color(0xFF9E9E9E),
+          textStyle: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        child: Text(label),
       ),
     );
   }

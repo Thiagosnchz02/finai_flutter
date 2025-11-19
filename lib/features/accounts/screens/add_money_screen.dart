@@ -8,6 +8,10 @@ import 'package:finai_flutter/core/events/app_events.dart';
 import 'package:finai_flutter/core/services/event_logger_service.dart';
 import 'package:finai_flutter/features/accounts/models/account_model.dart';
 
+// Colores consistentes con transactions_screen
+const Color _purpleAccent = Color(0xFF4a0873);
+const Color _inputFillColor = Color(0x12000000);
+
 class AddMoneyScreen extends StatefulWidget {
   const AddMoneyScreen({super.key, this.initialAccount});
 
@@ -92,6 +96,31 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
       initialDate: _selectedDate,
       firstDate: DateTime(DateTime.now().year - 3),
       lastDate: DateTime(DateTime.now().year + 3),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: _purpleAccent,
+              onPrimary: Colors.white,
+              surface: const Color(0xFF0A0A0A),
+              onSurface: Colors.white,
+              secondary: _purpleAccent.withOpacity(0.3),
+            ),
+            dialogBackgroundColor: const Color(0xFF0A0A0A),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -172,221 +201,441 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final dateFormatted = DateFormat('d MMM, yyyy', 'es_ES').format(_selectedDate);
 
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF4D0029), Color(0xFF121212)],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+    InputDecoration buildInputDecoration(String label) {
+      return InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: _inputFillColor,
+        labelStyle: const TextStyle(
+          fontFamily: 'Inter',
+          color: Color(0xFFA0AEC0),
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
         ),
+        floatingLabelStyle: TextStyle(
+          color: _purpleAccent.withOpacity(0.9),
+          fontFamily: 'Inter',
+          fontWeight: FontWeight.w600,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(
+            color: Color(0x1FFFFFFF),
+            width: 0.6,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(
+            color: Color(0x1FFFFFFF),
+            width: 0.6,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: _purpleAccent.withOpacity(0.6),
+            width: 0.8,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF000000),
+      appBar: AppBar(
+        title: const Text(
+          'Añadir dinero',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            color: Color(0xFFFFFFFF),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        backgroundColor: const Color(0xFF000000),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Color(0xFFFFFFFF)),
       ),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: const Text('Añadir dinero'),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF000000),
+              const Color(0xFF0A0A0A).withOpacity(0.98),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
         ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Form(
-              key: _formKey,
+        child: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Registra un ingreso rápido para tus cuentas de gasto',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: Colors.white.withOpacity(0.85),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  _SectionLabel(label: 'Cantidad'),
                   const SizedBox(height: 8),
-                  _GradientFieldContainer(
-                    child: TextFormField(
-                      controller: _amountController,
-                      style: const TextStyle(color: Colors.white, fontSize: 20),
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        hintText: 'Ej. 250',
-                        hintStyle: TextStyle(color: Colors.white54),
-                        border: InputBorder.none,
-                        prefixIcon: Icon(Icons.euro, color: Colors.white70),
-                        filled: true,
-                        fillColor: Colors.transparent,
+                  // Header: Cantidad
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.euro_symbol,
+                        size: 22,
+                        color: _purpleAccent.withOpacity(0.8),
                       ),
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'Introduce una cantidad válida';
-                        }
-                        final normalized = value.replaceAll('.', '').replaceAll(',', '.');
-                        final amount = double.tryParse(normalized);
-                        if (amount == null || amount <= 0) {
-                          return 'La cantidad debe ser mayor que cero';
-                        }
-                        return null;
-                      },
-                    ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Cantidad',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _amountController,
+                    style: const TextStyle(color: Colors.white),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: buildInputDecoration('0.00'),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Introduce una cantidad válida';
+                      }
+                      final normalized = value.replaceAll('.', '').replaceAll(',', '.');
+                      final amount = double.tryParse(normalized);
+                      if (amount == null || amount <= 0) {
+                        return 'La cantidad debe ser mayor que cero';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 24),
-                  _SectionLabel(label: 'Cuenta destino'),
-                  const SizedBox(height: 8),
+                  // Header: Cuenta destino
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.account_balance_wallet_outlined,
+                        size: 22,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Cuenta destino',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _accountsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: CircularProgressIndicator(color: Color(0xFF4a0873)),
+                        );
                       }
                       final accounts = snapshot.data ?? [];
                       if (accounts.isEmpty) {
-                        return const _EmptyHelperMessage(
-                          message: 'No tienes cuentas de gasto disponibles.',
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                _purpleAccent.withOpacity(0.15),
+                                _purpleAccent.withOpacity(0.12),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: const Text(
+                            'No tienes cuentas de gasto disponibles.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
                         );
                       }
-                      return _GradientFieldContainer(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedAccountId,
-                          isExpanded: true,
-                          dropdownColor: const Color(0xFF341931),
-                          iconEnabledColor: Colors.white,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            filled: true,
-                            fillColor: Colors.transparent,
-                          ),
-                          items: accounts
-                              .map(
-                                (acc) => DropdownMenuItem<String>(
-                                  value: acc['id'] as String,
-                                  child: Text(
-                                    acc['name'] as String,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() => _selectedAccountId = value);
-                          },
+                      return DropdownButtonFormField<String>(
+                        value: _selectedAccountId,
+                        decoration: buildInputDecoration(''),
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 14,
                         ),
+                        dropdownColor: const Color(0xFF0A0A0A),
+                        iconEnabledColor: _purpleAccent,
+                        menuMaxHeight: 300,
+                        borderRadius: BorderRadius.circular(14),
+                        items: accounts.map((acc) {
+                          return DropdownMenuItem<String>(
+                            value: acc['id'] as String,
+                            child: Text(
+                              acc['name'] as String,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() => _selectedAccountId = value);
+                        },
                       );
                     },
                   ),
                   const SizedBox(height: 24),
-                  _SectionLabel(label: 'Categoría'),
-                  const SizedBox(height: 8),
+                  // Header: Categoría
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.label_outline,
+                        size: 22,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Categoría',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
                   FutureBuilder<List<Map<String, dynamic>>>(
                     future: _categoriesFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: CircularProgressIndicator(color: Color(0xFF4a0873)),
+                        );
                       }
                       final categories = snapshot.data ?? [];
                       if (categories.isEmpty) {
-                        return const _EmptyHelperMessage(
-                          message: 'Crea categorías de ingreso para clasificarlos mejor.',
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                _purpleAccent.withOpacity(0.15),
+                                _purpleAccent.withOpacity(0.12),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: _purpleAccent.withOpacity(0.25),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: const Text(
+                            'Crea categorías de ingreso para clasificarlos mejor.',
+                            style: TextStyle(color: Colors.white70),
+                          ),
                         );
                       }
-                      return _GradientFieldContainer(
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedCategoryId,
-                          isExpanded: true,
-                          dropdownColor: const Color(0xFF341931),
-                          iconEnabledColor: Colors.white,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            filled: true,
-                            fillColor: Colors.transparent,
-                          ),
-                          items: categories
-                              .map(
-                                (category) => DropdownMenuItem<String>(
-                                  value: category['id'] as String,
-                                  child: Text(
-                                    category['name'] as String,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() => _selectedCategoryId = value);
-                          },
+                      return DropdownButtonFormField<String>(
+                        value: _selectedCategoryId,
+                        decoration: buildInputDecoration(''),
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Colors.white,
+                          fontSize: 14,
                         ),
+                        dropdownColor: const Color(0xFF0A0A0A),
+                        iconEnabledColor: _purpleAccent,
+                        menuMaxHeight: 300,
+                        borderRadius: BorderRadius.circular(14),
+                        items: categories.map((category) {
+                          return DropdownMenuItem<String>(
+                            value: category['id'] as String,
+                            child: Text(
+                              category['name'] as String,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'Inter',
+                                fontSize: 14,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() => _selectedCategoryId = value);
+                        },
                       );
                     },
                   ),
                   const SizedBox(height: 24),
-                  _SectionLabel(label: 'Fecha del ingreso'),
-                  const SizedBox(height: 8),
-                  GestureDetector(
+                  // Header: Fecha
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.event_outlined,
+                        size: 22,
+                        color: _purpleAccent.withOpacity(0.8),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Fecha del ingreso',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
                     onTap: _pickDate,
-                    child: _GradientFieldContainer(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                      decoration: BoxDecoration(
+                        color: _inputFillColor,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0x1FFFFFFF),
+                          width: 0.6,
+                        ),
+                      ),
                       child: Row(
                         children: [
-                          const Icon(Icons.calendar_today, color: Colors.white70),
+                          
                           const SizedBox(width: 12),
                           Text(
                             dateFormatted,
                             style: const TextStyle(
+                              fontFamily: 'Inter',
                               color: Colors.white,
-                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
                             ),
                           ),
                           const Spacer(),
-                          const Icon(Icons.keyboard_arrow_down, color: Colors.white70),
+                          Icon(
+                            Icons.keyboard_arrow_down,
+                            color: _purpleAccent.withOpacity(0.6),
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(height: 24),
-                  _SectionLabel(label: 'Notas (opcional)'),
-                  const SizedBox(height: 8),
-                  _GradientFieldContainer(
-                    child: TextFormField(
-                      controller: _notesController,
-                      maxLines: 3,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        hintText: 'Añade detalles adicionales',
-                        hintStyle: TextStyle(color: Colors.white54),
-                        border: InputBorder.none,
-                        filled: true,
-                        fillColor: Colors.transparent,
+                  // Header: Notas
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.notes_outlined,
+                        size: 22,
+                        color: _purpleAccent.withOpacity(0.8),
                       ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Notas (opcional)',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFFE0E0E0),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _notesController,
+                    maxLines: 3,
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: Colors.white,
+                      fontSize: 14,
                     ),
+                    decoration: buildInputDecoration('Añade detalles adicionales'),
                   ),
                   const SizedBox(height: 36),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color.fromRGBO(1, 51, 102, 0.12),
+                            Color.fromRGBO(74, 144, 226, 0.15),
+                            Color.fromRGBO(1, 51, 102, 0.12),
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
                         ),
-                        backgroundColor: const Color(0xFFF72585),
-                        foregroundColor: Colors.white,
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 16,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFF4A90E2).withOpacity(0.25),
+                          width: 1.0,
                         ),
                       ),
-                      onPressed: _isSubmitting ? null : _submit,
-                      child: _isSubmitting
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Text('Registrar ingreso'),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _isSubmitting ? null : _submit,
+                          borderRadius: BorderRadius.circular(14),
+                          child: Center(
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    'Registrar ingreso',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -394,66 +643,6 @@ class _AddMoneyScreenState extends State<AddMoneyScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _GradientFieldContainer extends StatelessWidget {
-  const _GradientFieldContainer({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
-        color: const Color.fromARGB(51, 255, 76, 156),
-        border: Border.all(color: const Color(0x22FFFFFF)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: child,
-    );
-  }
-}
-
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: Colors.white.withOpacity(0.7),
-            letterSpacing: 1.1,
-            fontWeight: FontWeight.w600,
-          ),
-    );
-  }
-}
-
-class _EmptyHelperMessage extends StatelessWidget {
-  const _EmptyHelperMessage({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white24),
-      ),
-      child: Text(
-        message,
-        style: const TextStyle(color: Colors.white70),
       ),
     );
   }

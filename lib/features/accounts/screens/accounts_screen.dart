@@ -330,23 +330,19 @@ class _AccountsContentState extends State<_AccountsContent> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 8),
-              const Center(
-                child: Text(
-                  'Mis Cuentas',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.bold,
-                    fontSize: 30,
-                    color: Colors.white,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  const Text(
+                    'Mis Cuentas',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                   AccountsActionButton(
                     label: 'Añadir cuenta',
                     icon: Icons.add,
